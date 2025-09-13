@@ -1,0 +1,111 @@
+generator client {
+  provider = "prisma-client-js"
+  output   = "../generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  user_id      Int       @id @default(autoincrement())
+  full_name    String
+  email        String    @unique
+  password_hash String
+  role         Role
+  created_at   DateTime  @default(now())
+
+  patient Patient?
+  doctor  Doctor?
+  admin   Admin?
+}
+
+model Patient {
+  patient_id     Int       @id @default(autoincrement())
+  user_id        Int       @unique
+  date_of_birth  DateTime?
+  gender         String?
+  region         String?
+  medical_history String?
+
+  user       User    @relation(fields: [user_id], references: [user_id])
+  symptoms   Symptom[]
+  appointments Appointment[]
+  prescriptions Prescription[]
+}
+
+model Doctor {
+  doctor_id   Int       @id @default(autoincrement())
+  user_id     Int       @unique
+  specialization String
+  availability_status Boolean @default(true)
+
+  user       User    @relation(fields: [user_id], references: [user_id])
+  appointments Appointment[]
+  prescriptions Prescription[]
+}
+
+model Admin {
+  admin_id   Int    @id @default(autoincrement())
+  user_id    Int    @unique
+
+  user       User    @relation(fields: [user_id], references: [user_id])
+}
+
+model Symptom {
+  symptom_id  Int      @id @default(autoincrement())
+  patient_id  Int
+  description String
+  severity_level String?
+  medications_taken String?
+  created_at  DateTime @default(now())
+
+  patient   Patient   @relation(fields: [patient_id], references: [patient_id])
+  predictions AiPrediction[]
+}
+
+model AiPrediction {
+  prediction_id Int     @id @default(autoincrement())
+  symptom_id    Int
+  probable_disease String
+  probability_score Float
+  status         String @default("pending")
+  created_at     DateTime @default(now())
+
+  symptom Symptom @relation(fields: [symptom_id], references: [symptom_id])
+}
+
+model Appointment {
+  appointment_id Int     @id @default(autoincrement())
+  patient_id     Int
+  doctor_id      Int
+  scheduled_date DateTime
+  status         String   @default("scheduled")
+  created_at     DateTime @default(now())
+
+  patient Patient @relation(fields: [patient_id], references: [patient_id])
+  doctor  Doctor  @relation(fields: [doctor_id], references: [doctor_id])
+  prescriptions Prescription[]
+}
+
+model Prescription {
+  prescription_id Int     @id @default(autoincrement())
+  appointment_id  Int
+  doctor_id       Int
+  patient_id      Int
+  medications     String
+  notes           String?
+  created_at      DateTime @default(now())
+
+  appointment Appointment @relation(fields: [appointment_id], references: [appointment_id])
+  doctor      Doctor      @relation(fields: [doctor_id], references: [doctor_id])
+  patient     Patient     @relation(fields: [patient_id], references: [patient_id])
+}
+
+enum Role {
+  patient
+  doctor
+  admin
+}
+
