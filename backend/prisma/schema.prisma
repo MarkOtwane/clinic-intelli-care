@@ -1,6 +1,5 @@
 generator client {
   provider = "prisma-client-js"
-  output   = "../generated/prisma"
 }
 
 datasource db {
@@ -8,104 +7,145 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-model User {
-  user_id      Int       @id @default(autoincrement())
-  full_name    String
-  email        String    @unique
-  password_hash String
-  role         Role
-  created_at   DateTime  @default(now())
+enum Role {
+  PATIENT
+  DOCTOR
+  ADMIN
+}
 
-  patient Patient?
-  doctor  Doctor?
-  admin   Admin?
+model User {
+  id               String    @id @default(uuid())
+  email            String    @unique
+  password         String
+  role             Role
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+  profile          Profile?
+  // Relations
+  patient          Patient?
+  doctor           Doctor?
+  uploadedMedia    Media[]
+  authoredComments Comment[]
+}
+
+model Profile {
+  id        String  @id @default(uuid())
+  user      User    @relation(fields: [userId], references: [id])
+  userId    String  @unique
+  firstName String
+  lastName  String
+  phone     String?
+  avatar    Media?  @relation(fields: [avatarId], references: [id])
+  avatarId  String? @unique
+  bio       String?
+}
+
+model Media {
+  id           String     @id @default(uuid())
+  url          String
+  publicId     String // cloudinary public id
+  mimeType     String?
+  size         Int?
+  uploadedBy   User?      @relation(fields: [uploadedById], references: [id])
+  uploadedById String?
+  profile      Profile?
+  blogPosts    BlogPost[] @relation("BlogImages")
+  createdAt    DateTime   @default(now())
 }
 
 model Patient {
-  patient_id     Int       @id @default(autoincrement())
-  user_id        Int       @unique
-  date_of_birth  DateTime?
-  gender         String?
-  region         String?
-  medical_history String?
-
-  user       User    @relation(fields: [user_id], references: [user_id])
-  symptoms   Symptom[]
-  appointments Appointment[]
+  id            String         @id @default(uuid())
+  userId        String         @unique
+  user          User           @relation(fields: [userId], references: [id])
+  medicalRecord Json?
+  symptoms      Symptom[]
+  appointments  Appointment[]
   prescriptions Prescription[]
+  createdAt     DateTime       @default(now())
 }
 
 model Doctor {
-  doctor_id   Int       @id @default(autoincrement())
-  user_id     Int       @unique
-  specialization String
-  availability_status Boolean @default(true)
-
-  user       User    @relation(fields: [user_id], references: [user_id])
-  appointments Appointment[]
-  prescriptions Prescription[]
-}
-
-model Admin {
-  admin_id   Int    @id @default(autoincrement())
-  user_id    Int    @unique
-
-  user       User    @relation(fields: [user_id], references: [user_id])
+  id                   String         @id @default(uuid())
+  userId               String         @unique
+  user                 User           @relation(fields: [userId], references: [id])
+  specialty            String
+  qualification        String?
+  bio                  String?
+  appointments         Appointment[]
+  blogPosts            BlogPost[]
+  forwardedPredictions Prediction[]
+  prescriptions        Prescription[]
+  createdAt            DateTime       @default(now())
 }
 
 model Symptom {
-  symptom_id  Int      @id @default(autoincrement())
-  patient_id  Int
+  id          String      @id @default(uuid())
+  patient     Patient     @relation(fields: [patientId], references: [id])
+  patientId   String
   description String
-  severity_level String?
-  medications_taken String?
-  created_at  DateTime @default(now())
-
-  patient   Patient   @relation(fields: [patient_id], references: [patient_id])
-  predictions AiPrediction[]
+  location    String? // e.g., 'head', 'chest', 'abdomen'
+  medications String? // medication already taken (text)
+  createdAt   DateTime    @default(now())
+  prediction  Prediction?
 }
 
-model AiPrediction {
-  prediction_id Int     @id @default(autoincrement())
-  symptom_id    Int
-  probable_disease String
-  probability_score Float
-  status         String @default("pending")
-  created_at     DateTime @default(now())
-
-  symptom Symptom @relation(fields: [symptom_id], references: [symptom_id])
+model Prediction {
+  id            String   @id @default(uuid())
+  symptom       Symptom  @relation(fields: [symptomId], references: [id])
+  symptomId     String   @unique
+  results       Json // e.g., [{ disease: "Flu", probability: 0.73 }, ...]
+  followUps     Json? // questions asked to clarify (if dynamic)
+  createdAt     DateTime @default(now())
+  forwardedTo   Doctor?  @relation(fields: [forwardedToId], references: [id])
+  forwardedToId String?
 }
 
 model Appointment {
-  appointment_id Int     @id @default(autoincrement())
-  patient_id     Int
-  doctor_id      Int
-  scheduled_date DateTime
-  status         String   @default("scheduled")
-  created_at     DateTime @default(now())
-
-  patient Patient @relation(fields: [patient_id], references: [patient_id])
-  doctor  Doctor  @relation(fields: [doctor_id], references: [doctor_id])
-  prescriptions Prescription[]
+  id        String    @id @default(uuid())
+  patient   Patient   @relation(fields: [patientId], references: [id])
+  patientId String
+  doctor    Doctor?   @relation(fields: [doctorId], references: [id])
+  doctorId  String?
+  startTime DateTime
+  endTime   DateTime?
+  status    String    @default("PENDING") // PENDING, CONFIRMED, CANCELLED, COMPLETED
+  reason    String?
+  createdAt DateTime  @default(now())
 }
 
 model Prescription {
-  prescription_id Int     @id @default(autoincrement())
-  appointment_id  Int
-  doctor_id       Int
-  patient_id      Int
-  medications     String
-  notes           String?
-  created_at      DateTime @default(now())
-
-  appointment Appointment @relation(fields: [appointment_id], references: [appointment_id])
-  doctor      Doctor      @relation(fields: [doctor_id], references: [doctor_id])
-  patient     Patient     @relation(fields: [patient_id], references: [patient_id])
+  id          String   @id @default(uuid())
+  patient     Patient  @relation(fields: [patientId], references: [id])
+  patientId   String
+  doctor      Doctor?  @relation(fields: [doctorId], references: [id])
+  doctorId    String?
+  medications Json // structured medication info
+  notes       String?
+  createdAt   DateTime @default(now())
 }
 
-enum Role {
-  patient
-  doctor
-  admin
+model BlogPost {
+  id        String    @id @default(uuid())
+  title     String
+  slug      String    @unique
+  content   String
+  author    Doctor    @relation(fields: [authorId], references: [id])
+  authorId  String
+  images    Media[]   @relation("BlogImages")
+  comments  Comment[]
+  likes     Int       @default(0)
+  published Boolean   @default(false)
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
 }
 
+model Comment {
+  id        String   @id @default(uuid())
+  post      BlogPost @relation(fields: [postId], references: [id])
+  postId    String
+  author    User     @relation(fields: [authorId], references: [id])
+  authorId  String
+  content   String
+  createdAt DateTime @default(now())
+  moderated Boolean  @default(false)
+}
