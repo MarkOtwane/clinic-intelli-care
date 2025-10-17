@@ -1,19 +1,28 @@
+/* eslint-disable @typescript-eslint/no-unsafe-member-access */
+/* eslint-disable @typescript-eslint/no-unsafe-call */
 import { Module } from '@nestjs/common';
+import { AiAnalysisModule } from './ai-analysis/ai-analysis.module';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
-import { CloudinaryService } from './cloudinary/cloudinary.service';
-import { PrismaModule } from './prisma/prisma.module';
 import { AuthModule } from './auth/auth.module';
-import { UsersModule } from './users/users.module';
-import { PatientsModule } from './patients/patients.module';
-import { DoctorsModule } from './doctors/doctors.module';
-import { AiAnalysisModule } from './ai-analysis/ai-analysis.module';
 import { BlogsModule } from './blogs/blogs.module';
-import { MediaModule } from './media/media.module';
-import { NotificationsModule } from './notifications/notifications.module';
+import { CloudinaryService } from './cloudinary/cloudinary.service';
+import { DoctorsModule } from './doctors/doctors.module';
+import { PatientsModule } from './patients/patients.module';
+import { PrismaModule } from './prisma/prisma.module';
+import { UsersModule } from './users/users.module';
 
 @Module({
-  imports: [PrismaModule, AuthModule, UsersModule, PatientsModule, DoctorsModule, AiAnalysisModule, BlogsModule, MediaModule, NotificationsModule],
+  imports: [
+    ConfigModule.forRoot({ isGlobal: true }),
+    PrismaModule,
+    AuthModule,
+    UsersModule,
+    PatientsModule,
+    DoctorsModule,
+    AiAnalysisModule,
+    BlogsModule,
+  ],
   controllers: [AppController],
   providers: [AppService, CloudinaryService],
 })
