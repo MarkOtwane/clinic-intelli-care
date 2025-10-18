@@ -26,7 +26,24 @@ model User {
   doctor           Doctor?
   uploadedMedia    Media[]
   authoredComments Comment[]
+
+  RefreshToken RefreshToken[]
 }
+
+model RefreshToken {
+  id         String   @id @default(uuid())
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId     String
+  tokenHash  String   // hashed refresh token
+  userAgent  String?  // optional: store device/user-agent
+  ip         String?  // optional: store request IP
+  expiresAt  DateTime
+  createdAt  DateTime @default(now())
+
+  @@index([userId])
+  @@index([expiresAt])
+}
+
 
 model Profile {
   id        String  @id @default(uuid())
