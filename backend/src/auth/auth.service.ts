@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/no-unsafe-argument */
+/* eslint-disable @typescript-eslint/no-unused-vars */
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */
 /* eslint-disable @typescript-eslint/no-unsafe-call */
 /* eslint-disable @typescript-eslint/no-unsafe-return */
@@ -10,8 +12,8 @@ import {
 } from '@nestjs/common';
 import { UsersService } from '../users/users.service';
 import { JwtService } from '@nestjs/jwt';
-import { PrismaService } from '../../prisma/prisma.service';
-import { SignupDto, LoginDto } from './dto/auth-credentials.dto';
+import { PrismaService } from '../prisma/prisma.service';
+import { SignupDto, LoginDto } from './dtos/auth-credentials.dto';
 import { ConfigService } from '@nestjs/config';
 import * as bcrypt from 'bcrypt';
 import { randomBytes } from 'crypto';
@@ -78,12 +80,15 @@ export class AuthService {
     const payload = { sub: userId, email, role };
     return this.jwtService.sign(payload, {
       secret: this.config.get<string>('JWT_SECRET'),
-      expiresIn: this.config.get<string>('JWT_EXPIRES_IN') || '900s',
+      expiresIn: parseInt(this.config.get<string>('JWT_EXPIRES_IN') || '900'),
     });
   }
 
   private parseExpiry(spec: string): Date {
     const match = spec.match(/^(\d+)([smhd])$/);
+    if (!match) {
+      throw new Error(`Invalid expiry specification: ${spec}`);
+    }
     const now = new Date();
     const val = Number(match[1]);
     const unit = match[2];

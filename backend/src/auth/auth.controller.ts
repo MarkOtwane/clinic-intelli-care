@@ -1,3 +1,6 @@
+/* eslint-disable @typescript-eslint/no-unsafe-argument */
+/* eslint-disable @typescript-eslint/no-unused-vars */
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
 /* eslint-disable @typescript-eslint/no-unsafe-return */
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */
 /* eslint-disable @typescript-eslint/require-await */
@@ -11,11 +14,12 @@ import {
   Res,
   HttpCode,
   HttpStatus,
+  UnauthorizedException,
 } from '@nestjs/common';
 import { AuthService } from './auth.service';
-import { SignupDto, LoginDto } from './dto/auth-credentials.dto';
-import { JwtAuthGuard } from './jwt-auth.guard';
-import { Request, Response } from 'express';
+import { SignupDto, LoginDto } from './dtos/auth-credentials.dto';
+import { JwtAuthGuard } from './guards/jwt-auth.guard';
+import type { Request, Response } from 'express';
 import { ConfigService } from '@nestjs/config';
 import { setRefreshTokenCookie, clearRefreshTokenCookie } from './cookie.utils';
 

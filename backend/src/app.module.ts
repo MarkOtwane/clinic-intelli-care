@@ -1,6 +1,5 @@
-/* eslint-disable @typescript-eslint/no-unsafe-member-access */
-/* eslint-disable @typescript-eslint/no-unsafe-call */
 import { Module } from '@nestjs/common';
+import { ConfigModule } from '@nestjs/config';
 import { AiAnalysisModule } from './ai-analysis/ai-analysis.module';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';

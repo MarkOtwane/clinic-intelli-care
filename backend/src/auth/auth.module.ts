@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unsafe-argument */
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */
 /* eslint-disable @typescript-eslint/no-unsafe-call */
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
@@ -22,7 +23,7 @@ import { JwtStrategy } from './jwt.strategy';
       useFactory: (cfg: ConfigService) => ({
         secret: cfg.get<string>('JWT_SECRET'),
         signOptions: {
-          expiresIn: cfg.get<string>('JWT_EXPIRES_IN') || '3600s',
+          expiresIn: parseInt(cfg.get<string>('JWT_EXPIRES_IN') || '3600'),
         },
       }),
     }),
