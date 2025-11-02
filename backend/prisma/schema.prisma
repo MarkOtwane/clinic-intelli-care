@@ -14,21 +14,28 @@ enum Role {
 }
 
 model User {
-  id               String    @id @default(uuid())
-  email            String    @unique
-  password         String
-  role             Role
-  createdAt        DateTime  @default(now())
-  updatedAt        DateTime  @updatedAt
-  profile          Profile?
-  // Relations
-  patient          Patient?
-  doctor           Doctor?
-  uploadedMedia    Media[]
-  authoredComments Comment[]
+  id             String          @id @default(uuid())
+  email          String          @unique
+  password       String
+  role           Role
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
 
-  RefreshToken RefreshToken[]
+  // Relationships
+  patientProfile Patient?        @relation(fields: [patientId], references: [id])
+  patientId      String? @unique
+  doctorProfile  Doctor?         @relation(fields: [doctorId], references: [id])
+  doctorId       String? @unique
+
+  refreshTokens  RefreshToken[]
+
+  Comment Comment[]
+
+  Media Media[]
+
+  Profile Profile[]
 }
+
 
 model RefreshToken {
   id        String   @id @default(uuid())
@@ -70,28 +77,41 @@ model Media {
 }
 
 model Patient {
-  id            String         @id @default(uuid())
-  userId        String         @unique
-  user          User           @relation(fields: [userId], references: [id])
-  medicalRecord Json?
-  symptoms      Symptom[]
-  appointments  Appointment[]
-  prescriptions Prescription[]
-  createdAt     DateTime       @default(now())
+  id          String       @id @default(uuid())
+  name        String
+  age         Int?
+  gender      String?
+  address     String?
+  phone       String?
+  medicalData Json?
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+
+  user        User?
+  appointments Appointment[]
+
+  Prescription Prescription[]
+
+  Symptom Symptom[]
 }
 
 model Doctor {
-  id                   String         @id @default(uuid())
-  userId               String         @unique
-  user                 User           @relation(fields: [userId], references: [id])
-  specialty            String
-  qualification        String?
-  bio                  String?
-  appointments         Appointment[]
-  blogPosts            BlogPost[]
-  forwardedPredictions Prediction[]
-  prescriptions        Prescription[]
-  createdAt            DateTime       @default(now())
+  id             String   @id @default(uuid())
+  name           String
+  specialization String
+  bio            String?
+  phone          String?
+  experience     Int?
+  available      Boolean  @default(true)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  user         User?          @relation(fields: [userId], references: [id])
+  appointments Appointment[]
+  blogPosts    BlogPost[]
+  userId       String? @unique
+  Prediction   Prediction[]
+  Prescription Prescription[]
 }
 
 model Symptom {
