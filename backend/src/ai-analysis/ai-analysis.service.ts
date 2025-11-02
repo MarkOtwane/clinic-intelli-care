@@ -1,90 +1,76 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
-import { AnalyzeSymptomsDto } from './dto/analyze-symptoms.dto';
+import { CreateAnalysisDto } from './dto/create-analysis.dto';
+import { UpdateAnalysisDto } from './dto/update-analysis.dto';
+import { diseaseRules } from './rules/basic-rules';
 
 @Injectable()
 export class AiAnalysisService {
   constructor(private prisma: PrismaService) {}
 
-  private symptomDatabase = [
-    {
-      disease: 'Common Cold',
-      keywords: ['cough', 'sore throat', 'runny nose', 'sneezing'],
-      advice: 'Rest, stay hydrated, and use mild cold medication.',
-      specialist: 'General Practitioner',
-    },
-    {
-      disease: 'Malaria',
-      keywords: ['fever', 'chills', 'sweating', 'headache', 'fatigue'],
-      advice: 'Seek a malaria test and treatment immediately.',
-      specialist: 'Tropical Medicine / GP',
-    },
-    {
-      disease: 'Migraine',
-      keywords: ['headache', 'nausea', 'light sensitivity', 'throbbing pain'],
-      advice:
-        'Avoid triggers, stay in a dark room, use pain relief medication.',
-      specialist: 'Neurologist',
-    },
-    {
-      disease: 'COVID-19',
-      keywords: ['fever', 'dry cough', 'loss of taste', 'difficulty breathing'],
-      advice: 'Get tested and isolate. Monitor oxygen levels.',
-      specialist: 'Respiratory Specialist',
-    },
-  ];
-
-  async analyzeSymptoms(dto: AnalyzeSymptomsDto, patientId: string) {
-    const matches = this.symptomDatabase.map((entry) => {
-      const matched = entry.keywords.filter((k) =>
-        dto.symptoms.map((s) => s.toLowerCase()).includes(k.toLowerCase()),
-      );
-      const probability = (matched.length / entry.keywords.length) * 100;
-
+  private analyzeSymptoms(symptoms: string[]) {
+    const results = diseaseRules.map((rule) => {
+      const matchCount = rule.keywords.filter((k) =>
+        symptoms.map((s) => s.toLowerCase()).includes(k.toLowerCase()),
+      ).length;
+      const probability = matchCount / rule.keywords.length;
       return {
-        disease: entry.disease,
-        probability: Number(probability.toFixed(1)),
-        advice: entry.advice,
-        specialist: entry.specialist,
+        name: rule.name,
+        probability: Number(probability.toFixed(2)),
+        doctorCategory: rule.doctorCategory,
+        recommendation: rule.recommendation,
       };
     });
 
-    const filteredResults = matches
-      .filter((m) => m.probability > 20)
+    return results
+      .filter((r) => r.probability > 0)
       .sort((a, b) => b.probability - a.probability);
-
-    const topResults = filteredResults.slice(0, 3);
-
-    const recommendations = topResults
-      .map(
-        (r) =>
-          `${r.disease} (${r.probability}%): ${r.advice} → See ${r.specialist}`,
-      )
-      .join('\n');
-
-    // Save to DB
-    const record = await this.prisma.analysis.create({
-      data: {
-        symptoms: dto.symptoms.join(', '),
-        predictedDiseases: topResults,
-        recommendations,
-        patient: { connect: { id: patientId } },
-      },
-    });
-
-    return { record, topResults };
   }
 
-  async getPatientAnalyses(patientId: string) {
+  async create(dto: CreateAnalysisDto, patientId: string) {
+    const predictions = this.analyzeSymptoms(dto.symptoms);
+
+    const topRecommendation = predictions[0]
+      ? predictions[0].recommendation
+      : 'Symptoms are inconclusive. Please provide more details or consult a doctor.';
+
+    return this.prisma.analysis.create({
+      data: {
+        patientId,
+        symptoms: dto.symptoms,
+        predictedDiseases: predictions,
+        recommendations: topRecommendation,
+      },
+    });
+  }
+
+  async findAll() {
+    return this.prisma.analysis.findMany({
+      include: { patient: true, doctor: true },
+      orderBy: { createdAt: 'desc' },
+    });
+  }
+
+  async findByPatient(patientId: string) {
     return this.prisma.analysis.findMany({
       where: { patientId },
       orderBy: { createdAt: 'desc' },
     });
   }
 
-  async getAnalysisById(id: string) {
-    return this.prisma.analysis.findUnique({
+  async findOne(id: string) {
+    const record = await this.prisma.analysis.findUnique({
       where: { id },
+      include: { patient: true, doctor: true },
+    });
+    if (!record) throw new NotFoundException('Analysis not found');
+    return record;
+  }
+
+  async update(id: string, dto: UpdateAnalysisDto) {
+    return this.prisma.analysis.update({
+      where: { id },
+      data: dto,
     });
   }
 }

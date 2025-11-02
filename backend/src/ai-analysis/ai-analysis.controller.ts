@@ -1,6 +1,15 @@
-import { Controller, Post, Get, Body, Param, UseGuards } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Patch,
+  Body,
+  Param,
+  UseGuards,
+} from '@nestjs/common';
 import { AiAnalysisService } from './ai-analysis.service';
-import { AnalyzeSymptomsDto } from './dto/analyze-symptoms.dto';
+import { CreateAnalysisDto } from './dto/create-analysis.dto';
+import { UpdateAnalysisDto } from './dto/update-analysis.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
 import { Roles } from '../auth/decorators/roles.decorator';
@@ -13,22 +22,31 @@ export class AiAnalysisController {
 
   @Post()
   @Roles('PATIENT')
-  analyzeSymptoms(
-    @Body() dto: AnalyzeSymptomsDto,
-    @CurrentUser('id') patientId: string,
-  ) {
-    return this.aiService.analyzeSymptoms(dto, patientId);
+  create(@Body() dto: CreateAnalysisDto, @CurrentUser('id') patientId: string) {
+    return this.aiService.create(dto, patientId);
   }
 
-  @Get('patient/:patientId')
-  @Roles('PATIENT', 'DOCTOR', 'ADMIN')
-  getPatientAnalyses(@Param('patientId') patientId: string) {
-    return this.aiService.getPatientAnalyses(patientId);
+  @Get()
+  @Roles('ADMIN', 'DOCTOR')
+  findAll() {
+    return this.aiService.findAll();
+  }
+
+  @Get('patient/:id')
+  @Roles('DOCTOR', 'PATIENT', 'ADMIN')
+  findByPatient(@Param('id') id: string) {
+    return this.aiService.findByPatient(id);
   }
 
   @Get(':id')
-  @Roles('PATIENT', 'DOCTOR', 'ADMIN')
-  getAnalysisById(@Param('id') id: string) {
-    return this.aiService.getAnalysisById(id);
+  @Roles('DOCTOR', 'PATIENT', 'ADMIN')
+  findOne(@Param('id') id: string) {
+    return this.aiService.findOne(id);
+  }
+
+  @Patch(':id')
+  @Roles('DOCTOR')
+  update(@Param('id') id: string, @Body() dto: UpdateAnalysisDto) {
+    return this.aiService.update(id, dto);
   }
 }
