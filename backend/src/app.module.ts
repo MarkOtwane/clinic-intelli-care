@@ -10,6 +10,10 @@ import { DoctorsModule } from './doctors/doctors.module';
 import { PatientsModule } from './patients/patients.module';
 import { PrismaModule } from './prisma/prisma.module';
 import { UsersModule } from './users/users.module';
+import { CommentsModule } from './comments/comments.module';
+import { MediaModule } from './media/media.module';
+import { NotificationsModule } from './notifications/notifications.module';
+import { AdminModule } from './admin/admin.module';
 
 @Module({
   imports: [
@@ -21,6 +25,10 @@ import { UsersModule } from './users/users.module';
     DoctorsModule,
     AiAnalysisModule,
     BlogsModule,
+    CommentsModule,
+    MediaModule,
+    NotificationsModule,
+    AdminModule,
   ],
   controllers: [AppController],
   providers: [AppService, CloudinaryService],

@@ -34,6 +34,8 @@ model User {
   Media Media[]
 
   Profile Profile[]
+
+  Notification Notification[]
 }
 
 model RefreshToken {
@@ -94,6 +96,8 @@ model Patient {
   Symptom Symptom[]
 
   Analysis Analysis[]
+
+  Comment Comment[]
 }
 
 model Doctor {
@@ -157,40 +161,37 @@ model Appointment {
 }
 
 model Prescription {
-  id             String      @id @default(uuid())
-  patientId      String
-  doctorId       String
-  appointmentId  String?     // optional link to an appointment
-  analysisId     String?     // optional link to AI analysis
-  medications    Json        // array of medication objects
-  notes          String?
-  createdAt      DateTime    @default(now())
-  updatedAt      DateTime    @updatedAt
+  id            String   @id @default(uuid())
+  patientId     String
+  doctorId      String
+  appointmentId String? // optional link to an appointment
+  analysisId    String? // optional link to AI analysis
+  medications   Json // array of medication objects
+  notes         String?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
 
-  patient        Patient     @relation(fields: [patientId], references: [id])
-  doctor         Doctor      @relation(fields: [doctorId], references: [id])
-  appointment    Appointment? @relation(fields: [appointmentId], references: [id])
-  analysis       Analysis?   @relation(fields: [analysisId], references: [id])
+  patient     Patient      @relation(fields: [patientId], references: [id])
+  doctor      Doctor       @relation(fields: [doctorId], references: [id])
+  appointment Appointment? @relation(fields: [appointmentId], references: [id])
+  analysis    Analysis?    @relation(fields: [analysisId], references: [id])
 }
-
 
 model Analysis {
-  id           String       @id @default(uuid())
-  patientId    String
-  doctorId     String?      // assigned later after AI recommendation or review
-  symptoms     Json
-  predictedDiseases Json    // e.g. [{ name: 'Malaria', probability: 0.82 }]
-  recommendations String?
-  status       String       @default("PENDING") // PENDING | REVIEWED | CONFIRMED
-  createdAt    DateTime     @default(now())
-  updatedAt    DateTime     @updatedAt
+  id                String   @id @default(uuid())
+  patientId         String
+  doctorId          String? // assigned later after AI recommendation or review
+  symptoms          Json
+  predictedDiseases Json // e.g. [{ name: 'Malaria', probability: 0.82 }]
+  recommendations   String?
+  status            String   @default("PENDING") // PENDING | REVIEWED | CONFIRMED
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
 
-  patient      Patient      @relation(fields: [patientId], references: [id])
-  doctor       Doctor?      @relation(fields: [doctorId], references: [id])
+  patient       Patient        @relation(fields: [patientId], references: [id])
+  doctor        Doctor?        @relation(fields: [doctorId], references: [id])
   prescriptions Prescription[]
 }
-
-
 
 model BlogPost {
   id        String    @id @default(uuid())
@@ -208,12 +209,30 @@ model BlogPost {
 }
 
 model Comment {
-  id        String   @id @default(uuid())
-  post      BlogPost @relation(fields: [postId], references: [id])
-  postId    String
-  author    User     @relation(fields: [authorId], references: [id])
-  authorId  String
-  content   String
-  createdAt DateTime @default(now())
-  moderated Boolean  @default(false)
+  id         String   @id @default(uuid())
+  content    String
+  authorId   String
+  blogPostId String
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+  isApproved Boolean  @default(true) // For admin moderation
+
+  author   Patient  @relation(fields: [authorId], references: [id])
+  blogPost BlogPost @relation(fields: [blogPostId], references: [id])
+  User     User?    @relation(fields: [userId], references: [id])
+  userId   String?
+}
+
+model Notification {
+  id          String    @id @default(uuid())
+  title       String
+  message     String
+  userId      String
+  type        String // EMAIL | IN_APP | BOTH
+  isRead      Boolean   @default(false)
+  createdAt   DateTime  @default(now())
+  scheduledAt DateTime?
+  deliveredAt DateTime?
+
+  user User @relation(fields: [userId], references: [id])
 }
