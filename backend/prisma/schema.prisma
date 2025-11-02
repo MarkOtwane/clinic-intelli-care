@@ -92,6 +92,8 @@ model Patient {
   Prescription Prescription[]
 
   Symptom Symptom[]
+
+  Analysis Analysis[]
 }
 
 model Doctor {
@@ -148,18 +150,27 @@ model Appointment {
   patientId String
   doctor    Doctor  @relation(fields: [doctorId], references: [id])
   doctorId  String
+
+  Prescription Prescription[]
 }
 
 model Prescription {
-  id          String   @id @default(uuid())
-  patient     Patient  @relation(fields: [patientId], references: [id])
-  patientId   String
-  doctor      Doctor?  @relation(fields: [doctorId], references: [id])
-  doctorId    String?
-  medications Json // structured medication info
-  notes       String?
-  createdAt   DateTime @default(now())
+  id             String      @id @default(uuid())
+  patientId      String
+  doctorId       String
+  appointmentId  String?     // optional link to an appointment
+  analysisId     String?     // optional link to AI analysis
+  medications    Json        // array of medication objects
+  notes          String?
+  createdAt      DateTime    @default(now())
+  updatedAt      DateTime    @updatedAt
+
+  patient        Patient     @relation(fields: [patientId], references: [id])
+  doctor         Doctor      @relation(fields: [doctorId], references: [id])
+  appointment    Appointment? @relation(fields: [appointmentId], references: [id])
+  analysis       Analysis?   @relation(fields: [analysisId], references: [id])
 }
+
 
 model Analysis {
   id           String      @id @default(uuid())
@@ -170,6 +181,8 @@ model Analysis {
 
   patient      Patient     @relation(fields: [patientId], references: [id])
   patientId    String
+
+  Prescription Prescription[]
 }
 
 
