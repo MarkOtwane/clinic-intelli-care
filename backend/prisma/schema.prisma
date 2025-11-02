@@ -14,20 +14,20 @@ enum Role {
 }
 
 model User {
-  id             String          @id @default(uuid())
-  email          String          @unique
-  password       String
-  role           Role
-  createdAt      DateTime        @default(now())
-  updatedAt      DateTime        @updatedAt
+  id        String   @id @default(uuid())
+  email     String   @unique
+  password  String
+  role      Role
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   // Relationships
-  patientProfile Patient?        @relation(fields: [patientId], references: [id])
-  patientId      String? @unique
-  doctorProfile  Doctor?         @relation(fields: [doctorId], references: [id])
-  doctorId       String? @unique
+  patientProfile Patient? @relation(fields: [patientId], references: [id])
+  patientId      String?  @unique
+  doctorProfile  Doctor?  @relation(fields: [doctorId], references: [id])
+  doctorId       String?  @unique
 
-  refreshTokens  RefreshToken[]
+  refreshTokens RefreshToken[]
 
   Comment Comment[]
 
@@ -35,7 +35,6 @@ model User {
 
   Profile Profile[]
 }
-
 
 model RefreshToken {
   id        String   @id @default(uuid())
@@ -77,17 +76,17 @@ model Media {
 }
 
 model Patient {
-  id          String       @id @default(uuid())
+  id          String   @id @default(uuid())
   name        String
   age         Int?
   gender      String?
   address     String?
   phone       String?
   medicalData Json?
-  createdAt   DateTime     @default(now())
-  updatedAt   DateTime     @updatedAt
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
 
-  user        User?
+  user         User?
   appointments Appointment[]
 
   Prescription Prescription[]
@@ -109,7 +108,7 @@ model Doctor {
   user         User?          @relation(fields: [userId], references: [id])
   appointments Appointment[]
   blogPosts    BlogPost[]
-  userId       String? @unique
+  userId       String?        @unique
   Prediction   Prediction[]
   Prescription Prescription[]
 }
@@ -137,16 +136,18 @@ model Prediction {
 }
 
 model Appointment {
-  id        String    @id @default(uuid())
-  patient   Patient   @relation(fields: [patientId], references: [id])
+  id        String   @id @default(uuid())
+  date      DateTime
+  time      String
+  status    String   @default("PENDING") // PENDING, CONFIRMED, COMPLETED, CANCELLED
+  notes     String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  patient   Patient @relation(fields: [patientId], references: [id])
   patientId String
-  doctor    Doctor?   @relation(fields: [doctorId], references: [id])
-  doctorId  String?
-  startTime DateTime
-  endTime   DateTime?
-  status    String    @default("PENDING") // PENDING, CONFIRMED, CANCELLED, COMPLETED
-  reason    String?
-  createdAt DateTime  @default(now())
+  doctor    Doctor  @relation(fields: [doctorId], references: [id])
+  doctorId  String
 }
 
 model Prescription {
@@ -159,6 +160,18 @@ model Prescription {
   notes       String?
   createdAt   DateTime @default(now())
 }
+
+model Analysis {
+  id           String      @id @default(uuid())
+  symptoms     String
+  predictedDiseases Json
+  recommendations  String?
+  createdAt    DateTime    @default(now())
+
+  patient      Patient     @relation(fields: [patientId], references: [id])
+  patientId    String
+}
+
 
 model BlogPost {
   id        String    @id @default(uuid())
