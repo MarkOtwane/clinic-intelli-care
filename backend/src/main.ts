@@ -1,15 +1,54 @@
 /* eslint-disable @typescript-eslint/no-floating-promises */
+import { ValidationPipe } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import { NestFactory, Reflector } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { JwtAuthGuard } from './auth/guards/jwt-auth.guard';
 import { RolesGuard } from './auth/guards/roles.guard';
 
+/**
+ * Bootstrap function to initialize the NestJS application
+ * Configures CORS, validation pipes, global guards, and API prefix
+ */
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
+  const configService = app.get(ConfigService);
 
+  // Enable CORS for frontend communication
+  app.enableCors({
+    origin: configService.get<string>('FRONTEND_URL') || '*',
+    credentials: true,
+    methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization'],
+  });
+
+  // Global validation pipe for DTOs
+  app.useGlobalPipes(
+    new ValidationPipe({
+      whitelist: true, // Strip properties that don't have decorators
+      forbidNonWhitelisted: true, // Throw error if non-whitelisted properties are sent
+      transform: true, // Automatically transform payloads to DTO instances
+      transformOptions: {
+        enableImplicitConversion: true, // Enable implicit type conversion
+      },
+    }),
+  );
+
+  // Global guards for authentication and authorization
   const reflector = app.get(Reflector);
   app.useGlobalGuards(new JwtAuthGuard(), new RolesGuard(reflector));
 
-  await app.listen(3000);
+  // API prefix for all routes
+  app.setGlobalPrefix('api');
+
+  // Get port from environment or default to 3000
+  const port = configService.get<number>('PORT') || 3000;
+
+  await app.listen(port);
+  console.log(`🚀 Application is running on: http://localhost:${port}/api`);
+  console.log(
+    `📚 API Documentation available at: http://localhost:${port}/api`,
+  );
 }
+
 bootstrap();

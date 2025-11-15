@@ -1,59 +1,169 @@
 import {
-  Controller,
-  Post,
-  Get,
-  Patch,
-  Delete,
+  BadRequestException,
   Body,
+  Controller,
+  Delete,
+  Get,
   Param,
+  Patch,
+  Post,
+  Query,
   UseGuards,
 } from '@nestjs/common';
-import { AppointmentsService } from './appointments.service';
-import { CreateAppointmentDto } from './dto/create-appointment.dto';
-import { UpdateAppointmentDto } from './dto/update-appointment.dto';
-import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
-import { RolesGuard } from '../auth/guards/roles.guard';
 import { Roles } from '../auth/decorators/roles.decorator';
 import { CurrentUser } from '../auth/decorators/user.decorator';
+import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { RolesGuard } from '../auth/guards/roles.guard';
+import { PrismaService } from '../prisma/prisma.service';
+import { AppointmentsService } from './appointments.service';
+import { CreateAppointmentDto } from './dtos/create-appointment.dto';
+import { UpdateAppointmentDto } from './dtos/update-appointment.dto';
 
+/**
+ * Controller for appointment management
+ * Handles appointment booking, intelligent routing, and availability checks
+ */
 @Controller('appointments')
 @UseGuards(JwtAuthGuard, RolesGuard)
 export class AppointmentsController {
-  constructor(private readonly appointmentsService: AppointmentsService) {}
+  constructor(
+    private readonly appointmentsService: AppointmentsService,
+    private prisma: PrismaService,
+  ) {}
 
+  /**
+   * Create appointment with optional intelligent routing (PATIENT only)
+   * Can auto-assign doctor based on AI analysis if analysisId provided
+   */
   @Post()
   @Roles('PATIENT')
-  createAppointment(
+  async createAppointment(
     @Body() dto: CreateAppointmentDto,
-    @CurrentUser('id') patientId: string,
+    @CurrentUser('id') userId: string,
+    @Query('analysisId') analysisId?: string,
   ) {
-    return this.appointmentsService.createAppointment(dto, patientId);
+    // Get patient ID from user
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+      include: { patientProfile: true },
+    });
+
+    if (!user || !user.patientProfile) {
+      throw new BadRequestException('Patient profile not found');
+    }
+
+    return this.appointmentsService.createAppointment(
+      dto,
+      user.patientProfile.id,
+      analysisId,
+    );
   }
 
+  /**
+   * Get suggested doctors based on AI analysis (PATIENT only)
+   * Shows recommended doctors before booking
+   */
+  @Get('suggested-doctors/:analysisId')
+  @Roles('PATIENT')
+  getSuggestedDoctors(@Param('analysisId') analysisId: string) {
+    return this.appointmentsService.getSuggestedDoctors(analysisId);
+  }
+
+  /**
+   * Get available time slots for a doctor on a specific date
+   * Used for appointment booking UI
+   */
+  @Get('available-slots/:doctorId')
+  @Roles('PATIENT', 'DOCTOR', 'ADMIN')
+  getAvailableTimeSlots(
+    @Param('doctorId') doctorId: string,
+    @Query('date') date: string,
+  ) {
+    if (!date) {
+      throw new BadRequestException('Date query parameter is required');
+    }
+    return this.appointmentsService.getAvailableTimeSlots(doctorId, date);
+  }
+
+  /**
+   * Get all appointments (ADMIN only)
+   */
   @Get()
   @Roles('ADMIN')
   getAllAppointments() {
     return this.appointmentsService.getAllAppointments();
   }
 
+  /**
+   * Get appointments for current patient (PATIENT only)
+   */
+  @Get('my-appointments')
+  @Roles('PATIENT')
+  async getMyAppointments(@CurrentUser('id') userId: string) {
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+      include: { patientProfile: true },
+    });
+
+    if (!user || !user.patientProfile) {
+      throw new BadRequestException('Patient profile not found');
+    }
+
+    return this.appointmentsService.getAppointmentsByPatient(
+      user.patientProfile.id,
+    );
+  }
+
+  /**
+   * Get appointments for current doctor (DOCTOR only)
+   */
+  @Get('my-doctor-appointments')
+  @Roles('DOCTOR')
+  async getMyDoctorAppointments(@CurrentUser('id') userId: string) {
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+      include: { doctorProfile: true },
+    });
+
+    if (!user || !user.doctorProfile) {
+      throw new BadRequestException('Doctor profile not found');
+    }
+
+    return this.appointmentsService.getAppointmentsByDoctor(
+      user.doctorProfile.id,
+    );
+  }
+
+  /**
+   * Get single appointment by ID
+   */
   @Get(':id')
   @Roles('ADMIN', 'DOCTOR', 'PATIENT')
   getAppointmentById(@Param('id') id: string) {
     return this.appointmentsService.getAppointmentById(id);
   }
 
+  /**
+   * Get appointments for a specific patient (by patient ID)
+   */
   @Get('patient/:patientId')
-  @Roles('PATIENT')
+  @Roles('ADMIN', 'DOCTOR')
   getAppointmentsByPatient(@Param('patientId') patientId: string) {
     return this.appointmentsService.getAppointmentsByPatient(patientId);
   }
 
+  /**
+   * Get appointments for a specific doctor (by doctor ID)
+   */
   @Get('doctor/:doctorId')
-  @Roles('DOCTOR')
+  @Roles('ADMIN')
   getAppointmentsByDoctor(@Param('doctorId') doctorId: string) {
     return this.appointmentsService.getAppointmentsByDoctor(doctorId);
   }
 
+  /**
+   * Update appointment (DOCTOR, ADMIN only)
+   */
   @Patch(':id')
   @Roles('DOCTOR', 'ADMIN')
   updateAppointment(
@@ -64,12 +174,27 @@ export class AppointmentsController {
     return this.appointmentsService.updateAppointment(id, dto, role);
   }
 
+  /**
+   * Cancel appointment (PATIENT only, own appointments)
+   */
   @Delete(':id')
   @Roles('PATIENT')
-  cancelAppointment(
+  async cancelAppointment(
     @Param('id') id: string,
-    @CurrentUser('id') patientId: string,
+    @CurrentUser('id') userId: string,
   ) {
-    return this.appointmentsService.cancelAppointment(id, patientId);
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+      include: { patientProfile: true },
+    });
+
+    if (!user || !user.patientProfile) {
+      throw new BadRequestException('Patient profile not found');
+    }
+
+    return this.appointmentsService.cancelAppointment(
+      id,
+      user.patientProfile.id,
+    );
   }
 }
