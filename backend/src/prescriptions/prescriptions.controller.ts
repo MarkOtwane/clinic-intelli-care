@@ -1,25 +1,30 @@
 import {
-  Controller,
-  Get,
-  Post,
-  Patch,
-  Delete,
+  BadRequestException,
   Body,
+  Controller,
+  Delete,
+  Get,
   Param,
+  Patch,
+  Post,
   UseGuards,
 } from '@nestjs/common';
-import { PrescriptionsService } from './prescriptions.service';
-import { CreatePrescriptionDto } from './dto/create-prescription.dto';
-import { UpdatePrescriptionDto } from './dto/update-prescription.dto';
-import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
-import { RolesGuard } from '../auth/guards/roles.guard';
 import { Roles } from '../auth/decorators/roles.decorator';
 import { CurrentUser } from '../auth/decorators/user.decorator';
+import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { RolesGuard } from '../auth/guards/roles.guard';
+import { PrismaService } from '../prisma/prisma.service';
+import { CreatePrescriptionDto } from './dto/create-prescription.dto';
+import { UpdatePrescriptionDto } from './dto/update-prescription.dto';
+import { PrescriptionsService } from './prescriptions.service';
 
 @Controller('prescriptions')
 @UseGuards(JwtAuthGuard, RolesGuard)
 export class PrescriptionsController {
-  constructor(private readonly prescriptionsService: PrescriptionsService) {}
+  constructor(
+    private readonly prescriptionsService: PrescriptionsService,
+    private prisma: PrismaService,
+  ) {}
 
   @Post()
   @Roles('DOCTOR')
@@ -34,6 +39,25 @@ export class PrescriptionsController {
   @Roles('ADMIN')
   findAll() {
     return this.prescriptionsService.findAll();
+  }
+
+  /**
+   * Get prescriptions for current patient (PATIENT only)
+   * Convenience endpoint that auto-detects patient ID from JWT
+   */
+  @Get('my-prescriptions')
+  @Roles('PATIENT')
+  async findMyPrescriptions(@CurrentUser('id') userId: string) {
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+      include: { patientProfile: true },
+    });
+
+    if (!user || !user.patientProfile) {
+      throw new BadRequestException('Patient profile not found');
+    }
+
+    return this.prescriptionsService.findByPatient(user.patientProfile.id);
   }
 
   @Get('patient/:id')

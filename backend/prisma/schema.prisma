@@ -22,9 +22,9 @@ model User {
   updatedAt DateTime @updatedAt
 
   // Relationships
-  patientProfile Patient? @relation(fields: [patientId], references: [id])
+  patientProfile Patient? @relation("PatientUser", fields: [patientId], references: [id])
   patientId      String?  @unique
-  doctorProfile  Doctor?  @relation(fields: [doctorId], references: [id])
+  doctorProfile  Doctor?  @relation("DoctorUser", fields: [doctorId], references: [id])
   doctorId       String?  @unique
 
   refreshTokens RefreshToken[]
@@ -88,7 +88,7 @@ model Patient {
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
-  user         User?
+  user         User?         @relation("PatientUser")
   appointments Appointment[]
 
   Prescription Prescription[]
@@ -111,7 +111,7 @@ model Doctor {
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
 
-  user         User?          @relation(fields: [userId], references: [id])
+  user         User?          @relation("DoctorUser")
   appointments Appointment[]
   blogPosts    BlogPost[]
   userId       String?        @unique

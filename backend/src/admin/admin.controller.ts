@@ -1,20 +1,21 @@
 import {
+  Body,
   Controller,
+  Delete,
   Get,
   Param,
   Patch,
-  Delete,
-  Body,
   UseGuards,
 } from '@nestjs/common';
+import { Roles } from '../auth/decorators/roles.decorator';
+import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { RolesGuard } from '../auth/guards/roles.guard';
 import { AdminService } from './admin.service';
-import { UpdateUserDto } from './dto/update-user.dto';
 import { ManageRoleDto } from './dto/manage-role.dto';
-import { RolesGuard } from 'src/modules/auth/guards/roles.guard';
-import { Roles } from 'src/modules/auth/decorators/roles.decorator';
+import { UpdateUserDto } from './dto/update-user.dto';
 
 @Controller('admin')
-@UseGuards(RolesGuard)
+@UseGuards(JwtAuthGuard, RolesGuard)
 @Roles('ADMIN')
 export class AdminController {
   constructor(private adminService: AdminService) {}

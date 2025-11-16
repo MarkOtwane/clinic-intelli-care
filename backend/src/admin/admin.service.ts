@@ -1,7 +1,7 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
-import { PrismaService } from 'src/prisma.service';
-import { UpdateUserDto } from './dto/update-user.dto';
+import { PrismaService } from '../prisma/prisma.service';
 import { ManageRoleDto } from './dto/manage-role.dto';
+import { UpdateUserDto } from './dto/update-user.dto';
 
 @Injectable()
 export class AdminService {
@@ -11,14 +11,14 @@ export class AdminService {
 
   async getAllUsers() {
     return this.prisma.user.findMany({
-      include: { doctor: true, patient: true },
+      include: { doctorProfile: true, patientProfile: true },
     });
   }
 
   async getUserById(id: string) {
     const user = await this.prisma.user.findUnique({
       where: { id },
-      include: { doctor: true, patient: true },
+      include: { doctorProfile: true, patientProfile: true },
     });
     if (!user) throw new NotFoundException('User not found');
     return user;
@@ -57,13 +57,13 @@ export class AdminService {
 
   async getAllBlogs() {
     return this.prisma.blogPost.findMany({
-      include: { doctor: true, comments: true },
+      include: { author: true, comments: true },
     });
   }
 
   async getAllComments() {
     return this.prisma.comment.findMany({
-      include: { user: true, blog: true },
+      include: { author: true, blogPost: true },
     });
   }
 }
