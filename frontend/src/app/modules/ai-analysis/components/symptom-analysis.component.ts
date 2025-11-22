@@ -236,7 +236,7 @@ import {
         <mat-card-content>
           <p>To provide more accurate results, please answer these follow-up questions:</p>
           
-          <div class="followup-question" *ngFor="let question of currentAnalysis.followUpQuestions || []">
+          <div class="followup-question" *ngFor="let question of (currentAnalysis?.followUpQuestions || [])">
             <h4>{{ question.question }}</h4>
             
             <div [ngSwitch]="question.type">

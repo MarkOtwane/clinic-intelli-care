@@ -63,7 +63,10 @@ export class BlogService {
    * Get all blogs
    */
   getAllBlogs(published?: boolean): Observable<Blog[]> {
-    const params = published !== undefined ? { published: published.toString() } : {};
+    let params: Record<string, string> = {};
+    if (published !== undefined) {
+      params['published'] = published.toString();
+    }
     return this.http.get<Blog[]>(this.apiUrl, { params });
   }
 
