@@ -103,10 +103,10 @@ export const routes: Routes = [
   {
     path: '',
     pathMatch: 'full',
-    redirectTo: 'dashboard',
+    redirectTo: 'auth/login',
   },
   {
     path: '**',
-    redirectTo: 'dashboard',
+    redirectTo: 'auth/login',
   },
 ];
