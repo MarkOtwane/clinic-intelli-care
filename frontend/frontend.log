@@ -1,0 +1,383 @@
+
+> frontend@0.0.0 start
+> ng serve
+
+Component HMR has been enabled, see https://angular.dev/hmr for more info.
+❯ Building...
+✔ Building...
+Initial chunk files | Names                       |  Raw size
+polyfills.js        | polyfills                   |  89.77 kB | 
+main.js             | main                        |  31.44 kB | 
+chunk-EB6DPLU2.js   | -                           |   3.28 kB | 
+chunk-MY2TTPYP.js   | -                           |   3.02 kB | 
+chunk-CZJLB7T5.js   | -                           |   1.08 kB | 
+chunk-R2CIRXN4.js   | -                           | 836 bytes | 
+chunk-NTE3OBSC.js   | -                           | 276 bytes | 
+styles.css          | styles                      |  95 bytes | 
+
+                    | Initial total               | 129.79 kB
+
+Lazy chunk files    | Names                       |  Raw size
+chunk-SB2C6TE5.js   | patients-module             | 131.39 kB | 
+chunk-PLQ4Y4Y4.js   | appointments-module         | 124.36 kB | 
+chunk-DX2TYGO2.js   | prescriptions-module        | 109.71 kB | 
+chunk-M5VF4FGM.js   | doctors-module              |  69.21 kB | 
+chunk-BI7OGGXB.js   | auth-module                 |  56.62 kB | 
+chunk-XVEO3MIK.js   | ai-analysis-module          |  54.29 kB | 
+chunk-T2XMYUPY.js   | admin-dashboard-component   |  51.24 kB | 
+chunk-YGAYNENB.js   | profile-settings-component  |  15.13 kB | 
+chunk-MOKIPB4X.js   | patient-dashboard-component |  12.94 kB | 
+chunk-PQLUSOGQ.js   | blog-list-component         |  11.68 kB | 
+chunk-WTCAXCW5.js   | notification-list-component |   9.06 kB | 
+chunk-UUSEH6EY.js   | -                           |   4.52 kB | 
+chunk-JL3LSJGA.js   | -                           |   3.99 kB | 
+chunk-NWTIBDX6.js   | patients-component          |   2.17 kB | 
+chunk-HZ7TFGXH.js   | doctors-component           |   2.14 kB | 
+...and 6 more lazy chunks files. Use "--verbose" to show all the files.
+
+Application bundle generation complete. [13.800 seconds]
+
+Watch mode enabled. Watching for file changes...
+NOTE: Raw file sizes do not reflect development server per-request transformations.
+7:52:33 AM [vite] (client) Re-optimizing dependencies because lockfile has changed
+7:52:33 AM [vite] (ssr) Re-optimizing dependencies because lockfile has changed
+  ➜  Local:   http://localhost:4200/
+❯ Changes detected. Rebuilding...
+✔ Changes detected. Rebuilding...
+Initial chunk files | Names  | Raw size
+styles.css          | styles |  8.26 kB | 
+
+Application bundle generation complete. [0.725 seconds]
+
+▲ [WARNING] All "@import" rules must come first [invalid-@import]
+
+    src/styles.css:98:0:
+      98 │ @import url('https://fonts.googleapis.com/css2?family=Inter:wght@3...
+         ╵ ~~~~~~~
+
+  This rule cannot come before an "@import" rule
+
+    src/styles.css:4:0:
+      4 │ :root {
+        ╵ ^
+
+
+Stylesheet update sent to client(s).
+❯ Changes detected. Rebuilding...
+✔ Changes detected. Rebuilding...
+Initial chunk files | Names       | Raw size
+main.js             | main        | 31.44 kB | 
+
+Lazy chunk files    | Names       | Raw size
+chunk-TDE6RSLZ.js   | auth-module | 56.29 kB | 
+
+Application bundle generation complete. [127.877 seconds]
+
+▲ [WARNING] All "@import" rules must come first [invalid-@import]
+
+    src/styles.css:98:0:
+      98 │ @import url('https://fonts.googleapis.com/css2?family=Inter:wght@3...
+         ╵ ~~~~~~~
+
+  This rule cannot come before an "@import" rule
+
+    src/styles.css:4:0:
+      4 │ :root {
+        ╵ ^
+
+
+Page reload sent to client(s).
+❯ Changes detected. Rebuilding...
+✔ Changes detected. Rebuilding...
+Initial chunk files | Names                       |  Raw size
+polyfills.js        | polyfills                   |  89.77 kB | 
+main.js             | main                        |  31.44 kB | 
+styles.css          | styles                      |   8.26 kB | 
+chunk-EB6DPLU2.js   | -                           |   3.28 kB | 
+chunk-MY2TTPYP.js   | -                           |   3.02 kB | 
+chunk-CZJLB7T5.js   | -                           |   1.08 kB | 
+chunk-R2CIRXN4.js   | -                           | 836 bytes | 
+chunk-NTE3OBSC.js   | -                           | 276 bytes | 
+
+                    | Initial total               | 137.96 kB
+
+Lazy chunk files    | Names                       |  Raw size
+chunk-SB2C6TE5.js   | patients-module             | 131.39 kB | 
+chunk-PLQ4Y4Y4.js   | appointments-module         | 124.36 kB | 
+chunk-DX2TYGO2.js   | prescriptions-module        | 109.71 kB | 
+chunk-M5VF4FGM.js   | doctors-module              |  69.21 kB | 
+chunk-TDE6RSLZ.js   | auth-module                 |  56.29 kB | 
+chunk-XVEO3MIK.js   | ai-analysis-module          |  54.29 kB | 
+chunk-T2XMYUPY.js   | admin-dashboard-component   |  51.24 kB | 
+chunk-YGAYNENB.js   | profile-settings-component  |  15.13 kB | 
+chunk-MOKIPB4X.js   | patient-dashboard-component |  12.94 kB | 
+chunk-PQLUSOGQ.js   | blog-list-component         |  11.68 kB | 
+chunk-WTCAXCW5.js   | notification-list-component |   9.06 kB | 
+chunk-UUSEH6EY.js   | -                           |   4.52 kB | 
+chunk-JL3LSJGA.js   | -                           |   3.99 kB | 
+chunk-NWTIBDX6.js   | patients-component          |   2.17 kB | 
+chunk-HZ7TFGXH.js   | doctors-component           |   2.14 kB | 
+...and 6 more lazy chunks files. Use "--verbose" to show all the files.
+
+Application bundle generation complete. [1.539 seconds]
+
+▲ [WARNING] All "@import" rules must come first [invalid-@import]
+
+    src/styles.css:98:0:
+      98 │ @import url('https://fonts.googleapis.com/css2?family=Inter:wght@3...
+         ╵ ~~~~~~~
+
+  This rule cannot come before an "@import" rule
+
+    src/styles.css:4:0:
+      4 │ :root {
+        ╵ ^
+
+
+❯ Changes detected. Rebuilding...
+✔ Changes detected. Rebuilding...
+Initial chunk files | Names       | Raw size
+main.js             | main        | 31.44 kB | 
+
+Lazy chunk files    | Names       | Raw size
+chunk-QYLT4IZI.js   | auth-module | 57.54 kB | 
+
+Application bundle generation complete. [4.579 seconds]
+
+▲ [WARNING] All "@import" rules must come first [invalid-@import]
+
+    src/styles.css:98:0:
+      98 │ @import url('https://fonts.googleapis.com/css2?family=Inter:wght@3...
+         ╵ ~~~~~~~
+
+  This rule cannot come before an "@import" rule
+
+    src/styles.css:4:0:
+      4 │ :root {
+        ╵ ^
+
+
+Component update sent to client(s).
+❯ Changes detected. Rebuilding...
+✔ Changes detected. Rebuilding...
+Initial chunk files | Names       | Raw size
+main.js             | main        | 31.44 kB | 
+
+Lazy chunk files    | Names       | Raw size
+chunk-RAEOM56S.js   | auth-module | 62.72 kB | 
+
+Application bundle generation complete. [4.034 seconds]
+
+▲ [WARNING] All "@import" rules must come first [invalid-@import]
+
+    src/styles.css:98:0:
+      98 │ @import url('https://fonts.googleapis.com/css2?family=Inter:wght@3...
+         ╵ ~~~~~~~
+
+  This rule cannot come before an "@import" rule
+
+    src/styles.css:4:0:
+      4 │ :root {
+        ╵ ^
+
+
+Component update sent to client(s).
+❯ Changes detected. Rebuilding...
+✔ Changes detected. Rebuilding...
+Initial chunk files | Names       | Raw size
+main.js             | main        | 31.44 kB | 
+
+Lazy chunk files    | Names       | Raw size
+chunk-OQMZLC2G.js   | auth-module | 62.72 kB | 
+
+Application bundle generation complete. [3.056 seconds]
+
+▲ [WARNING] All "@import" rules must come first [invalid-@import]
+
+    src/styles.css:98:0:
+      98 │ @import url('https://fonts.googleapis.com/css2?family=Inter:wght@3...
+         ╵ ~~~~~~~
+
+  This rule cannot come before an "@import" rule
+
+    src/styles.css:4:0:
+      4 │ :root {
+        ╵ ^
+
+
+Page reload sent to client(s).
+❯ Changes detected. Rebuilding...
+✔ Changes detected. Rebuilding...
+Initial chunk files | Names       | Raw size
+main.js             | main        | 31.44 kB | 
+
+Lazy chunk files    | Names       | Raw size
+chunk-S33XYPH6.js   | auth-module | 69.20 kB | 
+
+Application bundle generation complete. [4.838 seconds]
+
+▲ [WARNING] All "@import" rules must come first [invalid-@import]
+
+    src/styles.css:98:0:
+      98 │ @import url('https://fonts.googleapis.com/css2?family=Inter:wght@3...
+         ╵ ~~~~~~~
+
+  This rule cannot come before an "@import" rule
+
+    src/styles.css:4:0:
+      4 │ :root {
+        ╵ ^
+
+
+Component update sent to client(s).
+❯ Changes detected. Rebuilding...
+✔ Changes detected. Rebuilding...
+Initial chunk files | Names       | Raw size
+main.js             | main        | 31.44 kB | 
+
+Lazy chunk files    | Names       | Raw size
+chunk-FTFRI56O.js   | auth-module | 69.20 kB | 
+
+Application bundle generation complete. [3.475 seconds]
+
+▲ [WARNING] All "@import" rules must come first [invalid-@import]
+
+    src/styles.css:98:0:
+      98 │ @import url('https://fonts.googleapis.com/css2?family=Inter:wght@3...
+         ╵ ~~~~~~~
+
+  This rule cannot come before an "@import" rule
+
+    src/styles.css:4:0:
+      4 │ :root {
+        ╵ ^
+
+
+Page reload sent to client(s).
+❯ Changes detected. Rebuilding...
+✔ Changes detected. Rebuilding...
+Initial chunk files | Names       | Raw size
+main.js             | main        | 31.44 kB | 
+
+Lazy chunk files    | Names       | Raw size
+chunk-TVHWK7JI.js   | auth-module | 76.32 kB | 
+
+Application bundle generation complete. [5.092 seconds]
+
+▲ [WARNING] All "@import" rules must come first [invalid-@import]
+
+    src/styles.css:98:0:
+      98 │ @import url('https://fonts.googleapis.com/css2?family=Inter:wght@3...
+         ╵ ~~~~~~~
+
+  This rule cannot come before an "@import" rule
+
+    src/styles.css:4:0:
+      4 │ :root {
+        ╵ ^
+
+
+Component update sent to client(s).
+❯ Changes detected. Rebuilding...
+✔ Changes detected. Rebuilding...
+Initial chunk files | Names       | Raw size
+main.js             | main        | 31.44 kB | 
+
+Lazy chunk files    | Names       | Raw size
+chunk-SEPQFZON.js   | auth-module | 76.32 kB | 
+
+Application bundle generation complete. [3.576 seconds]
+
+▲ [WARNING] All "@import" rules must come first [invalid-@import]
+
+    src/styles.css:98:0:
+      98 │ @import url('https://fonts.googleapis.com/css2?family=Inter:wght@3...
+         ╵ ~~~~~~~
+
+  This rule cannot come before an "@import" rule
+
+    src/styles.css:4:0:
+      4 │ :root {
+        ╵ ^
+
+
+Page reload sent to client(s).
+❯ Changes detected. Rebuilding...
+✔ Changes detected. Rebuilding...
+Initial chunk files | Names                       | Raw size
+main.js             | main                        | 31.44 kB | 
+
+Lazy chunk files    | Names                       | Raw size
+chunk-AY27TRDF.js   | patient-dashboard-component | 23.79 kB | 
+chunk-FOM7MIHH.js   | dashboard-module            |  1.19 kB | 
+
+Application bundle generation complete. [3.378 seconds]
+
+▲ [WARNING] All "@import" rules must come first [invalid-@import]
+
+    src/styles.css:98:0:
+      98 │ @import url('https://fonts.googleapis.com/css2?family=Inter:wght@3...
+         ╵ ~~~~~~~
+
+  This rule cannot come before an "@import" rule
+
+    src/styles.css:4:0:
+      4 │ :root {
+        ╵ ^
+
+
+Component update sent to client(s).
+❯ Changes detected. Rebuilding...
+✔ Changes detected. Rebuilding...
+Initial chunk files | Names                       | Raw size
+main.js             | main                        | 31.44 kB | 
+
+Lazy chunk files    | Names                       | Raw size
+chunk-6MBIA47M.js   | patient-dashboard-component | 33.97 kB | 
+chunk-DM3LNVYO.js   | dashboard-module            |  1.19 kB | 
+
+Application bundle generation complete. [2.343 seconds]
+
+▲ [WARNING] All "@import" rules must come first [invalid-@import]
+
+    src/styles.css:98:0:
+      98 │ @import url('https://fonts.googleapis.com/css2?family=Inter:wght@3...
+         ╵ ~~~~~~~
+
+  This rule cannot come before an "@import" rule
+
+    src/styles.css:4:0:
+      4 │ :root {
+        ╵ ^
+
+
+Component update sent to client(s).
+❯ Changes detected. Rebuilding...
+✔ Changes detected. Rebuilding...
+Initial chunk files | Names  | Raw size
+styles.css          | styles |  8.36 kB | 
+
+Application bundle generation complete. [0.128 seconds]
+
+▲ [WARNING] All "@import" rules must come first [invalid-@import]
+
+    src/styles.css:101:0:
+      101 │ @import url('https://fonts.googleapis.com/css2?family=Inter:wght@...
+          ╵ ~~~~~~~
+
+  This rule cannot come before an "@import" rule
+
+    src/styles.css:7:0:
+      7 │ :root {
+        ╵ ^
+
+
+Stylesheet update sent to client(s).
+❯ Changes detected. Rebuilding...
+✔ Changes detected. Rebuilding...
+Initial chunk files | Names  | Raw size
+styles.css          | styles |  8.26 kB | 
+
+Application bundle generation complete. [0.037 seconds]
+
+Stylesheet update sent to client(s).

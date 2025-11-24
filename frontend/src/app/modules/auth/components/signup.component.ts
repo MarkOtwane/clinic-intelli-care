@@ -38,167 +38,228 @@ import { UserRole } from '../../../core/models/user.model';
   ],
   template: `
     <div class="signup-container">
-      <mat-card class="signup-card">
-        <mat-card-header>
-          <mat-card-title>Join Clinic IntelliCare</mat-card-title>
-          <mat-card-subtitle>Create your account</mat-card-subtitle>
-        </mat-card-header>
+      <div class="signup-card healthcare-card fade-in">
+        <div class="signup-header">
+          <div class="logo-section">
+            <mat-icon class="logo-icon icon-medical">local_hospital</mat-icon>
+            <h1 class="app-title">Join Clinic IntelliCare</h1>
+          </div>
+          <p class="signup-subtitle">Create your healthcare account</p>
+        </div>
         
-        <mat-card-content>
+        <div class="signup-content">
           <mat-stepper [linear]="true" #stepper>
             <!-- Step 1: Basic Information -->
             <mat-step label="Basic Information">
-              <form [formGroup]="basicInfoForm">
-                <h3>Basic Information</h3>
+              <div class="step-content">
+                <h3 class="step-title">Personal Information</h3>
+                <p class="step-description">Tell us about yourself</p>
                 
-                <div class="name-fields">
-                  <mat-form-field appearance="outline" class="half-width">
-                    <mat-label>First Name</mat-label>
-                    <input matInput formControlName="firstName" placeholder="Enter your first name">
-                    <mat-error *ngIf="basicInfoForm.get('firstName')?.hasError('required')">
-                      First name is required
-                    </mat-error>
-                  </mat-form-field>
+                <form [formGroup]="basicInfoForm" class="step-form">
+                  <div class="name-fields">
+                    <div class="form-group">
+                      <mat-form-field appearance="outline" class="half-width">
+                        <mat-label>First Name</mat-label>
+                        <input matInput formControlName="firstName" placeholder="Enter your first name">
+                        <mat-icon matSuffix class="icon-health">person</mat-icon>
+                        <mat-error *ngIf="basicInfoForm.get('firstName')?.hasError('required')">
+                          First name is required
+                        </mat-error>
+                      </mat-form-field>
+                    </div>
 
-                  <mat-form-field appearance="outline" class="half-width">
-                    <mat-label>Last Name</mat-label>
-                    <input matInput formControlName="lastName" placeholder="Enter your last name">
-                    <mat-error *ngIf="basicInfoForm.get('lastName')?.hasError('required')">
-                      Last name is required
-                    </mat-error>
-                  </mat-form-field>
-                </div>
+                    <div class="form-group">
+                      <mat-form-field appearance="outline" class="half-width">
+                        <mat-label>Last Name</mat-label>
+                        <input matInput formControlName="lastName" placeholder="Enter your last name">
+                        <mat-icon matSuffix class="icon-health">person</mat-icon>
+                        <mat-error *ngIf="basicInfoForm.get('lastName')?.hasError('required')">
+                          Last name is required
+                        </mat-error>
+                      </mat-form-field>
+                    </div>
+                  </div>
 
-                <mat-form-field appearance="outline" class="full-width">
-                  <mat-label>Email</mat-label>
-                  <input matInput type="email" formControlName="email" placeholder="Enter your email">
-                  <mat-icon matSuffix>email</mat-icon>
-                  <mat-error *ngIf="basicInfoForm.get('email')?.hasError('required')">
-                    Email is required
-                  </mat-error>
-                  <mat-error *ngIf="basicInfoForm.get('email')?.hasError('email')">
-                    Please enter a valid email
-                  </mat-error>
-                </mat-form-field>
+                  <div class="form-group">
+                    <mat-form-field appearance="outline" class="full-width">
+                      <mat-label>Email Address</mat-label>
+                      <input matInput type="email" formControlName="email" placeholder="Enter your email address">
+                      <mat-icon matSuffix class="icon-medical">mail</mat-icon>
+                      <mat-error *ngIf="basicInfoForm.get('email')?.hasError('required')">
+                        Email address is required
+                      </mat-error>
+                      <mat-error *ngIf="basicInfoForm.get('email')?.hasError('email')">
+                        Please enter a valid email address
+                      </mat-error>
+                    </mat-form-field>
+                  </div>
 
-                <mat-form-field appearance="outline" class="full-width">
-                  <mat-label>Phone Number</mat-label>
-                  <input matInput formControlName="phone" placeholder="Enter your phone number">
-                  <mat-icon matSuffix>phone</mat-icon>
-                </mat-form-field>
+                  <div class="form-group">
+                    <mat-form-field appearance="outline" class="full-width">
+                      <mat-label>Phone Number</mat-label>
+                      <input matInput formControlName="phone" placeholder="Enter your phone number">
+                      <mat-icon matSuffix class="icon-health">phone</mat-icon>
+                    </mat-form-field>
+                  </div>
 
-                <div class="button-row">
-                  <button mat-raised-button color="primary" matStepperNext [disabled]="basicInfoForm.invalid">
-                    Next
-                  </button>
-                </div>
-              </form>
+                  <div class="button-row">
+                    <button mat-raised-button color="primary" matStepperNext [disabled]="basicInfoForm.invalid" class="btn-primary">
+                      <mat-icon>arrow_forward</mat-icon>
+                      Continue
+                    </button>
+                  </div>
+                </form>
+              </div>
             </mat-step>
 
             <!-- Step 2: Account Security -->
             <mat-step label="Security">
-              <form [formGroup]="securityForm">
-                <h3>Account Security</h3>
+              <div class="step-content">
+                <h3 class="step-title">Account Security</h3>
+                <p class="step-description">Create a secure password</p>
                 
-                <mat-form-field appearance="outline" class="full-width">
-                  <mat-label>Password</mat-label>
-                  <input 
-                    matInput 
-                    [type]="hidePassword ? 'password' : 'text'" 
-                    formControlName="password"
-                    placeholder="Create a password">
-                  <button 
-                    mat-icon-button 
-                    matSuffix 
-                    type="button"
-                    (click)="hidePassword = !hidePassword">
-                    <mat-icon>{{hidePassword ? 'visibility_off' : 'visibility'}}</mat-icon>
-                  </button>
-                  <mat-error *ngIf="securityForm.get('password')?.hasError('required')">
-                    Password is required
-                  </mat-error>
-                  <mat-error *ngIf="securityForm.get('password')?.hasError('minlength')">
-                    Password must be at least 8 characters
-                  </mat-error>
-                </mat-form-field>
+                <form [formGroup]="securityForm" class="step-form">
+                  <div class="form-group">
+                    <mat-form-field appearance="outline" class="full-width">
+                      <mat-label>Password</mat-label>
+                      <input 
+                        matInput 
+                        [type]="hidePassword ? 'password' : 'text'" 
+                        formControlName="password"
+                        placeholder="Create a secure password">
+                      <button 
+                        mat-icon-button 
+                        matSuffix 
+                        type="button"
+                        (click)="hidePassword = !hidePassword">
+                        <mat-icon>{{hidePassword ? 'visibility_off' : 'visibility'}}</mat-icon>
+                      </button>
+                      <mat-error *ngIf="securityForm.get('password')?.hasError('required')">
+                        Password is required
+                      </mat-error>
+                      <mat-error *ngIf="securityForm.get('password')?.hasError('minlength')">
+                        Password must be at least 8 characters
+                      </mat-error>
+                    </mat-form-field>
+                  </div>
 
-                <mat-form-field appearance="outline" class="full-width">
-                  <mat-label>Confirm Password</mat-label>
-                  <input 
-                    matInput 
-                    [type]="hideConfirmPassword ? 'password' : 'text'" 
-                    formControlName="confirmPassword"
-                    placeholder="Confirm your password">
-                  <button 
-                    mat-icon-button 
-                    matSuffix 
-                    type="button"
-                    (click)="hideConfirmPassword = !hideConfirmPassword">
-                    <mat-icon>{{hideConfirmPassword ? 'visibility_off' : 'visibility'}}</mat-icon>
-                  </button>
-                  <mat-error *ngIf="securityForm.get('confirmPassword')?.hasError('required')">
-                    Please confirm your password
-                  </mat-error>
-                  <mat-error *ngIf="securityForm.hasError('passwordMismatch')">
-                    Passwords do not match
-                  </mat-error>
-                </mat-form-field>
+                  <div class="form-group">
+                    <mat-form-field appearance="outline" class="full-width">
+                      <mat-label>Confirm Password</mat-label>
+                      <input 
+                        matInput 
+                        [type]="hideConfirmPassword ? 'password' : 'text'" 
+                        formControlName="confirmPassword"
+                        placeholder="Confirm your password">
+                      <button 
+                        mat-icon-button 
+                        matSuffix 
+                        type="button"
+                        (click)="hideConfirmPassword = !hideConfirmPassword">
+                        <mat-icon>{{hideConfirmPassword ? 'visibility_off' : 'visibility'}}</mat-icon>
+                      </button>
+                      <mat-error *ngIf="securityForm.get('confirmPassword')?.hasError('required')">
+                        Please confirm your password
+                      </mat-error>
+                      <mat-error *ngIf="securityForm.hasError('passwordMismatch')">
+                        Passwords do not match
+                      </mat-error>
+                    </mat-form-field>
+                  </div>
 
-                <div class="button-row">
-                  <button mat-button matStepperPrevious>Back</button>
-                  <button mat-raised-button color="primary" matStepperNext [disabled]="securityForm.invalid">
-                    Next
-                  </button>
-                </div>
-              </form>
+                  <div class="button-row">
+                    <button mat-button matStepperPrevious class="btn-outline">
+                      <mat-icon>arrow_back</mat-icon>
+                      Back
+                    </button>
+                    <button mat-raised-button color="primary" matStepperNext [disabled]="securityForm.invalid" class="btn-primary">
+                      <mat-icon>arrow_forward</mat-icon>
+                      Continue
+                    </button>
+                  </div>
+                </form>
+              </div>
             </mat-step>
 
             <!-- Step 3: Account Type -->
             <mat-step label="Account Type">
-              <form [formGroup]="accountTypeForm">
-                <h3>Account Type</h3>
-                <p class="step-description">Select the type of account you want to create</p>
+              <div class="step-content">
+                <h3 class="step-title">Account Type</h3>
+                <p class="step-description">Select your account type</p>
                 
-                <mat-form-field appearance="outline" class="full-width">
-                  <mat-label>I am a</mat-label>
-                  <mat-select formControlName="role">
-                    <mat-option value="PATIENT">Patient - Seeking medical care</mat-option>
-                    <mat-option value="DOCTOR">Doctor - Medical professional</mat-option>
-                  </mat-select>
-                  <mat-error *ngIf="accountTypeForm.get('role')?.hasError('required')">
-                    Please select an account type
-                  </mat-error>
-                </mat-form-field>
+                <form [formGroup]="accountTypeForm" class="step-form">
+                  <div class="form-group">
+                    <mat-form-field appearance="outline" class="full-width">
+                      <mat-label>I am a</mat-label>
+                      <mat-select formControlName="role">
+                        <mat-option value="PATIENT">
+                          <div class="option-content">
+                            <mat-icon class="option-icon">person</mat-icon>
+                            <div class="option-text">
+                              <div class="option-title">Patient</div>
+                              <div class="option-subtitle">Seeking medical care</div>
+                            </div>
+                          </div>
+                        </mat-option>
+                        <mat-option value="DOCTOR">
+                          <div class="option-content">
+                            <mat-icon class="option-icon">medical_services</mat-icon>
+                            <div class="option-text">
+                              <div class="option-title">Doctor</div>
+                              <div class="option-subtitle">Medical professional</div>
+                            </div>
+                          </div>
+                        </mat-option>
+                      </mat-select>
+                      <mat-error *ngIf="accountTypeForm.get('role')?.hasError('required')">
+                        Please select an account type
+                      </mat-error>
+                    </mat-form-field>
+                  </div>
 
-                <mat-checkbox formControlName="agreeToTerms" class="full-width">
-                  I agree to the <a href="#" target="_blank">Terms of Service</a> and <a href="#" target="_blank">Privacy Policy</a>
-                </mat-checkbox>
+                  <div class="form-group">
+                    <mat-checkbox formControlName="agreeToTerms" class="full-width terms-checkbox">
+                      <span class="terms-text">
+                        I agree to the 
+                        <a href="#" target="_blank" class="terms-link">Terms of Service</a> 
+                        and 
+                        <a href="#" target="_blank" class="terms-link">Privacy Policy</a>
+                      </span>
+                    </mat-checkbox>
 
-                <mat-error *ngIf="accountTypeForm.get('agreeToTerms')?.hasError('required') && accountTypeForm.get('agreeToTerms')?.touched">
-                  You must agree to the terms and conditions
-                </mat-error>
+                    <mat-error *ngIf="accountTypeForm.get('agreeToTerms')?.hasError('required') && accountTypeForm.get('agreeToTerms')?.touched" class="checkbox-error">
+                      You must agree to the terms and conditions
+                    </mat-error>
+                  </div>
 
-                <div class="button-row">
-                  <button mat-button matStepperPrevious>Back</button>
-                  <button 
-                    mat-raised-button 
-                    color="primary" 
-                    (click)="onSubmit()" 
-                    [disabled]="accountTypeForm.invalid || isLoading">
-                    <mat-spinner diameter="20" *ngIf="isLoading"></mat-spinner>
-                    <span *ngIf="!isLoading">Create Account</span>
-                  </button>
-                </div>
-              </form>
+                  <div class="button-row">
+                    <button mat-button matStepperPrevious class="btn-outline">
+                      <mat-icon>arrow_back</mat-icon>
+                      Back
+                    </button>
+                    <button 
+                      mat-raised-button 
+                      (click)="onSubmit()" 
+                      [disabled]="accountTypeForm.invalid || isLoading"
+                      class="btn-primary create-account-btn">
+                      <mat-spinner diameter="20" *ngIf="isLoading" class="spinner"></mat-spinner>
+                      <mat-icon *ngIf="!isLoading">person_add</mat-icon>
+                      <span *ngIf="!isLoading">Create Account</span>
+                    </button>
+                  </div>
+                </form>
+              </div>
             </mat-step>
           </mat-stepper>
 
-          <div class="login-link">
-            <span>Already have an account?</span>
-            <a routerLink="/auth/login">Sign in here</a>
+          <div class="login-section">
+            <p class="login-text text-sm text-muted">
+              Already have an account? 
+              <a routerLink="/auth/login" class="login-link">Sign in here</a>
+            </p>
           </div>
-        </mat-card-content>
-      </mat-card>
+        </div>
+      </div>
     </div>
   `,
   styles: [`
@@ -207,81 +268,259 @@ import { UserRole } from '../../../core/models/user.model';
       display: flex;
       align-items: center;
       justify-content: center;
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-      padding: 20px;
+      background: linear-gradient(135deg, var(--primary-50) 0%, var(--secondary-50) 100%);
+      padding: var(--space-4);
     }
 
     .signup-card {
       width: 100%;
-      max-width: 500px;
-      box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+      max-width: 560px;
+      border-radius: var(--radius-xl);
+      padding: var(--space-8);
+      border: none;
+      background: rgba(255, 255, 255, 0.95);
+      backdrop-filter: blur(10px);
+      box-shadow: var(--shadow-xl);
+    }
+
+    .signup-header {
+      text-align: center;
+      margin-bottom: var(--space-8);
+    }
+
+    .logo-section {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: var(--space-3);
+      margin-bottom: var(--space-4);
+    }
+
+    .logo-icon {
+      font-size: 48px;
+      width: 48px;
+      height: 48px;
+      color: var(--medical-blue);
+    }
+
+    .app-title {
+      font-size: var(--font-size-2xl);
+      font-weight: 700;
+      color: var(--gray-800);
+      margin: 0;
+      font-family: var(--font-family);
+    }
+
+    .signup-subtitle {
+      color: var(--gray-600);
+      font-size: var(--font-size-base);
+      margin: 0;
+      font-weight: 400;
+    }
+
+    .signup-content {
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-6);
+    }
+
+    .step-content {
+      padding: var(--space-4) 0;
+    }
+
+    .step-title {
+      font-size: var(--font-size-xl);
+      font-weight: 600;
+      color: var(--gray-800);
+      margin: 0 0 var(--space-2) 0;
+      font-family: var(--font-family);
+    }
+
+    .step-description {
+      color: var(--gray-600);
+      font-size: var(--font-size-sm);
+      margin: 0 0 var(--space-6) 0;
+    }
+
+    .step-form {
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-4);
+    }
+
+    .form-group {
+      margin-bottom: var(--space-2);
     }
 
     .full-width {
       width: 100%;
-      margin-bottom: 16px;
     }
 
     .half-width {
-      width: calc(50% - 8px);
-      margin-bottom: 16px;
+      width: calc(50% - var(--space-2));
     }
 
     .name-fields {
       display: flex;
-      gap: 16px;
-      margin-bottom: 16px;
+      gap: var(--space-4);
+      margin-bottom: var(--space-2);
     }
 
     .button-row {
       display: flex;
       justify-content: space-between;
-      margin-top: 24px;
+      gap: var(--space-4);
+      margin-top: var(--space-6);
     }
 
-    .step-description {
-      color: #666;
-      margin-bottom: 24px;
+    .option-content {
+      display: flex;
+      align-items: center;
+      gap: var(--space-3);
+      padding: var(--space-2);
     }
 
-    .login-link {
-      text-align: center;
-      margin-top: 24px;
-      padding-top: 16px;
-      border-top: 1px solid #e0e0e0;
+    .option-icon {
+      font-size: 24px;
+      width: 24px;
+      height: 24px;
+      color: var(--primary-600);
     }
 
-    .login-link span {
-      color: #666;
-      margin-right: 8px;
+    .option-text {
+      display: flex;
+      flex-direction: column;
     }
 
-    .login-link a {
-      color: #3f51b5;
+    .option-title {
+      font-weight: 600;
+      color: var(--gray-800);
+      font-size: var(--font-size-sm);
+    }
+
+    .option-subtitle {
+      font-size: var(--font-size-xs);
+      color: var(--gray-500);
+    }
+
+    .terms-checkbox {
+      margin: var(--space-4) 0;
+    }
+
+    .terms-text {
+      font-size: var(--font-size-sm);
+      color: var(--gray-600);
+    }
+
+    .terms-link {
+      color: var(--primary-600);
       text-decoration: none;
       font-weight: 500;
     }
 
-    .login-link a:hover {
+    .terms-link:hover {
+      color: var(--primary-700);
       text-decoration: underline;
     }
 
-    mat-spinner {
-      margin-right: 8px;
+    .checkbox-error {
+      margin-top: var(--space-2);
+      font-size: var(--font-size-xs);
     }
 
-    h3 {
-      margin: 0 0 16px 0;
-      color: #333;
+    .login-section {
+      text-align: center;
+      margin-top: var(--space-6);
+      padding-top: var(--space-6);
+      border-top: 1px solid var(--gray-200);
     }
 
-    a {
-      color: #3f51b5;
+    .login-text {
+      margin: 0;
+      color: var(--gray-600);
+    }
+
+    .login-link {
+      color: var(--primary-600);
       text-decoration: none;
+      font-weight: 600;
+      margin-left: var(--space-1);
+      transition: color 0.2s ease;
     }
 
-    a:hover {
+    .login-link:hover {
+      color: var(--primary-700);
       text-decoration: underline;
+    }
+
+    .spinner {
+      margin-right: var(--space-2);
+    }
+
+    /* Custom Material Design overrides for stepper */
+    ::ng-deep .mat-mdc-stepper-horizontal {
+      background: transparent;
+      margin-bottom: var(--space-6);
+    }
+
+    ::ng-deep .mat-mdc-step-header {
+      padding: var(--space-3) var(--space-4);
+    }
+
+    ::ng-deep .mat-mdc-step-header .mat-step-icon {
+      background-color: var(--primary-500);
+      color: white;
+    }
+
+    ::ng-deep .mat-mdc-step-header .mat-step-icon-state-done {
+      background-color: var(--success-500);
+    }
+
+    ::ng-deep .mat-mdc-step-header .mat-step-label {
+      color: var(--gray-600);
+      font-weight: 500;
+    }
+
+    ::ng-deep .mat-mdc-form-field {
+      margin-bottom: var(--space-4);
+    }
+
+    ::ng-deep .mat-mdc-form-field-infix {
+      padding: var(--space-4) 0;
+    }
+
+    ::ng-deep .mat-mdc-form-field-outline {
+      border-radius: var(--radius-md);
+    }
+
+    ::ng-deep .mat-mdc-checkbox {
+      --mdc-checkbox-selected-icon-color: var(--primary-600);
+      --mdc-checkbox-selected-container-color: var(--primary-600);
+    }
+
+    /* Responsive design */
+    @media (max-width: 640px) {
+      .signup-card {
+        margin: var(--space-4);
+        padding: var(--space-6);
+      }
+
+      .app-title {
+        font-size: var(--font-size-xl);
+      }
+
+      .name-fields {
+        flex-direction: column;
+        gap: var(--space-2);
+      }
+
+      .half-width {
+        width: 100%;
+      }
+
+      .button-row {
+        flex-direction: column;
+      }
     }
   `]
 })
@@ -372,18 +611,7 @@ export class SignupComponent implements OnInit {
   }
 
   private redirectBasedOnRole(role: UserRole): void {
-    switch (role) {
-      case UserRole.PATIENT:
-        this.router.navigate(['/patient/dashboard']);
-        break;
-      case UserRole.DOCTOR:
-        this.router.navigate(['/doctor/dashboard']);
-        break;
-      case UserRole.ADMIN:
-        this.router.navigate(['/admin/dashboard']);
-        break;
-      default:
-        this.router.navigate(['/dashboard']);
-    }
+    // Redirect to login page after successful registration
+    this.router.navigate(['/auth/login']);
   }
 }
