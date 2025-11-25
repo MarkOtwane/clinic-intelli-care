@@ -1,32 +1,32 @@
 export const environment = {
   production: false,
-  apiUrl: 'http://localhost:3000/api',
+  apiUrl: '/api',
   wsUrl: 'ws://localhost:3000',
   cloudinary: {
     cloudName: 'your-cloudinary-cloud-name',
     uploadPreset: 'your-upload-preset',
-    apiKey: 'your-api-key'
+    apiKey: 'your-api-key',
   },
   features: {
     enableAI: true,
     enableNotifications: true,
     enableFileUploads: true,
     enableRealTimeChat: false,
-    enableAnalytics: true
+    enableAnalytics: true,
   },
   limits: {
     maxFileSize: 10485760, // 10MB
     maxFilesPerUpload: 5,
-    appointmentAdvanceBookingDays: 30
+    appointmentAdvanceBookingDays: 30,
   },
   ai: {
     analysisTimeout: 30000, // 30 seconds
     confidenceThreshold: 60,
-    enableFollowUpQuestions: true
+    enableFollowUpQuestions: true,
   },
   notifications: {
     enablePush: true,
     enableEmail: true,
-    enableSMS: false
-  }
+    enableSMS: false,
+  },
 };
