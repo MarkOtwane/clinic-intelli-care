@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
-import { PrismaService } from '../../prisma/prisma.service';
-import { CreateNotificationDto } from './dto/create-notification.dto';
+import { PrismaService } from '../prisma/prisma.service';
+import { CreateNotificationDto } from './dtos/create-notification.dto';
 import { v4 as uuidv4 } from 'uuid';
 import * as nodemailer from 'nodemailer';
 

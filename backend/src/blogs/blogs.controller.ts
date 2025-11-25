@@ -9,14 +9,14 @@ import {
   Post,
   UseGuards,
 } from '@nestjs/common';
-import { Roles } from '../auth/decorators/roles.decorator';
+import { Roles } from '../auth/roles.decorator';
 import { CurrentUser } from '../auth/decorators/user.decorator';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
 import { PrismaService } from '../prisma/prisma.service';
 import { BlogsService } from './blogs.service';
-import { CreateBlogDto } from './dto/create-blog.dto';
-import { UpdateBlogDto } from './dto/update-blog.dto';
+import { CreateBlogDto } from './dtos/create-blog.dto';
+import { UpdateBlogDto } from './dtos/update-blog.dto';
 
 @Controller('blogs')
 @UseGuards(JwtAuthGuard, RolesGuard)

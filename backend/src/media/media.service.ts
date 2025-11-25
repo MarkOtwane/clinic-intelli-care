@@ -1,7 +1,6 @@
-import { Injectable, BadRequestException } from '@nestjs/common';
-import { PrismaService } from 'src/prisma.service';
-import { v2 as cloudinary } from 'cloudinary';
-import { UploadApiResponse } from 'cloudinary';
+import { BadRequestException, Injectable } from '@nestjs/common';
+import { v2 as cloudinary, UploadApiResponse } from 'cloudinary';
+import { PrismaService } from '../prisma/prisma.service';
 
 @Injectable()
 export class MediaService {
@@ -20,18 +19,26 @@ export class MediaService {
   ) {
     if (!file) throw new BadRequestException('No file uploaded');
 
-    const result: UploadApiResponse = await cloudinary.uploader.upload_stream({
-      resource_type: 'auto',
-      folder: 'hms_uploads',
+    const result: UploadApiResponse = await new Promise((resolve, reject) => {
+      const uploadStream = cloudinary.uploader.upload_stream(
+        {
+          resource_type: 'auto',
+          folder: 'hms_uploads',
+        },
+        (error, result) => {
+          if (error) reject(error);
+          else resolve(result!);
+        },
+      );
+      uploadStream.end(file.buffer);
     });
 
     const media = await this.prisma.media.create({
       data: {
         url: result.secure_url,
         publicId: result.public_id,
-        type: file.mimetype.split('/')[0],
-        ownerId,
-        ownerType,
+        mimeType: file.mimetype,
+        uploadedById: ownerId,
       },
     });
 
@@ -40,10 +47,16 @@ export class MediaService {
 
   async deleteMedia(publicId: string) {
     await cloudinary.uploader.destroy(publicId);
-    return this.prisma.media.delete({ where: { publicId } });
+    const media = await this.prisma.media.findFirst({
+      where: { publicId },
+    });
+    if (!media) {
+      throw new BadRequestException('Media not found');
+    }
+    return this.prisma.media.delete({ where: { id: media.id } });
   }
 
   async getMediaByOwner(ownerId: string) {
-    return this.prisma.media.findMany({ where: { ownerId } });
+    return this.prisma.media.findMany({ where: { uploadedById: ownerId } });
   }
 }

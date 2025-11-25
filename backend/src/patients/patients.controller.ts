@@ -9,11 +9,11 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import { PatientsService } from './patients.service';
-import { CreatePatientDto } from './dto/create-patient.dto';
-import { UpdatePatientDto } from './dto/update-patient.dto';
+import { CreatePatientDto } from './dtos/create-patient.dto';
+import { UpdatePatientDto } from './dtos/update-patient.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
-import { Roles } from '../auth/decorators/roles.decorator';
+import { Roles } from '../auth/roles.decorator';
 import { CurrentUser } from '../auth/decorators/user.decorator';
 
 @Controller('patients')

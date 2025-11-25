@@ -1,11 +1,11 @@
 import {
+  ForbiddenException,
   Injectable,
   NotFoundException,
-  ForbiddenException,
 } from '@nestjs/common';
-import { PrismaService } from '../../prisma/prisma.service';
-import { CreatePatientDto } from './dto/create-patient.dto';
-import { UpdatePatientDto } from './dto/update-patient.dto';
+import { PrismaService } from '../prisma/prisma.service';
+import { CreatePatientDto } from './dtos/create-patient.dto';
+import { UpdatePatientDto } from './dtos/update-patient.dto';
 
 @Injectable()
 export class PatientsService {
@@ -48,7 +48,7 @@ export class PatientsService {
     });
 
     if (!patient) throw new NotFoundException('Patient not found');
-    if (!isAdmin && patient.userId !== currentUserId)
+    if (!isAdmin && patient.user?.id !== currentUserId)
       throw new ForbiddenException('You can only update your own profile');
 
     return this.prisma.patient.update({

@@ -3,8 +3,9 @@ import {
   NotFoundException,
   ForbiddenException,
 } from '@nestjs/common';
-import { PrismaService } from '../../prisma/prisma.service';
-import { CreateDoctorDto, UpdateDoctorDto } from './dto';
+import { PrismaService } from '../prisma/prisma.service';
+import { CreateDoctorDto } from './dtos/create-doctor.dto';
+import { UpdateDoctorDto } from './dtos/update-doctor.dto';
 
 @Injectable()
 export class DoctorsService {

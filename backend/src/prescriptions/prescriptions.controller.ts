@@ -9,13 +9,13 @@ import {
   Post,
   UseGuards,
 } from '@nestjs/common';
-import { Roles } from '../auth/decorators/roles.decorator';
 import { CurrentUser } from '../auth/decorators/user.decorator';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
+import { Roles } from '../auth/roles.decorator';
 import { PrismaService } from '../prisma/prisma.service';
-import { CreatePrescriptionDto } from './dto/create-prescription.dto';
-import { UpdatePrescriptionDto } from './dto/update-prescription.dto';
+import { CreatePrescriptionDto } from './dtos/create-prescription.dto';
+import { UpdatePrescriptionDto } from './dtos/update-prescription.dto';
 import { PrescriptionsService } from './prescriptions.service';
 
 @Controller('prescriptions')

@@ -8,10 +8,10 @@ import {
   Patch,
 } from '@nestjs/common';
 import { NotificationsService } from './notifications.service';
-import { CreateNotificationDto } from './dto/create-notification.dto';
+import { CreateNotificationDto } from './dtos/create-notification.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
-import { Roles } from '../auth/decorators/roles.decorator';
+import { Roles } from '../auth/roles.decorator';
 import { CurrentUser } from '../auth/decorators/user.decorator';
 
 @Controller('notifications')

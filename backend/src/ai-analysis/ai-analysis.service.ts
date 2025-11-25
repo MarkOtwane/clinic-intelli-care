@@ -3,7 +3,7 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
-import { PrismaService } from '../../prisma/prisma.service';
+import { PrismaService } from '../prisma/prisma.service';
 import { CreateAnalysisDto } from './dto/create-analysis.dto';
 import { UpdateAnalysisDto } from './dto/update-analysis.dto';
 import {
@@ -118,8 +118,10 @@ export class AiAnalysisService {
 
     // Filter out null results and sort by probability
     return results
-      .filter((r) => r !== null && r.probability > 0)
-      .sort((a, b) => b!.probability - a!.probability)
+      .filter(
+        (r): r is NonNullable<typeof r> => r !== null && r.probability > 0,
+      )
+      .sort((a, b) => b.probability - a.probability)
       .slice(0, 5); // Return top 5 predictions
   }
 
@@ -350,7 +352,7 @@ export class AiAnalysisService {
       data: {
         symptomId,
         results: predictions,
-        followUps: followUpQuestions,
+        followUps: followUpQuestions ?? undefined,
         forwardedToId: forwardedDoctorId,
       },
       include: {
