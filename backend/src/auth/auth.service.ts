@@ -1,9 +1,4 @@
-/* eslint-disable @typescript-eslint/no-unsafe-argument */
 /* eslint-disable @typescript-eslint/no-unused-vars */
-/* eslint-disable @typescript-eslint/no-unsafe-member-access */
-/* eslint-disable @typescript-eslint/no-unsafe-call */
-/* eslint-disable @typescript-eslint/no-unsafe-return */
-/* eslint-disable @typescript-eslint/no-unsafe-assignment */
 import {
   Injectable,
   UnauthorizedException,
@@ -39,6 +34,9 @@ export class AuthService {
       dto.email,
       hashed,
       dto.role ?? 'PATIENT',
+      dto.firstName,
+      dto.lastName,
+      dto.phone,
     );
 
     const accessToken = this.generateAccessToken(

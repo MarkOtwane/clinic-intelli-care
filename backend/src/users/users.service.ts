@@ -3,16 +3,36 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { UpdateUserDto } from './dtos/update-user.dto';
-import { Role } from '@prisma/client';
 
 @Injectable()
 export class UsersService {
   constructor(private prisma: PrismaService) {}
 
-  async createUser(email: string, password: string, role: string) {
-    return this.prisma.user.create({
+  async createUser(
+    email: string,
+    password: string,
+    role: string,
+    firstName?: string,
+    lastName?: string,
+    phone?: string,
+  ) {
+    const user = await this.prisma.user.create({
       data: { email, password, role: role as any },
     });
+
+    // Create profile if additional fields are provided
+    if (firstName || lastName || phone) {
+      await this.prisma.profile.create({
+        data: {
+          userId: user.id,
+          firstName: firstName || '',
+          lastName: lastName || '',
+          phone: phone || null,
+        },
+      });
+    }
+
+    return user;
   }
 
   async findAll() {

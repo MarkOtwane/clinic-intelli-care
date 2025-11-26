@@ -1,10 +1,10 @@
-/* eslint-disable @typescript-eslint/no-unsafe-call */
 import { Role } from '@prisma/client';
 import {
   IsEmail,
   IsEnum,
   IsNotEmpty,
   IsOptional,
+  IsString,
   MinLength,
 } from 'class-validator';
 
@@ -19,6 +19,18 @@ export class SignupDto {
   @IsOptional()
   @IsEnum(['PATIENT', 'DOCTOR', 'ADMIN'])
   role?: Role;
+
+  @IsOptional()
+  @IsString()
+  firstName?: string;
+
+  @IsOptional()
+  @IsString()
+  lastName?: string;
+
+  @IsOptional()
+  @IsString()
+  phone?: string;
 }
 
 export class LoginDto {
