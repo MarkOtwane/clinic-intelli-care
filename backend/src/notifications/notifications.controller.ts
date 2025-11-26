@@ -37,6 +37,12 @@ export class NotificationsController {
     return this.notificationsService.findAll();
   }
 
+  @Get('user/:userId/unread-count')
+  @Roles('PATIENT', 'DOCTOR', 'ADMIN')
+  getUnreadCount(@Param('userId') userId: string) {
+    return this.notificationsService.getUnreadCount(userId);
+  }
+
   @Patch(':id/read')
   @Roles('PATIENT', 'DOCTOR', 'ADMIN')
   markAsRead(@Param('id') id: string) {
