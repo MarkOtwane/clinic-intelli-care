@@ -61,4 +61,95 @@ export class PatientsService {
     await this.prisma.patient.delete({ where: { id } });
     return { message: 'Patient deleted successfully' };
   }
+
+  async getPatientDashboardByUserId(userId: string) {
+    // Find the patient associated with this user
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+      include: { patientProfile: true },
+    });
+
+    if (!user || !user.patientProfile) {
+      throw new NotFoundException('Patient profile not found for this user');
+    }
+
+    return this.getPatientDashboard(user.patientProfile.id);
+  }
+
+  async getPatientDashboard(patientId: string) {
+    const patient = await this.prisma.patient.findUnique({
+      where: { id: patientId },
+      include: {
+        user: {
+          include: { Profile: true }
+        }
+      },
+    });
+
+    if (!patient) throw new NotFoundException('Patient not found');
+
+    // Get upcoming appointments
+    const upcomingAppointments = await this.prisma.appointment.findMany({
+      where: {
+        patientId,
+        date: { gte: new Date() },
+        status: { in: ['SCHEDULED', 'CONFIRMED'] },
+      },
+      include: {
+        doctor: {
+          include: {
+            user: { include: { Profile: true } }
+          }
+        }
+      },
+      orderBy: { date: 'asc' },
+      take: 3,
+    });
+
+    // Get recent prescriptions (since there's no status field, we'll just get recent ones)
+    const recentPrescriptions = await this.prisma.prescription.findMany({
+      where: { patientId },
+      include: {
+        doctor: {
+          include: {
+            user: { include: { Profile: true } }
+          }
+        }
+      },
+      orderBy: { createdAt: 'desc' },
+      take: 5,
+    });
+
+    // Get recent AI analyses
+    const recentAnalyses = await this.prisma.analysis.findMany({
+      where: { patientId },
+      orderBy: { createdAt: 'desc' },
+      take: 3,
+    });
+
+    // Get unread notifications count
+    const unreadNotifications = await this.prisma.notification.count({
+      where: {
+        userId: patient.user?.id || '',
+        isRead: false,
+      },
+    });
+
+    return {
+      patient: {
+        id: patient.id,
+        firstName: patient.user?.Profile?.[0]?.firstName || patient.name.split(' ')[0],
+        lastName: patient.user?.Profile?.[0]?.lastName || patient.name.split(' ').slice(1).join(' '),
+        status: 'active', // Default status since Patient model doesn't have status
+      },
+      stats: {
+        upcomingAppointments: upcomingAppointments.length,
+        activePrescriptions: recentPrescriptions.length,
+        unreadNotifications,
+      },
+      upcomingAppointments,
+      activePrescriptions: recentPrescriptions,
+      recentAnalyses,
+    };
+  }
 }
