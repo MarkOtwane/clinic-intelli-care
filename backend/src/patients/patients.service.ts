@@ -81,8 +81,8 @@ export class PatientsService {
       where: { id: patientId },
       include: {
         user: {
-          include: { Profile: true }
-        }
+          include: { Profile: true },
+        },
       },
     });
 
@@ -98,9 +98,9 @@ export class PatientsService {
       include: {
         doctor: {
           include: {
-            user: { include: { Profile: true } }
-          }
-        }
+            user: { include: { Profile: true } },
+          },
+        },
       },
       orderBy: { date: 'asc' },
       take: 3,
@@ -112,9 +112,9 @@ export class PatientsService {
       include: {
         doctor: {
           include: {
-            user: { include: { Profile: true } }
-          }
-        }
+            user: { include: { Profile: true } },
+          },
+        },
       },
       orderBy: { createdAt: 'desc' },
       take: 5,
@@ -138,8 +138,11 @@ export class PatientsService {
     return {
       patient: {
         id: patient.id,
-        firstName: patient.user?.Profile?.[0]?.firstName || patient.name.split(' ')[0],
-        lastName: patient.user?.Profile?.[0]?.lastName || patient.name.split(' ').slice(1).join(' '),
+        firstName:
+          patient.user?.Profile?.[0]?.firstName || patient.name.split(' ')[0],
+        lastName:
+          patient.user?.Profile?.[0]?.lastName ||
+          patient.name.split(' ').slice(1).join(' '),
         status: 'active', // Default status since Patient model doesn't have status
       },
       stats: {
