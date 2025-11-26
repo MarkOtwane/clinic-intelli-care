@@ -36,7 +36,7 @@ async function bootstrap() {
 
   // Global guards for authentication and authorization
   const reflector = app.get(Reflector);
-  app.useGlobalGuards(new JwtAuthGuard(), new RolesGuard(reflector));
+  app.useGlobalGuards(new JwtAuthGuard(reflector), new RolesGuard(reflector));
 
   // API prefix for all routes
   app.setGlobalPrefix('api');

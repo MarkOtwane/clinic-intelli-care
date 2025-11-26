@@ -22,6 +22,7 @@ import { JwtAuthGuard } from './guards/jwt-auth.guard';
 import type { Request, Response } from 'express';
 import { ConfigService } from '@nestjs/config';
 import { setRefreshTokenCookie, clearRefreshTokenCookie } from './cookie.utils';
+import { Public } from './decorators/public.decorator';
 
 @Controller('auth')
 export class AuthController {
@@ -30,6 +31,7 @@ export class AuthController {
     private config: ConfigService,
   ) {}
 
+  @Public()
   @Post('signup')
   async signup(
     @Body() dto: SignupDto,
@@ -45,6 +47,7 @@ export class AuthController {
     return { user: result.user, accessToken: result.accessToken };
   }
 
+  @Public()
   @Post('login')
   async login(
     @Body() dto: LoginDto,
@@ -61,6 +64,7 @@ export class AuthController {
    * Refresh endpoint.
    * Reads refresh token from httpOnly cookie and issues new access + refresh tokens.
    */
+  @Public()
   @Post('refresh')
   async refresh(
     @Req() req: Request,
@@ -79,6 +83,7 @@ export class AuthController {
     return { accessToken: result.accessToken, user: result.user };
   }
 
+  @Public()
   @Post('logout')
   @HttpCode(HttpStatus.OK)
   async logout(@Req() req: Request, @Res({ passthrough: true }) res: Response) {
