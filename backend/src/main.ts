@@ -6,10 +6,6 @@ import { AppModule } from './app.module';
 import { JwtAuthGuard } from './auth/guards/jwt-auth.guard';
 import { RolesGuard } from './auth/guards/roles.guard';
 
-/**
- * Bootstrap function to initialize the NestJS application
- * Configures CORS, validation pipes, global guards, and API prefix
- */
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
   const configService = app.get(ConfigService);
@@ -25,11 +21,11 @@ async function bootstrap() {
   // Global validation pipe for DTOs
   app.useGlobalPipes(
     new ValidationPipe({
-      whitelist: true, // Strip properties that don't have decorators
-      forbidNonWhitelisted: true, // Throw error if non-whitelisted properties are sent
-      transform: true, // Automatically transform payloads to DTO instances
+      whitelist: true,
+      forbidNonWhitelisted: true,
+      transform: true,
       transformOptions: {
-        enableImplicitConversion: true, // Enable implicit type conversion
+        enableImplicitConversion: true,
       },
     }),
   );
