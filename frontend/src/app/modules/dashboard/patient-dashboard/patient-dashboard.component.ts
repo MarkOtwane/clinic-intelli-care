@@ -1,12 +1,16 @@
-import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { RouterModule } from '@angular/router';
-import { MatCardModule } from '@angular/material/card';
+import { Component, OnInit } from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
-import { MatIconModule } from '@angular/material/icon';
+import { MatCardModule } from '@angular/material/card';
 import { MatGridListModule } from '@angular/material/grid-list';
+import { MatIconModule } from '@angular/material/icon';
+import { RouterModule } from '@angular/router';
 
 import { AuthService } from '../../../core/services/auth.service';
+import { PatientService } from '../../../core/services/patient.service';
+import { Patient } from '../../../core/models/patient.model';
+import { MatSnackBarModule } from '@angular/material/snack-bar';
+import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 
 @Component({
   selector: 'app-patient-dashboard',
@@ -17,14 +21,23 @@ import { AuthService } from '../../../core/services/auth.service';
     MatCardModule,
     MatButtonModule,
     MatIconModule,
-    MatGridListModule
+    MatGridListModule,
+    MatProgressSpinnerModule,
+    MatSnackBarModule,
   ],
   template: `
-    <div class="dashboard-container">
+    <div
+      class="dashboard-container"
+      *ngIf="!isLoading && patient; else loadingTemplate"
+    >
       <div class="dashboard-header">
         <div class="welcome-section">
-          <h1 class="dashboard-title">Welcome to Your Health Dashboard</h1>
-          <p class="dashboard-subtitle">Manage your healthcare journey from one centralized location</p>
+          <h1 class="dashboard-title">
+            Welcome back, {{ patient.firstName }}!
+          </h1>
+          <p class="dashboard-subtitle">
+            Manage your healthcare journey from one centralized location
+          </p>
         </div>
         <div class="quick-stats">
           <div class="stat-card">
@@ -43,51 +56,79 @@ import { AuthService } from '../../../core/services/auth.service';
           </div>
         </div>
       </div>
-      
+
       <div class="dashboard-grid">
-        <mat-card class="dashboard-card healthcare-card healthcare-card-primary slide-up" style="animation-delay: 0.1s">
+        <mat-card
+          class="dashboard-card healthcare-card healthcare-card-primary slide-up"
+          style="animation-delay: 0.1s"
+        >
           <mat-card-header>
             <div class="card-icon-container">
-              <mat-icon mat-card-avatar class="card-icon icon-medical">event</mat-icon>
+              <mat-icon mat-card-avatar class="card-icon icon-medical"
+                >event</mat-icon
+              >
             </div>
             <div class="card-title-section">
               <mat-card-title class="card-title">Appointments</mat-card-title>
-              <mat-card-subtitle class="card-subtitle">Schedule & manage visits</mat-card-subtitle>
+              <mat-card-subtitle class="card-subtitle"
+                >Schedule & manage visits</mat-card-subtitle
+              >
             </div>
           </mat-card-header>
           <mat-card-content class="card-content">
-            <p class="card-description">View and schedule your upcoming appointments with healthcare providers. Manage your visit history and upcoming consultations.</p>
+            <p class="card-description">
+              View and schedule your upcoming appointments with healthcare
+              providers. Manage your visit history and upcoming consultations.
+            </p>
             <div class="card-stats">
               <div class="stat-item">
                 <mat-icon class="stat-item-icon">check_circle</mat-icon>
                 <span>2 confirmed</span>
               </div>
               <div class="stat-item">
-                <mat-icon class="stat-item-icon icon-warning">schedule</mat-icon>
+                <mat-icon class="stat-item-icon icon-warning"
+                  >schedule</mat-icon
+                >
                 <span>1 pending</span>
               </div>
             </div>
           </mat-card-content>
           <mat-card-actions class="card-actions">
-            <button mat-raised-button routerLink="/appointments" class="btn-primary">
+            <button
+              mat-raised-button
+              routerLink="/appointments"
+              class="btn-primary"
+            >
               <mat-icon>arrow_forward</mat-icon>
               Manage Appointments
             </button>
           </mat-card-actions>
         </mat-card>
 
-        <mat-card class="dashboard-card healthcare-card healthcare-card-secondary slide-up" style="animation-delay: 0.2s">
+        <mat-card
+          class="dashboard-card healthcare-card healthcare-card-secondary slide-up"
+          style="animation-delay: 0.2s"
+        >
           <mat-card-header>
             <div class="card-icon-container">
-              <mat-icon mat-card-avatar class="card-icon icon-health">psychology</mat-icon>
+              <mat-icon mat-card-avatar class="card-icon icon-health"
+                >psychology</mat-icon
+              >
             </div>
             <div class="card-title-section">
-              <mat-card-title class="card-title">AI Health Analysis</mat-card-title>
-              <mat-card-subtitle class="card-subtitle">Symptom assessment</mat-card-subtitle>
+              <mat-card-title class="card-title"
+                >AI Health Analysis</mat-card-title
+              >
+              <mat-card-subtitle class="card-subtitle"
+                >Symptom assessment</mat-card-subtitle
+              >
             </div>
           </mat-card-header>
           <mat-card-content class="card-content">
-            <p class="card-description">Get AI-powered insights about your symptoms and health conditions. Receive personalized recommendations for your wellbeing.</p>
+            <p class="card-description">
+              Get AI-powered insights about your symptoms and health conditions.
+              Receive personalized recommendations for your wellbeing.
+            </p>
             <div class="card-features">
               <div class="feature-item">
                 <mat-icon class="feature-icon icon-success">smart_toy</mat-icon>
@@ -100,25 +141,39 @@ import { AuthService } from '../../../core/services/auth.service';
             </div>
           </mat-card-content>
           <mat-card-actions class="card-actions">
-            <button mat-raised-button routerLink="/ai-analysis" class="btn-secondary">
+            <button
+              mat-raised-button
+              routerLink="/ai-analysis"
+              class="btn-secondary"
+            >
               <mat-icon>psychology</mat-icon>
               Start Analysis
             </button>
           </mat-card-actions>
         </mat-card>
 
-        <mat-card class="dashboard-card healthcare-card healthcare-card-success slide-up" style="animation-delay: 0.3s">
+        <mat-card
+          class="dashboard-card healthcare-card healthcare-card-success slide-up"
+          style="animation-delay: 0.3s"
+        >
           <mat-card-header>
             <div class="card-icon-container">
-              <mat-icon mat-card-avatar class="card-icon icon-success">vaccines</mat-icon>
+              <mat-icon mat-card-avatar class="card-icon icon-success"
+                >vaccines</mat-icon
+              >
             </div>
             <div class="card-title-section">
               <mat-card-title class="card-title">Prescriptions</mat-card-title>
-              <mat-card-subtitle class="card-subtitle">Medication management</mat-card-subtitle>
+              <mat-card-subtitle class="card-subtitle"
+                >Medication management</mat-card-subtitle
+              >
             </div>
           </mat-card-header>
           <mat-card-content class="card-content">
-            <p class="card-description">View your prescriptions, track medication schedules, and set reminders. Keep your treatment plan organized and up-to-date.</p>
+            <p class="card-description">
+              View your prescriptions, track medication schedules, and set
+              reminders. Keep your treatment plan organized and up-to-date.
+            </p>
             <div class="card-medications">
               <div class="medication-item">
                 <mat-icon class="medication-icon">pill</mat-icon>
@@ -137,25 +192,41 @@ import { AuthService } from '../../../core/services/auth.service';
             </div>
           </mat-card-content>
           <mat-card-actions class="card-actions">
-            <button mat-raised-button routerLink="/prescriptions" class="btn-primary">
+            <button
+              mat-raised-button
+              routerLink="/prescriptions"
+              class="btn-primary"
+            >
               <mat-icon>vaccines</mat-icon>
               View Prescriptions
             </button>
           </mat-card-actions>
         </mat-card>
 
-        <mat-card class="dashboard-card healthcare-card slide-up" style="animation-delay: 0.4s">
+        <mat-card
+          class="dashboard-card healthcare-card slide-up"
+          style="animation-delay: 0.4s"
+        >
           <mat-card-header>
             <div class="card-icon-container">
-              <mat-icon mat-card-avatar class="card-icon icon-warning">notifications</mat-icon>
+              <mat-icon mat-card-avatar class="card-icon icon-warning"
+                >notifications</mat-icon
+              >
             </div>
             <div class="card-title-section">
-              <mat-card-title class="card-title">Health Notifications</mat-card-title>
-              <mat-card-subtitle class="card-subtitle">Stay informed</mat-card-subtitle>
+              <mat-card-title class="card-title"
+                >Health Notifications</mat-card-title
+              >
+              <mat-card-subtitle class="card-subtitle"
+                >Stay informed</mat-card-subtitle
+              >
             </div>
           </mat-card-header>
           <mat-card-content class="card-content">
-            <p class="card-description">Receive important health reminders, test results, and updates from your healthcare providers. Never miss critical information.</p>
+            <p class="card-description">
+              Receive important health reminders, test results, and updates from
+              your healthcare providers. Never miss critical information.
+            </p>
             <div class="notification-summary">
               <div class="notification-item urgent">
                 <mat-icon class="notification-icon">priority_high</mat-icon>
@@ -168,7 +239,11 @@ import { AuthService } from '../../../core/services/auth.service';
             </div>
           </mat-card-content>
           <mat-card-actions class="card-actions">
-            <button mat-raised-button routerLink="/notifications" class="btn-outline">
+            <button
+              mat-raised-button
+              routerLink="/notifications"
+              class="btn-outline"
+            >
               <mat-icon>notifications</mat-icon>
               View Notifications
             </button>
@@ -176,310 +251,357 @@ import { AuthService } from '../../../core/services/auth.service';
         </mat-card>
       </div>
     </div>
+
+    <ng-template #loadingTemplate>
+      <div class="loading">
+        <mat-spinner></mat-spinner>
+        <p>Loading patient profile...</p>
+      </div>
+    </ng-template>
   `,
-  styles: [`
-    .dashboard-container {
-      padding: var(--space-8);
-      max-width: 1400px;
-      margin: 0 auto;
-      background: var(--gray-50);
-      min-height: 100vh;
-    }
-
-    .dashboard-header {
-      margin-bottom: var(--space-10);
-    }
-
-    .welcome-section {
-      margin-bottom: var(--space-8);
-    }
-
-    .dashboard-title {
-      font-size: var(--font-size-3xl);
-      font-weight: 700;
-      color: var(--gray-800);
-      margin: 0 0 var(--space-3) 0;
-      font-family: var(--font-family);
-      line-height: 1.2;
-    }
-
-    .dashboard-subtitle {
-      font-size: var(--font-size-lg);
-      color: var(--gray-600);
-      margin: 0;
-      font-weight: 400;
-      max-width: 600px;
-    }
-
-    .quick-stats {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-      gap: var(--space-4);
-      margin-top: var(--space-6);
-    }
-
-    .stat-card {
-      background: white;
-      border-radius: var(--radius-lg);
-      padding: var(--space-6);
-      box-shadow: var(--shadow-md);
-      border: 1px solid var(--gray-200);
-      display: flex;
-      align-items: center;
-      gap: var(--space-4);
-      transition: all 0.2s ease;
-    }
-
-    .stat-card:hover {
-      box-shadow: var(--shadow-lg);
-      transform: translateY(-2px);
-    }
-
-    .stat-icon {
-      font-size: 32px;
-      width: 32px;
-      height: 32px;
-    }
-
-    .stat-content {
-      display: flex;
-      flex-direction: column;
-    }
-
-    .stat-number {
-      font-size: var(--font-size-2xl);
-      font-weight: 700;
-      color: var(--gray-800);
-      line-height: 1;
-    }
-
-    .stat-label {
-      font-size: var(--font-size-sm);
-      color: var(--gray-600);
-      margin-top: var(--space-1);
-    }
-
-    .dashboard-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
-      gap: var(--space-6);
-    }
-
-    .dashboard-card {
-      border-radius: var(--radius-xl);
-      overflow: hidden;
-      border: none;
-      transition: all 0.3s ease;
-      min-height: 320px;
-      display: flex;
-      flex-direction: column;
-    }
-
-    .dashboard-card:hover {
-      transform: translateY(-4px);
-    }
-
-    .card-icon-container {
-      background: linear-gradient(135deg, var(--primary-50) 0%, var(--secondary-50) 100%);
-      border-radius: var(--radius-lg);
-      padding: var(--space-2);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      width: 64px;
-      height: 64px;
-      margin-right: var(--space-4);
-    }
-
-    .card-icon {
-      font-size: 32px;
-      width: 32px;
-      height: 32px;
-    }
-
-    .card-title-section {
-      flex: 1;
-    }
-
-    .card-title {
-      font-size: var(--font-size-xl);
-      font-weight: 600;
-      color: var(--gray-800);
-      margin: 0 0 var(--space-1) 0;
-    }
-
-    .card-subtitle {
-      font-size: var(--font-size-sm);
-      color: var(--gray-500);
-      margin: 0;
-      font-weight: 400;
-    }
-
-    .card-content {
-      flex: 1;
-      padding: var(--space-6) var(--space-6) var(--space-4) var(--space-6);
-    }
-
-    .card-description {
-      font-size: var(--font-size-sm);
-      color: var(--gray-600);
-      line-height: 1.6;
-      margin: 0 0 var(--space-4) 0;
-    }
-
-    .card-stats {
-      display: flex;
-      flex-direction: column;
-      gap: var(--space-2);
-    }
-
-    .stat-item {
-      display: flex;
-      align-items: center;
-      gap: var(--space-2);
-      font-size: var(--font-size-sm);
-      color: var(--gray-700);
-    }
-
-    .stat-item-icon {
-      font-size: 16px;
-      width: 16px;
-      height: 16px;
-    }
-
-    .card-features {
-      display: flex;
-      flex-direction: column;
-      gap: var(--space-2);
-    }
-
-    .feature-item {
-      display: flex;
-      align-items: center;
-      gap: var(--space-2);
-      font-size: var(--font-size-sm);
-      color: var(--gray-700);
-    }
-
-    .feature-icon {
-      font-size: 16px;
-      width: 16px;
-      height: 16px;
-    }
-
-    .card-medications {
-      display: flex;
-      flex-direction: column;
-      gap: var(--space-3);
-    }
-
-    .medication-item {
-      display: flex;
-      align-items: center;
-      gap: var(--space-3);
-      padding: var(--space-3);
-      background: var(--gray-50);
-      border-radius: var(--radius-md);
-    }
-
-    .medication-icon {
-      font-size: 20px;
-      width: 20px;
-      height: 20px;
-      color: var(--success-600);
-    }
-
-    .medication-info {
-      flex: 1;
-    }
-
-    .medication-name {
-      font-size: var(--font-size-sm);
-      font-weight: 500;
-      color: var(--gray-800);
-    }
-
-    .medication-schedule {
-      font-size: var(--font-size-xs);
-      color: var(--gray-500);
-    }
-
-    .notification-summary {
-      display: flex;
-      flex-direction: column;
-      gap: var(--space-2);
-    }
-
-    .notification-item {
-      display: flex;
-      align-items: center;
-      gap: var(--space-2);
-      font-size: var(--font-size-sm);
-      color: var(--gray-700);
-      padding: var(--space-2) var(--space-3);
-      border-radius: var(--radius-md);
-      background: var(--gray-50);
-    }
-
-    .notification-item.urgent {
-      background: var(--error-50);
-      border-left: 3px solid var(--error-500);
-    }
-
-    .notification-item.info {
-      background: var(--primary-50);
-      border-left: 3px solid var(--primary-500);
-    }
-
-    .notification-icon {
-      font-size: 16px;
-      width: 16px;
-      height: 16px;
-    }
-
-    .card-actions {
-      padding: var(--space-4) var(--space-6) var(--space-6) var(--space-6);
-      gap: var(--space-2);
-    }
-
-    /* Responsive design */
-    @media (max-width: 768px) {
+  styles: [
+    `
       .dashboard-container {
-        padding: var(--space-4);
+        padding: var(--space-8);
+        max-width: 1400px;
+        margin: 0 auto;
+        background: var(--gray-50);
+        min-height: 100vh;
+      }
+
+      .dashboard-header {
+        margin-bottom: var(--space-10);
+      }
+
+      .welcome-section {
+        margin-bottom: var(--space-8);
       }
 
       .dashboard-title {
-        font-size: var(--font-size-2xl);
-      }
-
-      .dashboard-grid {
-        grid-template-columns: 1fr;
-        gap: var(--space-4);
-      }
-
-      .quick-stats {
-        grid-template-columns: 1fr;
-        gap: var(--space-3);
-      }
-
-      .stat-card {
-        padding: var(--space-4);
-      }
-    }
-
-    @media (max-width: 480px) {
-      .dashboard-title {
-        font-size: var(--font-size-xl);
+        font-size: var(--font-size-3xl);
+        font-weight: 700;
+        color: var(--gray-800);
+        margin: 0 0 var(--space-3) 0;
+        font-family: var(--font-family);
+        line-height: 1.2;
       }
 
       .dashboard-subtitle {
-        font-size: var(--font-size-base);
+        font-size: var(--font-size-lg);
+        color: var(--gray-600);
+        margin: 0;
+        font-weight: 400;
+        max-width: 600px;
       }
-    }
-  `]
+
+      .quick-stats {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+        gap: var(--space-4);
+        margin-top: var(--space-6);
+      }
+
+      .stat-card {
+        background: white;
+        border-radius: var(--radius-lg);
+        padding: var(--space-6);
+        box-shadow: var(--shadow-md);
+        border: 1px solid var(--gray-200);
+        display: flex;
+        align-items: center;
+        gap: var(--space-4);
+        transition: all 0.2s ease;
+      }
+
+      .stat-card:hover {
+        box-shadow: var(--shadow-lg);
+        transform: translateY(-2px);
+      }
+
+      .stat-icon {
+        font-size: 32px;
+        width: 32px;
+        height: 32px;
+      }
+
+      .stat-content {
+        display: flex;
+        flex-direction: column;
+      }
+
+      .stat-number {
+        font-size: var(--font-size-2xl);
+        font-weight: 700;
+        color: var(--gray-800);
+        line-height: 1;
+      }
+
+      .stat-label {
+        font-size: var(--font-size-sm);
+        color: var(--gray-600);
+        margin-top: var(--space-1);
+      }
+
+      .dashboard-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+        gap: var(--space-6);
+      }
+
+      .dashboard-card {
+        border-radius: var(--radius-xl);
+        overflow: hidden;
+        border: none;
+        transition: all 0.3s ease;
+        min-height: 320px;
+        display: flex;
+        flex-direction: column;
+      }
+
+      .dashboard-card:hover {
+        transform: translateY(-4px);
+      }
+
+      .card-icon-container {
+        background: linear-gradient(
+          135deg,
+          var(--primary-50) 0%,
+          var(--secondary-50) 100%
+        );
+        border-radius: var(--radius-lg);
+        padding: var(--space-2);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 64px;
+        height: 64px;
+        margin-right: var(--space-4);
+      }
+
+      .card-icon {
+        font-size: 32px;
+        width: 32px;
+        height: 32px;
+      }
+
+      .card-title-section {
+        flex: 1;
+      }
+
+      .card-title {
+        font-size: var(--font-size-xl);
+        font-weight: 600;
+        color: var(--gray-800);
+        margin: 0 0 var(--space-1) 0;
+      }
+
+      .card-subtitle {
+        font-size: var(--font-size-sm);
+        color: var(--gray-500);
+        margin: 0;
+        font-weight: 400;
+      }
+
+      .card-content {
+        flex: 1;
+        padding: var(--space-6) var(--space-6) var(--space-4) var(--space-6);
+      }
+
+      .card-description {
+        font-size: var(--font-size-sm);
+        color: var(--gray-600);
+        line-height: 1.6;
+        margin: 0 0 var(--space-4) 0;
+      }
+
+      .card-stats {
+        display: flex;
+        flex-direction: column;
+        gap: var(--space-2);
+      }
+
+      .stat-item {
+        display: flex;
+        align-items: center;
+        gap: var(--space-2);
+        font-size: var(--font-size-sm);
+        color: var(--gray-700);
+      }
+
+      .stat-item-icon {
+        font-size: 16px;
+        width: 16px;
+        height: 16px;
+      }
+
+      .card-features {
+        display: flex;
+        flex-direction: column;
+        gap: var(--space-2);
+      }
+
+      .feature-item {
+        display: flex;
+        align-items: center;
+        gap: var(--space-2);
+        font-size: var(--font-size-sm);
+        color: var(--gray-700);
+      }
+
+      .feature-icon {
+        font-size: 16px;
+        width: 16px;
+        height: 16px;
+      }
+
+      .card-medications {
+        display: flex;
+        flex-direction: column;
+        gap: var(--space-3);
+      }
+
+      .medication-item {
+        display: flex;
+        align-items: center;
+        gap: var(--space-3);
+        padding: var(--space-3);
+        background: var(--gray-50);
+        border-radius: var(--radius-md);
+      }
+
+      .medication-icon {
+        font-size: 20px;
+        width: 20px;
+        height: 20px;
+        color: var(--success-600);
+      }
+
+      .medication-info {
+        flex: 1;
+      }
+
+      .medication-name {
+        font-size: var(--font-size-sm);
+        font-weight: 500;
+        color: var(--gray-800);
+      }
+
+      .medication-schedule {
+        font-size: var(--font-size-xs);
+        color: var(--gray-500);
+      }
+
+      .notification-summary {
+        display: flex;
+        flex-direction: column;
+        gap: var(--space-2);
+      }
+
+      .notification-item {
+        display: flex;
+        align-items: center;
+        gap: var(--space-2);
+        font-size: var(--font-size-sm);
+        color: var(--gray-700);
+        padding: var(--space-2) var(--space-3);
+        border-radius: var(--radius-md);
+        background: var(--gray-50);
+      }
+
+      .notification-item.urgent {
+        background: var(--error-50);
+        border-left: 3px solid var(--error-500);
+      }
+
+      .notification-item.info {
+        background: var(--primary-50);
+        border-left: 3px solid var(--primary-500);
+      }
+
+      .notification-icon {
+        font-size: 16px;
+        width: 16px;
+        height: 16px;
+      }
+
+      .card-actions {
+        padding: var(--space-4) var(--space-6) var(--space-6) var(--space-6);
+        gap: var(--space-2);
+      }
+
+      /* Responsive design */
+      @media (max-width: 768px) {
+        .dashboard-container {
+          padding: var(--space-4);
+        }
+
+        .dashboard-title {
+          font-size: var(--font-size-2xl);
+        }
+
+        .dashboard-grid {
+          grid-template-columns: 1fr;
+          gap: var(--space-4);
+        }
+
+        .quick-stats {
+          grid-template-columns: 1fr;
+          gap: var(--space-3);
+        }
+
+        .stat-card {
+          padding: var(--space-4);
+        }
+      }
+
+      @media (max-width: 480px) {
+        .dashboard-title {
+          font-size: var(--font-size-xl);
+        }
+
+        .dashboard-subtitle {
+          font-size: var(--font-size-base);
+        }
+      }
+
+      .loading {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        padding: 48px;
+        gap: 16px;
+      }
+    `,
+  ],
 })
 export class PatientDashboardComponent implements OnInit {
-  constructor(private authService: AuthService) {}
+  patient: Patient | null = null;
+  isLoading = true;
 
-  ngOnInit(): void {}
+  constructor(
+    private authService: AuthService,
+    private patientService: PatientService
+  ) {}
+
+  ngOnInit(): void {
+    this.authService.currentUser$.subscribe(user => {
+      if (user && user.role === 'PATIENT') {
+        // Assuming user has patientId or id is patientId
+        const patientId = user.patientId || user.id;
+        this.patientService.getPatientById(patientId).subscribe({
+          next: (patient) => {
+            this.patient = patient;
+            this.isLoading = false;
+          },
+          error: (error) => {
+            console.error('Error loading patient:', error);
+            this.isLoading = false;
+          }
+        });
+      } else {
+        this.isLoading = false;
+      }
+    });
+  }
 }

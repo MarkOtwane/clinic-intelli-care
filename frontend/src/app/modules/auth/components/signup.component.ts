@@ -357,7 +357,8 @@ import { UserRole } from '../../../core/models/user.model';
     }
 
     .half-width {
-      width: calc(50% - var(--space-2));
+      width: calc(70% - var(--space-2));
+      height: 48px;
     }
 
     .name-fields {
