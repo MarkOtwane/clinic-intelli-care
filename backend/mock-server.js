@@ -6,10 +6,12 @@ const app = express();
 const PORT = 3000;
 
 // Middleware
-app.use(cors({
-  origin: 'http://localhost:4200',
-  credentials: true
-}));
+app.use(
+  cors({
+    origin: 'http://localhost:4200',
+    credentials: true,
+  }),
+);
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 
@@ -21,7 +23,7 @@ const users = [
     password: 'admin123', // In production, this would be hashed
     firstName: 'Admin',
     lastName: 'User',
-    role: 'ADMIN'
+    role: 'ADMIN',
   },
   {
     id: 2,
@@ -29,7 +31,7 @@ const users = [
     password: 'doctor123',
     firstName: 'Dr. Jane',
     lastName: 'Smith',
-    role: 'DOCTOR'
+    role: 'DOCTOR',
   },
   {
     id: 3,
@@ -37,8 +39,8 @@ const users = [
     password: 'patient123',
     firstName: 'John',
     lastName: 'Doe',
-    role: 'PATIENT'
-  }
+    role: 'PATIENT',
+  },
 ];
 
 // Mock JWT token (in production, use real JWT)
@@ -49,50 +51,50 @@ const generateMockToken = (user) => {
 // Auth Routes
 app.post('/api/auth/login', (req, res) => {
   const { email, password } = req.body;
-  
-  const user = users.find(u => u.email === email && u.password === password);
-  
+
+  const user = users.find((u) => u.email === email && u.password === password);
+
   if (!user) {
     return res.status(401).json({
-      message: 'Invalid credentials'
+      message: 'Invalid credentials',
     });
   }
-  
+
   const token = generateMockToken(user);
   const { password: _, ...userWithoutPassword } = user;
-  
+
   res.json({
     accessToken: token,
-    user: userWithoutPassword
+    user: userWithoutPassword,
   });
 });
 
 app.post('/api/auth/signup', (req, res) => {
   const { email, password, role = 'PATIENT' } = req.body;
-  
+
   // Check if user already exists
-  if (users.find(u => u.email === email)) {
+  if (users.find((u) => u.email === email)) {
     return res.status(400).json({
-      message: 'User already exists'
+      message: 'User already exists',
     });
   }
-  
+
   const newUser = {
     id: users.length + 1,
     email,
     password,
     firstName: 'New',
     lastName: 'User',
-    role: role.toUpperCase()
+    role: role.toUpperCase(),
   };
-  
+
   users.push(newUser);
   const token = generateMockToken(newUser);
   const { password: _, ...userWithoutPassword } = newUser;
-  
+
   res.json({
     accessToken: token,
-    user: userWithoutPassword
+    user: userWithoutPassword,
   });
 });
 
@@ -101,10 +103,10 @@ app.post('/api/auth/refresh', (req, res) => {
   const token = generateMockToken({ id: 1 });
   const user = users[0];
   const { password: _, ...userWithoutPassword } = user;
-  
+
   res.json({
     accessToken: token,
-    user: userWithoutPassword
+    user: userWithoutPassword,
   });
 });
 
@@ -113,7 +115,7 @@ app.get('/api/auth/me', (req, res) => {
   // For mock purposes, return the first user
   const user = users[0];
   const { password: _, ...userWithoutPassword } = user;
-  
+
   res.json(userWithoutPassword);
 });
 
@@ -135,8 +137,106 @@ app.get('/api/doctors', (req, res) => {
   res.json([]);
 });
 
+// Mock doctor data
+const doctors = [
+  {
+    id: 2,
+    name: 'Dr. Jane Smith',
+    specialization: 'Cardiology',
+    bio: 'Experienced cardiologist with 15 years of practice',
+    phone: '+1234567892',
+    experience: 15,
+    available: true,
+    email: 'doctor@clinic.com',
+    licenseNumber: 'MD123456',
+    hospital: 'General Hospital',
+    totalPatients: 150,
+    totalAppointments: 450,
+    rating: 4.8,
+    createdAt: '2020-01-01',
+    updatedAt: '2023-12-01',
+  },
+];
+
+app.get('/api/doctors/:id', (req, res) => {
+  const doctorId = parseInt(req.params.id);
+  const doctor = doctors.find((d) => d.id === doctorId);
+
+  if (!doctor) {
+    return res.status(404).json({ message: 'Doctor not found' });
+  }
+
+  res.json(doctor);
+});
+
+app.get('/api/doctors/:id/stats', (req, res) => {
+  res.json({
+    totalPatients: 150,
+    totalAppointments: 450,
+    todayAppointments: 3,
+    pendingPrescriptions: 2,
+  });
+});
+
 app.get('/api/patients', (req, res) => {
   res.json([]);
+});
+
+// Mock patient data
+const patients = [
+  {
+    id: 3,
+    firstName: 'John',
+    lastName: 'Doe',
+    email: 'patient@clinic.com',
+    phone: '+1234567890',
+    dateOfBirth: '1990-01-01',
+    gender: 'Male',
+    address: '123 Main St',
+    city: 'Anytown',
+    state: 'CA',
+    zipCode: '12345',
+    bloodGroup: 'O+',
+    allergies: ['Penicillin'],
+    conditions: ['Hypertension'],
+    emergencyContact: {
+      name: 'Jane Doe',
+      relationship: 'Spouse',
+      phone: '+1234567891',
+    },
+    insuranceInfo: {
+      provider: 'Health Insurance Co',
+      policyNumber: 'POL123456',
+      groupNumber: 'GRP789',
+    },
+    medicalHistory: [
+      {
+        id: 1,
+        date: '2023-01-15',
+        diagnosis: 'Hypertension',
+        treatment: 'Lisinopril 10mg daily',
+        notes: 'Blood pressure controlled',
+        doctorId: 2,
+        doctorName: 'Dr. Jane Smith',
+      },
+    ],
+    lastVisit: '2023-12-01',
+    totalAppointments: 5,
+    status: 'active',
+    createdAt: '2023-01-01',
+    updatedAt: '2023-12-01',
+  },
+];
+
+app.get('/api/patients/:id', (req, res) => {
+  const patientId = parseInt(req.params.id);
+  const patient = patients.find((p) => p.id === patientId);
+
+  if (!patient) {
+    return res.status(404).json({ message: 'Patient not found' });
+  }
+
+  res.json(patient);
 });
 
 // Start server

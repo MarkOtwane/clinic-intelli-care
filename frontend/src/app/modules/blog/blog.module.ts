@@ -6,6 +6,10 @@ const routes: Routes = [
   {
     path: '',
     loadComponent: () => import('./posts/blog-list.component').then(m => m.BlogListComponent)
+  },
+  {
+    path: 'create',
+    loadComponent: () => import('./create-post/create-post.component').then(m => m.CreatePostComponent)
   }
 ];
 

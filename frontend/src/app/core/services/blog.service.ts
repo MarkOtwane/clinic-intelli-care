@@ -1,172 +1,49 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Observable, BehaviorSubject } from 'rxjs';
-import { tap } from 'rxjs/operators';
-import { environment } from '../../../enviroments/enviroment';
-
-export interface Blog {
-  id: string;
-  title: string;
-  content: string;
-  excerpt?: string;
-  authorId: string;
-  authorName?: string;
-  category: string;
-  tags?: string[];
-  imageUrl?: string;
-  published: boolean;
-  views: number;
-  likes: number;
-  commentsCount: number;
-  createdAt: Date;
-  updatedAt: Date;
-}
-
-export interface CreateBlogDto {
-  title: string;
-  content: string;
-  excerpt?: string;
-  category: string;
-  tags?: string[];
-  imageUrl?: string;
-  published?: boolean;
-}
-
-export interface UpdateBlogDto extends Partial<CreateBlogDto> {}
-
-export interface Comment {
-  id: string;
-  blogId: string;
-  userId: string;
-  userName?: string;
-  content: string;
-  createdAt: Date;
-  updatedAt: Date;
-}
-
-export interface CreateCommentDto {
-  blogId: string;
-  content: string;
-}
+import { Observable } from 'rxjs';
+import { Blog, CreateBlogDto, UpdateBlogDto } from '../models/blog.model';
 
 @Injectable({
   providedIn: 'root'
 })
 export class BlogService {
-  private apiUrl = `${environment.apiUrl}/blogs`;
-  private selectedBlogSubject = new BehaviorSubject<Blog | null>(null);
-  public selectedBlog$ = this.selectedBlogSubject.asObservable();
+  private apiUrl = '/api/blogs';
 
   constructor(private http: HttpClient) {}
 
-  /**
-   * Get all blogs
-   */
-  getAllBlogs(published?: boolean): Observable<Blog[]> {
-    let params: Record<string, string> = {};
-    if (published !== undefined) {
-      params['published'] = published.toString();
-    }
-    return this.http.get<Blog[]>(this.apiUrl, { params });
+  getAllBlogs(): Observable<Blog[]> {
+    return this.http.get<Blog[]>(this.apiUrl);
   }
 
-  /**
-   * Get blog by ID
-   */
   getBlogById(id: string): Observable<Blog> {
-    return this.http.get<Blog>(`${this.apiUrl}/${id}`).pipe(
-      tap(blog => this.selectedBlogSubject.next(blog))
-    );
+    return this.http.get<Blog>(`${this.apiUrl}/${id}`);
   }
 
-  /**
-   * Get blogs by category
-   */
-  getBlogsByCategory(category: string): Observable<Blog[]> {
-    return this.http.get<Blog[]>(`${this.apiUrl}/category/${category}`);
+  getBlogsByAuthor(authorId: string): Observable<Blog[]> {
+    return this.http.get<Blog[]>(`${this.apiUrl}/author/${authorId}`);
   }
 
-  /**
-   * Search blogs
-   */
-  searchBlogs(query: string): Observable<Blog[]> {
-    return this.http.get<Blog[]>(`${this.apiUrl}/search`, {
-      params: { q: query }
-    });
+  getPublishedBlogs(): Observable<Blog[]> {
+    return this.http.get<Blog[]>(`${this.apiUrl}/published`);
   }
 
-  /**
-   * Create new blog
-   */
-  createBlog(blogData: CreateBlogDto): Observable<Blog> {
-    return this.http.post<Blog>(this.apiUrl, blogData);
+  createBlog(blog: CreateBlogDto): Observable<Blog> {
+    return this.http.post<Blog>(this.apiUrl, blog);
   }
 
-  /**
-   * Update blog
-   */
-  updateBlog(id: string, blogData: UpdateBlogDto): Observable<Blog> {
-    return this.http.patch<Blog>(`${this.apiUrl}/${id}`, blogData).pipe(
-      tap(blog => {
-        if (this.selectedBlogSubject.value?.id === id) {
-          this.selectedBlogSubject.next(blog);
-        }
-      })
-    );
+  updateBlog(id: string, blog: UpdateBlogDto): Observable<Blog> {
+    return this.http.patch<Blog>(`${this.apiUrl}/${id}`, blog);
   }
 
-  /**
-   * Delete blog
-   */
   deleteBlog(id: string): Observable<void> {
-    return this.http.delete<void>(`${this.apiUrl}/${id}`).pipe(
-      tap(() => {
-        if (this.selectedBlogSubject.value?.id === id) {
-          this.selectedBlogSubject.next(null);
-        }
-      })
-    );
+    return this.http.delete<void>(`${this.apiUrl}/${id}`);
   }
 
-  /**
-   * Like blog
-   */
-  likeBlog(id: string): Observable<Blog> {
-    return this.http.post<Blog>(`${this.apiUrl}/${id}/like`, {});
+  publishBlog(id: string): Observable<Blog> {
+    return this.http.patch<Blog>(`${this.apiUrl}/${id}/publish`, {});
   }
 
-  /**
-   * Get blog comments
-   */
-  getBlogComments(blogId: string): Observable<Comment[]> {
-    return this.http.get<Comment[]>(`${this.apiUrl}/${blogId}/comments`);
-  }
-
-  /**
-   * Add comment to blog
-   */
-  addComment(commentData: CreateCommentDto): Observable<Comment> {
-    return this.http.post<Comment>(`${this.apiUrl}/${commentData.blogId}/comments`, commentData);
-  }
-
-  /**
-   * Delete comment
-   */
-  deleteComment(blogId: string, commentId: string): Observable<void> {
-    return this.http.delete<void>(`${this.apiUrl}/${blogId}/comments/${commentId}`);
-  }
-
-  /**
-   * Set selected blog
-   */
-  setSelectedBlog(blog: Blog | null): void {
-    this.selectedBlogSubject.next(blog);
-  }
-
-  /**
-   * Clear selected blog
-   */
-  clearSelectedBlog(): void {
-    this.selectedBlogSubject.next(null);
+  unpublishBlog(id: string): Observable<Blog> {
+    return this.http.patch<Blog>(`${this.apiUrl}/${id}/unpublish`, {});
   }
 }

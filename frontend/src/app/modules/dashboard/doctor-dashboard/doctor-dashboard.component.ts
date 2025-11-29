@@ -6,14 +6,14 @@ import { MatGridListModule } from '@angular/material/grid-list';
 import { MatIconModule } from '@angular/material/icon';
 import { RouterModule } from '@angular/router';
 
-import { AuthService } from '../../../core/services/auth.service';
-import { PatientService } from '../../../core/services/patient.service';
-import { Patient } from '../../../core/models/patient.model';
-import { MatSnackBarModule } from '@angular/material/snack-bar';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { MatSnackBarModule } from '@angular/material/snack-bar';
+import { Doctor } from '../../../core/models/doctor.model';
+import { AuthService } from '../../../core/services/auth.service';
+import { DoctorService } from '../../../core/services/doctor.service';
 
 @Component({
-  selector: 'app-patient-dashboard',
+  selector: 'app-doctor-dashboard',
   standalone: true,
   imports: [
     CommonModule,
@@ -28,30 +28,38 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
   template: `
     <div
       class="dashboard-container"
-      *ngIf="!isLoading && patient; else loadingOrErrorTemplate"
+      *ngIf="!isLoading && doctor; else loadingTemplate"
     >
       <div class="dashboard-header">
         <div class="welcome-section">
-          <h1 class="dashboard-title">
-            Welcome back, {{ patient.firstName }}!
-          </h1>
+          <h1 class="dashboard-title">Welcome back, Dr. {{ doctor.name }}!</h1>
           <p class="dashboard-subtitle">
-            Manage your healthcare journey from one centralized location
+            Manage your practice and connect with patients from your centralized
+            dashboard
           </p>
         </div>
         <div class="quick-stats">
           <div class="stat-card">
             <mat-icon class="stat-icon icon-success">event_available</mat-icon>
             <div class="stat-content">
-              <div class="stat-number">3</div>
-              <div class="stat-label">Upcoming Appointments</div>
+              <div class="stat-number">{{ stats?.todayAppointments || 0 }}</div>
+              <div class="stat-label">Today's Appointments</div>
             </div>
           </div>
           <div class="stat-card">
-            <mat-icon class="stat-icon icon-medical">medication</mat-icon>
+            <mat-icon class="stat-icon icon-medical">people</mat-icon>
             <div class="stat-content">
-              <div class="stat-number">2</div>
-              <div class="stat-label">Active Prescriptions</div>
+              <div class="stat-number">{{ stats?.totalPatients || 0 }}</div>
+              <div class="stat-label">Total Patients</div>
+            </div>
+          </div>
+          <div class="stat-card">
+            <mat-icon class="stat-icon icon-warning">assignment</mat-icon>
+            <div class="stat-content">
+              <div class="stat-number">
+                {{ stats?.pendingPrescriptions || 0 }}
+              </div>
+              <div class="stat-label">Pending Prescriptions</div>
             </div>
           </div>
         </div>
@@ -77,26 +85,29 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
           </mat-card-header>
           <mat-card-content class="card-content">
             <p class="card-description">
-              View and schedule your upcoming appointments with healthcare
-              providers. Manage your visit history and upcoming consultations.
+              View and manage your upcoming appointments, reschedule visits, and
+              track patient consultations. Stay organized with your practice
+              schedule.
             </p>
             <div class="card-stats">
               <div class="stat-item">
-                <mat-icon class="stat-item-icon">check_circle</mat-icon>
-                <span>2 confirmed</span>
+                <mat-icon class="stat-item-icon">today</mat-icon>
+                <span>{{ stats?.todayAppointments || 0 }} today</span>
               </div>
               <div class="stat-item">
                 <mat-icon class="stat-item-icon icon-warning"
                   >schedule</mat-icon
                 >
-                <span>1 pending</span>
+                <span
+                  >{{ stats?.totalAppointments || 0 }} total this month</span
+                >
               </div>
             </div>
           </mat-card-content>
           <mat-card-actions class="card-actions">
             <button
               mat-raised-button
-              routerLink="/appointments"
+              routerLink="/doctor/appointments"
               class="btn-primary"
             >
               <mat-icon>arrow_forward</mat-icon>
@@ -112,42 +123,45 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
           <mat-card-header>
             <div class="card-icon-container">
               <mat-icon mat-card-avatar class="card-icon icon-health"
-                >psychology</mat-icon
+                >people</mat-icon
               >
             </div>
             <div class="card-title-section">
               <mat-card-title class="card-title"
-                >AI Health Analysis</mat-card-title
+                >Patient Records</mat-card-title
               >
               <mat-card-subtitle class="card-subtitle"
-                >Symptom assessment</mat-card-subtitle
+                >Medical history & profiles</mat-card-subtitle
               >
             </div>
           </mat-card-header>
           <mat-card-content class="card-content">
             <p class="card-description">
-              Get AI-powered insights about your symptoms and health conditions.
-              Receive personalized recommendations for your wellbeing.
+              Access patient medical records, update treatment plans, and
+              maintain comprehensive health documentation for better care
+              delivery.
             </p>
             <div class="card-features">
               <div class="feature-item">
-                <mat-icon class="feature-icon icon-success">smart_toy</mat-icon>
-                <span>AI-powered analysis</span>
+                <mat-icon class="feature-icon icon-success"
+                  >folder_shared</mat-icon
+                >
+                <span>{{ stats?.totalPatients || 0 }} active patients</span>
               </div>
               <div class="feature-item">
-                <mat-icon class="feature-icon icon-medical">security</mat-icon>
-                <span>Privacy focused</span>
+                <mat-icon class="feature-icon icon-medical">history</mat-icon>
+                <span>Medical history tracking</span>
               </div>
             </div>
           </mat-card-content>
           <mat-card-actions class="card-actions">
             <button
               mat-raised-button
-              routerLink="/ai-analysis"
+              routerLink="/doctor/patients"
               class="btn-secondary"
             >
-              <mat-icon>psychology</mat-icon>
-              Start Analysis
+              <mat-icon>people</mat-icon>
+              View Patients
             </button>
           </mat-card-actions>
         </mat-card>
@@ -171,22 +185,17 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
           </mat-card-header>
           <mat-card-content class="card-content">
             <p class="card-description">
-              View your prescriptions, track medication schedules, and set
-              reminders. Keep your treatment plan organized and up-to-date.
+              Create and manage prescriptions, track medication refills, and
+              ensure patients receive appropriate treatment plans.
             </p>
-            <div class="card-medications">
-              <div class="medication-item">
-                <mat-icon class="medication-icon">pill</mat-icon>
-                <div class="medication-info">
-                  <div class="medication-name">Vitamin D3</div>
-                  <div class="medication-schedule">Daily - 8:00 AM</div>
-                </div>
-              </div>
-              <div class="medication-item">
-                <mat-icon class="medication-icon">pill</mat-icon>
-                <div class="medication-info">
-                  <div class="medication-name">Multivitamin</div>
-                  <div class="medication-schedule">Daily - 12:00 PM</div>
+            <div class="prescription-alerts">
+              <div class="alert-item">
+                <mat-icon class="alert-icon">warning</mat-icon>
+                <div class="alert-info">
+                  <div class="alert-title">
+                    {{ stats?.pendingPrescriptions || 0 }} pending reviews
+                  </div>
+                  <div class="alert-desc">Prescriptions awaiting approval</div>
                 </div>
               </div>
             </div>
@@ -194,11 +203,11 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
           <mat-card-actions class="card-actions">
             <button
               mat-raised-button
-              routerLink="/prescriptions"
+              routerLink="/doctor/prescriptions"
               class="btn-primary"
             >
               <mat-icon>vaccines</mat-icon>
-              View Prescriptions
+              Manage Prescriptions
             </button>
           </mat-card-actions>
         </mat-card>
@@ -209,39 +218,84 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
         >
           <mat-card-header>
             <div class="card-icon-container">
-              <mat-icon mat-card-avatar class="card-icon icon-warning"
-                >notifications</mat-icon
+              <mat-icon mat-card-avatar class="card-icon icon-blog"
+                >article</mat-icon
               >
             </div>
             <div class="card-title-section">
-              <mat-card-title class="card-title"
-                >Health Notifications</mat-card-title
-              >
+              <mat-card-title class="card-title">Medical Blog</mat-card-title>
               <mat-card-subtitle class="card-subtitle"
-                >Stay informed</mat-card-subtitle
+                >Share knowledge & insights</mat-card-subtitle
               >
             </div>
           </mat-card-header>
           <mat-card-content class="card-content">
             <p class="card-description">
-              Receive important health reminders, test results, and updates from
-              your healthcare providers. Never miss critical information.
+              Write and publish medical articles, share health tips, and
+              contribute to the medical community. Help educate patients and
+              colleagues.
             </p>
-            <div class="notification-summary">
-              <div class="notification-item urgent">
-                <mat-icon class="notification-icon">priority_high</mat-icon>
-                <span>1 urgent message</span>
+            <div class="blog-stats">
+              <div class="blog-item">
+                <mat-icon class="blog-icon">edit</mat-icon>
+                <span>Draft new articles</span>
               </div>
-              <div class="notification-item info">
-                <mat-icon class="notification-icon">info</mat-icon>
-                <span>3 general updates</span>
+              <div class="blog-item">
+                <mat-icon class="blog-icon">publish</mat-icon>
+                <span>Publish content</span>
               </div>
             </div>
           </mat-card-content>
           <mat-card-actions class="card-actions">
             <button
               mat-raised-button
-              routerLink="/notifications"
+              routerLink="/doctor/blog/create"
+              class="btn-blog"
+            >
+              <mat-icon>create</mat-icon>
+              Write Blog Post
+            </button>
+          </mat-card-actions>
+        </mat-card>
+
+        <mat-card
+          class="dashboard-card healthcare-card slide-up"
+          style="animation-delay: 0.5s"
+        >
+          <mat-card-header>
+            <div class="card-icon-container">
+              <mat-icon mat-card-avatar class="card-icon icon-warning"
+                >notifications</mat-icon
+              >
+            </div>
+            <div class="card-title-section">
+              <mat-card-title class="card-title">Notifications</mat-card-title>
+              <mat-card-subtitle class="card-subtitle"
+                >Stay updated</mat-card-subtitle
+              >
+            </div>
+          </mat-card-header>
+          <mat-card-content class="card-content">
+            <p class="card-description">
+              Receive important updates about patient appointments, prescription
+              renewals, and system notifications. Never miss critical
+              information.
+            </p>
+            <div class="notification-summary">
+              <div class="notification-item urgent">
+                <mat-icon class="notification-icon">priority_high</mat-icon>
+                <span>2 urgent patient updates</span>
+              </div>
+              <div class="notification-item info">
+                <mat-icon class="notification-icon">info</mat-icon>
+                <span>5 general notifications</span>
+              </div>
+            </div>
+          </mat-card-content>
+          <mat-card-actions class="card-actions">
+            <button
+              mat-raised-button
+              routerLink="/doctor/notifications"
               class="btn-outline"
             >
               <mat-icon>notifications</mat-icon>
@@ -249,19 +303,63 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
             </button>
           </mat-card-actions>
         </mat-card>
+
+        <mat-card
+          class="dashboard-card healthcare-card slide-up"
+          style="animation-delay: 0.6s"
+        >
+          <mat-card-header>
+            <div class="card-icon-container">
+              <mat-icon mat-card-avatar class="card-icon icon-analytics"
+                >analytics</mat-icon
+              >
+            </div>
+            <div class="card-title-section">
+              <mat-card-title class="card-title"
+                >Practice Analytics</mat-card-title
+              >
+              <mat-card-subtitle class="card-subtitle"
+                >Performance insights</mat-card-subtitle
+              >
+            </div>
+          </mat-card-header>
+          <mat-card-content class="card-content">
+            <p class="card-description">
+              Monitor your practice performance, patient satisfaction ratings,
+              and treatment outcomes. Make data-driven decisions to improve care
+              quality.
+            </p>
+            <div class="analytics-preview">
+              <div class="metric">
+                <div class="metric-value">{{ doctor.rating || 0 }}/5</div>
+                <div class="metric-label">Patient Rating</div>
+              </div>
+              <div class="metric">
+                <div class="metric-value">
+                  {{ stats?.totalAppointments || 0 }}
+                </div>
+                <div class="metric-label">Monthly Appointments</div>
+              </div>
+            </div>
+          </mat-card-content>
+          <mat-card-actions class="card-actions">
+            <button
+              mat-raised-button
+              routerLink="/doctor/analytics"
+              class="btn-analytics"
+            >
+              <mat-icon>analytics</mat-icon>
+              View Analytics
+            </button>
+          </mat-card-actions>
+        </mat-card>
       </div>
     </div>
 
-    <ng-template #loadingOrErrorTemplate>
-      <div class="loading" *ngIf="isLoading">
+    <ng-template #loadingTemplate>
+      <div class="loading">
         <mat-spinner></mat-spinner>
-        <p>Loading patient profile...</p>
-      </div>
-      <div class="error-state" *ngIf="!isLoading && !patient">
-        <mat-icon class="error-icon">info</mat-icon>
-        <h2>Welcome to Your Health Dashboard</h2>
-        <p>Your patient profile is being set up. Please contact your healthcare provider to complete your registration.</p>
-        <p class="error-details">If you believe this is an error, please try refreshing the page or contact support.</p>
+        <p>Loading doctor profile...</p>
       </div>
     </ng-template>
   `,
@@ -460,41 +558,63 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
         height: 16px;
       }
 
-      .card-medications {
+      .prescription-alerts {
         display: flex;
         flex-direction: column;
         gap: var(--space-3);
       }
 
-      .medication-item {
+      .alert-item {
         display: flex;
         align-items: center;
         gap: var(--space-3);
         padding: var(--space-3);
-        background: var(--gray-50);
+        background: var(--warning-50);
         border-radius: var(--radius-md);
+        border-left: 3px solid var(--warning-500);
       }
 
-      .medication-icon {
+      .alert-icon {
         font-size: 20px;
         width: 20px;
         height: 20px;
-        color: var(--success-600);
+        color: var(--warning-600);
       }
 
-      .medication-info {
+      .alert-info {
         flex: 1;
       }
 
-      .medication-name {
+      .alert-title {
         font-size: var(--font-size-sm);
         font-weight: 500;
         color: var(--gray-800);
       }
 
-      .medication-schedule {
+      .alert-desc {
         font-size: var(--font-size-xs);
         color: var(--gray-500);
+      }
+
+      .blog-stats {
+        display: flex;
+        flex-direction: column;
+        gap: var(--space-2);
+      }
+
+      .blog-item {
+        display: flex;
+        align-items: center;
+        gap: var(--space-2);
+        font-size: var(--font-size-sm);
+        color: var(--gray-700);
+      }
+
+      .blog-icon {
+        font-size: 16px;
+        width: 16px;
+        height: 16px;
+        color: var(--primary-600);
       }
 
       .notification-summary {
@@ -530,9 +650,49 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
         height: 16px;
       }
 
+      .analytics-preview {
+        display: flex;
+        justify-content: space-around;
+        gap: var(--space-4);
+      }
+
+      .metric {
+        text-align: center;
+      }
+
+      .metric-value {
+        font-size: var(--font-size-xl);
+        font-weight: 700;
+        color: var(--gray-800);
+      }
+
+      .metric-label {
+        font-size: var(--font-size-xs);
+        color: var(--gray-500);
+        margin-top: var(--space-1);
+      }
+
       .card-actions {
         padding: var(--space-4) var(--space-6) var(--space-6) var(--space-6);
         gap: var(--space-2);
+      }
+
+      .btn-blog {
+        background-color: var(--primary-600);
+        color: white;
+      }
+
+      .btn-blog:hover {
+        background-color: var(--primary-700);
+      }
+
+      .btn-analytics {
+        background-color: var(--secondary-600);
+        color: white;
+      }
+
+      .btn-analytics:hover {
+        background-color: var(--secondary-700);
       }
 
       /* Responsive design */
@@ -558,6 +718,11 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
         .stat-card {
           padding: var(--space-4);
         }
+
+        .analytics-preview {
+          flex-direction: column;
+          gap: var(--space-2);
+        }
       }
 
       @media (max-width: 480px) {
@@ -579,74 +744,61 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
         gap: 16px;
       }
 
-      .error-state {
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        justify-content: center;
-        padding: 48px;
-        gap: 24px;
-        text-align: center;
-        max-width: 600px;
-        margin: 0 auto;
+      .icon-blog {
+        color: var(--primary-600);
       }
 
-      .error-icon {
-        font-size: 64px;
-        width: 64px;
-        height: 64px;
-        color: var(--gray-400);
-      }
-
-      .error-state h2 {
-        font-size: var(--font-size-2xl);
-        font-weight: 600;
-        color: var(--gray-800);
-        margin: 0;
-      }
-
-      .error-state p {
-        font-size: var(--font-size-base);
-        color: var(--gray-600);
-        line-height: 1.6;
-        margin: 0;
-      }
-
-      .error-details {
-        font-size: var(--font-size-sm) !important;
-        color: var(--gray-500) !important;
-        font-style: italic;
+      .icon-analytics {
+        color: var(--secondary-600);
       }
     `,
   ],
 })
-export class PatientDashboardComponent implements OnInit {
-  patient: Patient | null = null;
+export class DoctorDashboardComponent implements OnInit {
+  doctor: Doctor | null = null;
+  stats: {
+    totalPatients: number;
+    totalAppointments: number;
+    todayAppointments: number;
+    pendingPrescriptions: number;
+  } | null = null;
   isLoading = true;
 
   constructor(
     private authService: AuthService,
-    private patientService: PatientService
+    private doctorService: DoctorService
   ) {}
 
   ngOnInit(): void {
-    this.authService.currentUser$.subscribe(user => {
-      if (user && user.role === 'PATIENT') {
-        // Assuming user has patientId or id is patientId
-        const patientId = user.patientId || user.id;
-        this.patientService.getPatientById(patientId).subscribe({
-          next: (patient) => {
-            this.patient = patient;
-            this.isLoading = false;
+    this.authService.currentUser$.subscribe((user) => {
+      if (user && user.role === 'DOCTOR') {
+        const doctorId = user.doctorId || user.id;
+        this.doctorService.getDoctorById(doctorId).subscribe({
+          next: (doctor) => {
+            this.doctor = doctor;
+            this.loadStats(doctorId);
           },
           error: (error) => {
-            console.error('Error loading patient:', error);
+            console.error('Error loading doctor:', error);
             this.isLoading = false;
-          }
+          },
         });
       } else {
         this.isLoading = false;
       }
+    });
+  }
+
+  private loadStats(doctorId: string): void {
+    this.doctorService.getDoctorStats(doctorId).subscribe({
+      next: (stats) => {
+        this.stats = stats;
+        this.isLoading = false;
+      },
+      error: (error) => {
+        console.error('Error loading stats:', error);
+        this.isLoading = false;
+      },
     });
   }
 }

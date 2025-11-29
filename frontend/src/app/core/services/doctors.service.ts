@@ -3,7 +3,7 @@ import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
 import { DoctorProfile, DoctorAvailability } from '../models/user.model';
 import { Appointment } from '../models/appointment.model';
-import { BlogPost } from '../models/blog.model';
+import { Blog } from '../models/blog.model';
 import { Prescription } from '../models/prescription.model';
 
 export interface Doctor extends DoctorProfile {
@@ -114,8 +114,8 @@ export class DoctorsService {
     return this.http.get<Prescription[]>(`${this.apiUrl}/${doctorId}/prescriptions`);
   }
 
-  getDoctorBlogs(doctorId: string): Observable<BlogPost[]> {
-    return this.http.get<BlogPost[]>(`${this.apiUrl}/${doctorId}/blogs`);
+  getDoctorBlogs(doctorId: string): Observable<Blog[]> {
+    return this.http.get<Blog[]>(`${this.apiUrl}/${doctorId}/blogs`);
   }
 
   // Profile management
