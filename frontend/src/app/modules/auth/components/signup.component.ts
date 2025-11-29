@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
@@ -6,15 +6,13 @@ import { MatCardModule } from '@angular/material/card';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatButtonModule } from '@angular/material/button';
-import { MatSelectModule } from '@angular/material/select';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { MatIconModule } from '@angular/material/icon';
 import { MatCheckboxModule } from '@angular/material/checkbox';
-import { MatStepperModule } from '@angular/material/stepper';
+import { MatStepper, MatStepperModule } from '@angular/material/stepper';
 
 import { AuthService } from '../../../core/services/auth.service';
-import { UserRole } from '../../../core/models/user.model';
 
 @Component({
   selector: 'app-signup',
@@ -29,7 +27,6 @@ import { UserRole } from '../../../core/models/user.model';
     MatFormFieldModule,
     MatInputModule,
     MatButtonModule,
-    MatSelectModule,
     MatProgressSpinnerModule,
     MatSnackBarModule,
     MatIconModule,
@@ -181,42 +178,39 @@ import { UserRole } from '../../../core/models/user.model';
               </div>
             </mat-step>
 
-            <!-- Step 3: Account Type -->
-            <mat-step label="Account Type">
+            <!-- Step 3: Confirmation -->
+            <mat-step label="Confirmation">
               <div class="step-content">
-                <h3 class="step-title">Account Type</h3>
-                <p class="step-description">Select your account type</p>
+                <h3 class="step-title">Patient Access</h3>
+                <p class="step-description">
+                  For security, all self-registrations are provisioned as patient accounts.
+                  Doctor or admin access must be granted by the hospital administration team.
+                </p>
+
+                <section class="account-summary">
+                  <div class="summary-card">
+                    <mat-icon class="summary-icon icon-medical">verified_user</mat-icon>
+                    <div>
+                      <h4>Patient privileges</h4>
+                      <ul>
+                        <li>Book and manage appointments</li>
+                        <li>Run AI-powered symptom checks</li>
+                        <li>Access prescriptions and notifications</li>
+                      </ul>
+                    </div>
+                  </div>
+                  <div class="summary-card info-card">
+                    <mat-icon class="summary-icon icon-warning">support_agent</mat-icon>
+                    <div>
+                      <h4>Need elevated access?</h4>
+                      <p class="summary-text">
+                        Ask an administrator to upgrade your role after verifying credentials.
+                      </p>
+                    </div>
+                  </div>
+                </section>
                 
                 <form [formGroup]="accountTypeForm" class="step-form">
-                  <div class="form-group">
-                    <mat-form-field appearance="outline" class="full-width">
-                      <mat-label>I am a</mat-label>
-                      <mat-select formControlName="role">
-                        <mat-option value="PATIENT">
-                          <div class="option-content">
-                            <mat-icon class="option-icon">person</mat-icon>
-                            <div class="option-text">
-                              <div class="option-title">Patient</div>
-                              <div class="option-subtitle">Seeking medical care</div>
-                            </div>
-                          </div>
-                        </mat-option>
-                        <mat-option value="DOCTOR">
-                          <div class="option-content">
-                            <mat-icon class="option-icon">medical_services</mat-icon>
-                            <div class="option-text">
-                              <div class="option-title">Doctor</div>
-                              <div class="option-subtitle">Medical professional</div>
-                            </div>
-                          </div>
-                        </mat-option>
-                      </mat-select>
-                      <mat-error *ngIf="accountTypeForm.get('role')?.hasError('required')">
-                        Please select an account type
-                      </mat-error>
-                    </mat-form-field>
-                  </div>
-
                   <div class="form-group">
                     <mat-checkbox formControlName="agreeToTerms" class="full-width terms-checkbox">
                       <span class="terms-text">
@@ -227,7 +221,7 @@ import { UserRole } from '../../../core/models/user.model';
                       </span>
                     </mat-checkbox>
 
-                    <mat-error *ngIf="accountTypeForm.get('agreeToTerms')?.hasError('required') && accountTypeForm.get('agreeToTerms')?.touched" class="checkbox-error">
+                    <mat-error *ngIf="accountTypeForm.get('agreeToTerms')?.hasError('requiredTrue') && accountTypeForm.get('agreeToTerms')?.touched" class="checkbox-error">
                       You must agree to the terms and conditions
                     </mat-error>
                   </div>
@@ -404,6 +398,52 @@ import { UserRole } from '../../../core/models/user.model';
       color: var(--gray-500);
     }
 
+    .account-summary {
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-4);
+      margin-bottom: var(--space-4);
+    }
+
+    .summary-card {
+      display: flex;
+      align-items: flex-start;
+      gap: var(--space-4);
+      padding: var(--space-4);
+      border-radius: var(--radius-lg);
+      background: var(--gray-50);
+      border: 1px solid var(--gray-200);
+    }
+
+    .summary-card.info-card {
+      background: var(--secondary-50);
+      border-color: var(--secondary-100);
+    }
+
+    .summary-icon {
+      font-size: 28px;
+      width: 28px;
+      height: 28px;
+    }
+
+    .summary-card h4 {
+      margin: 0 0 var(--space-2) 0;
+      font-size: var(--font-size-base);
+      font-weight: 600;
+      color: var(--gray-800);
+    }
+
+    .summary-card ul {
+      margin: 0;
+      padding-left: 1.5rem;
+      color: var(--gray-600);
+    }
+
+    .summary-text {
+      margin: 0;
+      color: var(--gray-600);
+    }
+
     .terms-checkbox {
       margin: var(--space-4) 0;
     }
@@ -526,6 +566,7 @@ import { UserRole } from '../../../core/models/user.model';
   `]
 })
 export class SignupComponent implements OnInit {
+  @ViewChild('stepper') stepper?: MatStepper;
   basicInfoForm: FormGroup;
   securityForm: FormGroup;
   accountTypeForm: FormGroup;
@@ -552,7 +593,6 @@ export class SignupComponent implements OnInit {
     }, { validators: this.passwordMatchValidator });
 
     this.accountTypeForm = this.fb.group({
-      role: ['', Validators.required],
       agreeToTerms: [false, Validators.requiredTrue]
     });
   }
@@ -582,22 +622,22 @@ export class SignupComponent implements OnInit {
       
       const basicInfo = this.basicInfoForm.value;
       const security = this.securityForm.value;
-      const accountType = this.accountTypeForm.value;
+      const emailForRedirect = basicInfo.email;
 
       const signupData = {
         email: basicInfo.email,
         password: security.password,
-        role: accountType.role,
         firstName: basicInfo.firstName,
         lastName: basicInfo.lastName,
         phone: basicInfo.phone
       };
 
       this.authService.signup(signupData).subscribe({
-        next: (response) => {
+        next: () => {
           this.isLoading = false;
-          this.snackBar.open('Account created successfully!', 'Close', { duration: 3000 });
-          this.redirectBasedOnRole(response.user.role);
+          this.snackBar.open('Account created successfully! Please sign in.', 'Close', { duration: 4000 });
+          this.resetForms();
+          this.router.navigate(['/auth/login'], { queryParams: { email: emailForRedirect } });
         },
         error: (error) => {
           this.isLoading = false;
@@ -611,8 +651,10 @@ export class SignupComponent implements OnInit {
     }
   }
 
-  private redirectBasedOnRole(role: UserRole): void {
-    // Redirect to login page after successful registration
-    this.router.navigate(['/auth/login']);
+  private resetForms(): void {
+    this.basicInfoForm.reset();
+    this.securityForm.reset();
+    this.accountTypeForm.reset({ agreeToTerms: false });
+    this.stepper?.reset();
   }
 }

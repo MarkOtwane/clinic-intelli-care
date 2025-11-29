@@ -5,24 +5,24 @@
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */
 /* eslint-disable @typescript-eslint/require-await */
 import {
-  Controller,
-  Post,
   Body,
-  UseGuards,
+  Controller,
   Get,
-  Req,
-  Res,
   HttpCode,
   HttpStatus,
+  Post,
+  Req,
+  Res,
   UnauthorizedException,
+  UseGuards,
 } from '@nestjs/common';
-import { AuthService } from './auth.service';
-import { SignupDto, LoginDto } from './dtos/auth-credentials.dto';
-import { JwtAuthGuard } from './guards/jwt-auth.guard';
-import type { Request, Response } from 'express';
 import { ConfigService } from '@nestjs/config';
-import { setRefreshTokenCookie, clearRefreshTokenCookie } from './cookie.utils';
+import type { Request, Response } from 'express';
+import { AuthService } from './auth.service';
+import { clearRefreshTokenCookie, setRefreshTokenCookie } from './cookie.utils';
 import { Public } from './decorators/public.decorator';
+import { LoginDto, SignupDto } from './dtos/auth-credentials.dto';
+import { JwtAuthGuard } from './guards/jwt-auth.guard';
 
 @Controller('auth')
 export class AuthController {
@@ -33,18 +33,8 @@ export class AuthController {
 
   @Public()
   @Post('signup')
-  async signup(
-    @Body() dto: SignupDto,
-    @Res({ passthrough: true }) res: Response,
-    @Req() req: Request,
-  ) {
-    const meta = { userAgent: req.get('user-agent') || undefined, ip: req.ip };
-    const result = await this.authService.signup(dto);
-    // set refresh cookie if returned
-    if (result.refreshToken)
-      setRefreshTokenCookie(res, result.refreshToken, this.config);
-    // return access token only (or include user)
-    return { user: result.user, accessToken: result.accessToken };
+  async signup(@Body() dto: SignupDto) {
+    return this.authService.signup(dto);
   }
 
   @Public()

@@ -1,4 +1,8 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  ForbiddenException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateBlogDto } from './dtos/create-blog.dto';
 import { UpdateBlogDto } from './dtos/update-blog.dto';
@@ -6,6 +10,23 @@ import { UpdateBlogDto } from './dtos/update-blog.dto';
 @Injectable()
 export class BlogsService {
   constructor(private prisma: PrismaService) {}
+
+  private async assertOwnership(postId: string, doctorId: string) {
+    const post = await this.prisma.blogPost.findUnique({
+      where: { id: postId },
+      select: { authorId: true },
+    });
+
+    if (!post) {
+      throw new NotFoundException('Blog post not found');
+    }
+
+    if (post.authorId !== doctorId) {
+      throw new ForbiddenException(
+        'You are not allowed to modify this blog post',
+      );
+    }
+  }
 
   /**
    * Generate URL-friendly slug from title
@@ -130,8 +151,18 @@ export class BlogsService {
     });
   }
 
+  async updateAsDoctor(id: string, dto: UpdateBlogDto, doctorId: string) {
+    await this.assertOwnership(id, doctorId);
+    return this.update(id, dto);
+  }
+
   async remove(id: string) {
     return await this.prisma.blogPost.delete({ where: { id } });
+  }
+
+  async removeAsDoctor(id: string, doctorId: string) {
+    await this.assertOwnership(id, doctorId);
+    return this.remove(id);
   }
 
   async findByDoctor(doctorId: string) {

@@ -1,14 +1,26 @@
+export interface BlogImage {
+  id: string;
+  url: string;
+  publicId: string;
+}
+
+export interface BlogAuthor {
+  id: string;
+  name?: string;
+}
+
 export interface Blog {
   id: string;
   title: string;
   content: string;
   imageIds?: string[];
+  images?: BlogImage[];
   published: boolean;
   authorId: string;
-  authorName?: string;
-  createdAt: Date;
-  updatedAt: Date;
-  publishedAt?: Date;
+  author?: BlogAuthor;
+  createdAt: string | Date;
+  updatedAt: string | Date;
+  publishedAt?: string | Date;
 }
 
 export interface CreateBlogDto {

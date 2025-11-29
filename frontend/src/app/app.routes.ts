@@ -7,14 +7,18 @@ export const routes: Routes = [
   // Public routes
   {
     path: 'auth',
-    loadChildren: () => import('./modules/auth/auth.module').then(m => m.AuthModule)
+    loadChildren: () =>
+      import('./modules/auth/auth.module').then((m) => m.AuthModule),
   },
 
   // Dashboard routes (protected)
   {
     path: 'dashboard',
     canActivate: [AuthGuard],
-    loadChildren: () => import('./modules/dashboard/dashboard.module').then(m => m.DashboardModule)
+    loadChildren: () =>
+      import('./modules/dashboard/dashboard.module').then(
+        (m) => m.DashboardModule
+      ),
   },
 
   // Patient routes
@@ -22,7 +26,10 @@ export const routes: Routes = [
     path: 'patient',
     canActivate: [AuthGuard, RoleGuard],
     data: { roles: [UserRole.PATIENT] },
-    loadChildren: () => import('./modules/patients/patients.module').then(m => m.PatientsModule)
+    loadChildren: () =>
+      import('./modules/patient-portal/patient-portal.module').then(
+        (m) => m.PatientPortalModule
+      ),
   },
 
   // Doctor routes
@@ -30,7 +37,8 @@ export const routes: Routes = [
     path: 'doctor',
     canActivate: [AuthGuard, RoleGuard],
     data: { roles: [UserRole.DOCTOR] },
-    loadChildren: () => import('./modules/doctors/doctors.module').then(m => m.DoctorsModule)
+    loadChildren: () =>
+      import('./modules/doctors/doctors.module').then((m) => m.DoctorsModule),
   },
 
   // Admin routes
@@ -38,7 +46,8 @@ export const routes: Routes = [
     path: 'admin',
     canActivate: [AuthGuard, RoleGuard],
     data: { roles: [UserRole.ADMIN] },
-    loadChildren: () => import('./modules/admin/admin.module').then(m => m.AdminModule)
+    loadChildren: () =>
+      import('./modules/admin/admin.module').then((m) => m.AdminModule),
   },
 
   // Public feature routes
@@ -51,34 +60,52 @@ export const routes: Routes = [
   },
   {
     path: 'blogs',
-    loadChildren: () => import('./modules/blog/blog.module').then(m => m.BlogModule)
+    canActivate: [AuthGuard, RoleGuard],
+    data: { roles: [UserRole.PATIENT, UserRole.DOCTOR, UserRole.ADMIN] },
+    loadChildren: () =>
+      import('./modules/blog/blog.module').then((m) => m.BlogModule),
   },
 
   // Core feature routes
   {
     path: 'appointments',
     canActivate: [AuthGuard],
-    loadChildren: () => import('./modules/appointments/appointments.module').then(m => m.AppointmentsModule)
+    loadChildren: () =>
+      import('./modules/appointments/appointments.module').then(
+        (m) => m.AppointmentsModule
+      ),
   },
   {
     path: 'ai-analysis',
     canActivate: [AuthGuard],
-    loadChildren: () => import('./modules/ai-analysis/ai-analysis.module').then(m => m.AiAnalysisModule)
+    loadChildren: () =>
+      import('./modules/ai-analysis/ai-analysis.module').then(
+        (m) => m.AiAnalysisModule
+      ),
   },
   {
     path: 'prescriptions',
     canActivate: [AuthGuard],
-    loadChildren: () => import('./modules/prescriptions/prescriptions.module').then(m => m.PrescriptionsModule)
+    loadChildren: () =>
+      import('./modules/prescriptions/prescriptions.module').then(
+        (m) => m.PrescriptionsModule
+      ),
   },
   {
     path: 'notifications',
     canActivate: [AuthGuard],
-    loadChildren: () => import('./modules/notifications/notifications.module').then(m => m.NotificationsModule)
+    loadChildren: () =>
+      import('./modules/notifications/notifications.module').then(
+        (m) => m.NotificationsModule
+      ),
   },
   {
     path: 'settings',
     canActivate: [AuthGuard],
-    loadChildren: () => import('./modules/settings/settings.module').then(m => m.SettingsModule)
+    loadChildren: () =>
+      import('./modules/settings/settings.module').then(
+        (m) => m.SettingsModule
+      ),
   },
 
   // Legacy routes (for backward compatibility)

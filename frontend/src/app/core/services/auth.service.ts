@@ -1,10 +1,24 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { BehaviorSubject, Observable, tap } from 'rxjs';
+import { map } from 'rxjs/operators';
 
 interface LoginResponse {
   accessToken: string;
   user: any;
+}
+
+interface SignupResponse {
+  user: any;
+  message: string;
+}
+
+interface SignupRequest {
+  email: string;
+  password: string;
+  firstName?: string;
+  lastName?: string;
+  phone?: string;
 }
 
 @Injectable({
@@ -15,7 +29,22 @@ export class AuthService {
   private currentUserSubject = new BehaviorSubject<any>(null);
   currentUser$ = this.currentUserSubject.asObservable();
 
-  constructor(private http: HttpClient) {}
+  constructor(private http: HttpClient) {
+    const storedUser = localStorage.getItem('currentUser');
+    if (storedUser) {
+      try {
+        this.currentUserSubject.next(JSON.parse(storedUser));
+      } catch {
+        localStorage.removeItem('currentUser');
+      }
+    }
+  }
+
+  private persistSession(user: any, accessToken: string): void {
+    localStorage.setItem('accessToken', accessToken);
+    localStorage.setItem('currentUser', JSON.stringify(user));
+    this.currentUserSubject.next(user);
+  }
 
   login(credentials: {
     email: string;
@@ -27,23 +56,17 @@ export class AuthService {
       })
       .pipe(
         tap((response) => {
-          localStorage.setItem('accessToken', response.accessToken);
-          this.currentUserSubject.next(response.user);
+          this.persistSession(response.user, response.accessToken);
         })
       );
   }
 
-  signup(dto: { email: string; password: string; role?: string }) {
+  signup(dto: SignupRequest): Observable<SignupResponse> {
     return this.http
-      .post<LoginResponse>(`${this.apiUrl}/signup`, dto, {
+      .post<SignupResponse>(`${this.apiUrl}/signup`, dto, {
         withCredentials: true,
       })
-      .pipe(
-        tap((response) => {
-          localStorage.setItem('accessToken', response.accessToken);
-          this.currentUserSubject.next(response.user);
-        })
-      );
+      .pipe(map((response) => response));
   }
 
   /**
@@ -59,8 +82,7 @@ export class AuthService {
       )
       .pipe(
         tap((res) => {
-          localStorage.setItem('accessToken', res.accessToken);
-          this.currentUserSubject.next(res.user);
+          this.persistSession(res.user, res.accessToken);
         })
       );
   }
@@ -72,11 +94,13 @@ export class AuthService {
       .subscribe({
         next: () => {
           localStorage.removeItem('accessToken');
+          localStorage.removeItem('currentUser');
           this.currentUserSubject.next(null);
         },
         error: () => {
           // still clear local state even if backend fails
           localStorage.removeItem('accessToken');
+          localStorage.removeItem('currentUser');
           this.currentUserSubject.next(null);
         },
       });
@@ -94,7 +118,12 @@ export class AuthService {
   fetchMe(): Observable<any> {
     return this.http
       .get<any>(`${this.apiUrl}/me`, { withCredentials: true })
-      .pipe(tap((user) => this.currentUserSubject.next(user)));
+      .pipe(
+        tap((user) => {
+          localStorage.setItem('currentUser', JSON.stringify(user));
+          this.currentUserSubject.next(user);
+        })
+      );
   }
 
   isAuthenticated(): boolean {

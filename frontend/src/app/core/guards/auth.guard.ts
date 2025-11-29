@@ -1,21 +1,30 @@
 import { inject } from '@angular/core';
 import { Router } from '@angular/router';
+import { of } from 'rxjs';
+import { catchError, map, switchMap, take } from 'rxjs/operators';
 import { AuthService } from '../services/auth.service';
-import { map, take } from 'rxjs/operators';
 
 export const AuthGuard = () => {
   const authService = inject(AuthService);
   const router = inject(Router);
 
+  const redirectToLogin = () => router.parseUrl('/auth/login');
+
   return authService.currentUser$.pipe(
     take(1),
-    map(user => {
+    switchMap((user) => {
       if (user) {
-        return true;
-      } else {
-        router.navigate(['/auth/login']);
-        return false;
+        return of(true);
       }
+
+      if (!authService.getToken()) {
+        return of(redirectToLogin());
+      }
+
+      return authService.fetchMe().pipe(
+        map(() => true),
+        catchError(() => of(redirectToLogin()))
+      );
     })
   );
 };

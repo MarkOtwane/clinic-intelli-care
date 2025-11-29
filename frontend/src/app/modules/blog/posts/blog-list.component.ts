@@ -31,10 +31,13 @@ import { BlogService } from '../../../core/services/blog.service';
         <mat-card *ngFor="let blog of blogs" class="blog-card">
           <mat-card-header>
             <mat-card-title>{{ blog.title }}</mat-card-title>
-            <mat-card-subtitle>{{ blog.createdAt | date }}</mat-card-subtitle>
+            <mat-card-subtitle>
+              {{ blog.author?.name || 'Medical staff' }} ·
+              {{ blog.createdAt | date }}
+            </mat-card-subtitle>
           </mat-card-header>
           <mat-card-content>
-            <p>{{ blog.content | slice : 0 : 150 }}...</p>
+            <p>{{ blog.content || '' | slice : 0 : 150 }}...</p>
           </mat-card-content>
           <mat-card-actions>
             <button mat-button color="primary">Read More</button>

@@ -13,7 +13,7 @@
         <mat-divider></mat-divider>
         <!-- Patient Menu -->
         <div *ngIf="currentUser?.role === 'PATIENT'">
-          <button mat-menu-item routerLink="/patient/symptoms">
+          <button mat-menu-item routerLink="/patient/analysis">
             <mat-icon>health_and_safety</mat-icon>
             <span>AI Symptom Analysis</span>
           </button>
@@ -21,7 +21,7 @@
             <mat-icon>event</mat-icon>
             <span>Appointments</span>
           </button>
-          <button mat-menu-item routerLink="/prescriptions">
+          <button mat-menu-item routerLink="/doctor/prescriptions">
             <mat-icon>medication</mat-icon>
             <span>Prescriptions</span>
           </button>
@@ -32,7 +32,7 @@
         </div>
         <!-- Doctor Menu -->
         <div *ngIf="currentUser?.role === 'DOCTOR'">
-          <button mat-menu-item routerLink="/doctor/cases">
+          <button mat-menu-item routerLink="/doctor/patients">
             <mat-icon>folder_shared</mat-icon>
             <span>Patient Cases</span>
           </button>
@@ -40,7 +40,7 @@
             <mat-icon>event</mat-icon>
             <span>Schedule</span>
           </button>
-          <button mat-menu-item routerLink="/doctor/blogs">
+          <button mat-menu-item routerLink="/doctor/blog">
             <mat-icon>edit_note</mat-icon>
             <span>My Blogs</span>
           </button>

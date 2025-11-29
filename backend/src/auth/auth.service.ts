@@ -1,18 +1,17 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import {
+  ConflictException,
   Injectable,
   UnauthorizedException,
-  ConflictException,
-  ForbiddenException,
 } from '@nestjs/common';
-import { UsersService } from '../users/users.service';
-import { JwtService } from '@nestjs/jwt';
-import { PrismaService } from '../prisma/prisma.service';
-import { SignupDto, LoginDto } from './dtos/auth-credentials.dto';
 import { ConfigService } from '@nestjs/config';
+import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
 import { randomBytes } from 'crypto';
 import { v4 as uuidv4 } from 'uuid';
+import { PrismaService } from '../prisma/prisma.service';
+import { UsersService } from '../users/users.service';
+import { LoginDto, SignupDto } from './dtos/auth-credentials.dto';
 
 @Injectable()
 export class AuthService {
@@ -33,23 +32,15 @@ export class AuthService {
     const user = await this.usersService.createUser(
       dto.email,
       hashed,
-      dto.role ?? 'PATIENT',
+      'PATIENT',
       dto.firstName,
       dto.lastName,
       dto.phone,
     );
 
-    const accessToken = this.generateAccessToken(
-      user.id,
-      user.email,
-      user.role,
-    );
-    const refreshToken = await this.createAndStoreRefreshToken(user.id);
-
     return {
       user: { id: user.id, email: user.email, role: user.role },
-      accessToken,
-      refreshToken,
+      message: 'Account created successfully. Please sign in to continue.',
     };
   }
 

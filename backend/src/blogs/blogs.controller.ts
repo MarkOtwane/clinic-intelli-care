@@ -3,6 +3,7 @@ import {
   Body,
   Controller,
   Delete,
+  ForbiddenException,
   Get,
   Param,
   Patch,
@@ -26,13 +27,7 @@ export class BlogsController {
     private prisma: PrismaService,
   ) {}
 
-  /**
-   * Create a new blog post (DOCTOR only)
-   */
-  @Post()
-  @Roles('DOCTOR')
-  async create(@Body() dto: CreateBlogDto, @CurrentUser('id') userId: string) {
-    // Get doctor ID from user
+  private async getDoctorProfile(userId: string) {
     const user = await this.prisma.user.findUnique({
       where: { id: userId },
       include: { doctorProfile: true },
@@ -42,7 +37,17 @@ export class BlogsController {
       throw new BadRequestException('Doctor profile not found');
     }
 
-    return this.blogsService.create(dto, user.doctorProfile.id);
+    return user.doctorProfile;
+  }
+
+  /**
+   * Create a new blog post (DOCTOR only)
+   */
+  @Post()
+  @Roles('DOCTOR')
+  async create(@Body() dto: CreateBlogDto, @CurrentUser('id') userId: string) {
+    const doctor = await this.getDoctorProfile(userId);
+    return this.blogsService.create(dto, doctor.id);
   }
 
   @Get()
@@ -53,20 +58,54 @@ export class BlogsController {
 
   @Get(':id')
   @Roles('PATIENT', 'DOCTOR', 'ADMIN')
-  findOne(@Param('id') id: string) {
-    return this.blogsService.findOne(id);
+  async findOne(@Param('id') id: string, @CurrentUser() user: any) {
+    const post = await this.blogsService.findOne(id);
+    if (post.published) {
+      return post;
+    }
+
+    if (!user) {
+      throw new ForbiddenException('You cannot access this blog post');
+    }
+
+    if (user.role === 'ADMIN') {
+      return post;
+    }
+
+    if (user.role === 'DOCTOR') {
+      const doctor = await this.getDoctorProfile(user.id);
+      if (post.authorId === doctor.id) {
+        return post;
+      }
+    }
+
+    throw new ForbiddenException('You cannot access this blog post');
   }
 
   @Patch(':id')
   @Roles('DOCTOR', 'ADMIN')
-  update(@Param('id') id: string, @Body() dto: UpdateBlogDto) {
-    return this.blogsService.update(id, dto);
+  async update(
+    @Param('id') id: string,
+    @Body() dto: UpdateBlogDto,
+    @CurrentUser() user: any,
+  ) {
+    if (user.role === 'ADMIN') {
+      return this.blogsService.update(id, dto);
+    }
+
+    const doctor = await this.getDoctorProfile(user.id);
+    return this.blogsService.updateAsDoctor(id, dto, doctor.id);
   }
 
   @Delete(':id')
   @Roles('DOCTOR', 'ADMIN')
-  remove(@Param('id') id: string) {
-    return this.blogsService.remove(id);
+  async remove(@Param('id') id: string, @CurrentUser() user: any) {
+    if (user.role === 'ADMIN') {
+      return this.blogsService.remove(id);
+    }
+
+    const doctor = await this.getDoctorProfile(user.id);
+    return this.blogsService.removeAsDoctor(id, doctor.id);
   }
 
   /**
@@ -84,16 +123,8 @@ export class BlogsController {
   @Get('my-blogs')
   @Roles('DOCTOR')
   async findMyBlogs(@CurrentUser('id') userId: string) {
-    const user = await this.prisma.user.findUnique({
-      where: { id: userId },
-      include: { doctorProfile: true },
-    });
-
-    if (!user || !user.doctorProfile) {
-      throw new BadRequestException('Doctor profile not found');
-    }
-
-    return this.blogsService.findByDoctor(user.doctorProfile.id);
+    const doctor = await this.getDoctorProfile(userId);
+    return this.blogsService.findByDoctor(doctor.id);
   }
 
   /**
