@@ -20,7 +20,7 @@ const users = [
   {
     id: 1,
     email: 'admin@clinic.com',
-    password: 'admin123', // In production, this would be hashed
+    password: 'admin123',
     firstName: 'Admin',
     lastName: 'User',
     role: 'ADMIN',
