@@ -7,8 +7,6 @@ import { UpdateUserDto } from './dto/update-user.dto';
 export class AdminService {
   constructor(private prisma: PrismaService) {}
 
-  // --- USERS MANAGEMENT ---
-
   async getAllUsers() {
     return this.prisma.user.findMany({
       include: { doctorProfile: true, patientProfile: true },
