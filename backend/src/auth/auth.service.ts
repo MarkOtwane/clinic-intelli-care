@@ -38,6 +38,20 @@ export class AuthService {
       dto.phone,
     );
 
+    // Create patient profile for PATIENT role users
+    if (user.role === 'PATIENT') {
+      await this.prisma.patient.create({
+        data: {
+          user: { connect: { id: user.id } },
+          name: `${dto.firstName || ''} ${dto.lastName || ''}`.trim(),
+          age: 0, // Will be updated later
+          gender: 'OTHER', // Will be updated later
+          phone: dto.phone || '',
+          address: '',
+        },
+      });
+    }
+
     return {
       user: { id: user.id, email: user.email, role: user.role },
       message: 'Account created successfully. Please sign in to continue.',

@@ -44,11 +44,32 @@ export class AiAnalysisController {
       include: { patientProfile: true },
     });
 
-    if (!user || !user.patientProfile) {
-      throw new BadRequestException('Patient profile not found');
+    if (!user) {
+      throw new BadRequestException('User not found');
     }
 
-    return this.aiService.create(dto, user.patientProfile.id);
+    let patientId = user.patientProfile?.id;
+
+    // Create patient profile if it doesn't exist for PATIENT role users
+    if (!patientId && user.role === 'PATIENT') {
+      const patient = await this.prisma.patient.create({
+        data: {
+          user: { connect: { id: userId } },
+          name: `${user.email}`, // Use email as fallback name
+          age: 0,
+          gender: 'OTHER',
+          phone: '',
+          address: '',
+        },
+      });
+      patientId = patient.id;
+    }
+
+    if (!patientId) {
+      throw new BadRequestException('Patient profile not found and could not be created');
+    }
+
+    return this.aiService.create(dto, patientId);
   }
 
   /**
