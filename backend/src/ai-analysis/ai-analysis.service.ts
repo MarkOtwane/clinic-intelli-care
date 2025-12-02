@@ -4,13 +4,9 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
+import { AIService } from './ai.service';
 import { CreateAnalysisDto } from './dto/create-analysis.dto';
 import { UpdateAnalysisDto } from './dto/update-analysis.dto';
-import {
-  defaultFollowUpQuestions,
-  DiseaseRule,
-  diseaseRules,
-} from './rules/basic-rules';
 
 /**
  * AI Analysis Service
@@ -18,144 +14,103 @@ import {
  */
 @Injectable()
 export class AiAnalysisService {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    private aiService: AIService,
+  ) {}
 
   /**
-   * Advanced symptom analysis with probability calculation
-   * Considers keyword matching, required keywords, and symptom frequency
+   * AI-powered symptom analysis using Google Gemini
    * @param symptoms - Array of symptom strings
-   * @returns Array of predicted diseases with probabilities and metadata
+   * @param additionalInfo - Additional context information
+   * @returns AI analysis results
    */
-  private analyzeSymptoms(symptoms: string[]): Array<{
-    name: string;
-    probability: number;
-    doctorCategory: string;
-    doctorSpecialization?: string[];
-    recommendation: string;
-    severity?: string;
-    needsFollowUp?: boolean;
-    followUpQuestions?: string[];
-  }> {
-    if (!symptoms || symptoms.length === 0) {
-      return [];
-    }
-
-    // Normalize symptoms to lowercase for matching
-    const normalizedSymptoms = symptoms.map((s) => s.toLowerCase().trim());
-
-    const results = diseaseRules.map((rule: DiseaseRule) => {
-      // Calculate keyword matches
-      const matchedKeywords = rule.keywords.filter((keyword) =>
-        normalizedSymptoms.some((symptom) => {
-          // Check for exact match or partial match (word contains keyword or vice versa)
-          return (
-            symptom === keyword.toLowerCase() ||
-            symptom.includes(keyword.toLowerCase()) ||
-            keyword.toLowerCase().includes(symptom)
-          );
-        }),
-      );
-
-      // Check if required keywords are present
-      const hasRequiredKeywords =
-        !rule.requiredKeywords ||
-        rule.requiredKeywords.length === 0 ||
-        rule.requiredKeywords.some((req) =>
-          normalizedSymptoms.some(
-            (symptom) =>
-              symptom.includes(req.toLowerCase()) ||
-              req.toLowerCase().includes(symptom),
-          ),
-        );
-
-      if (!hasRequiredKeywords) {
-        return null; // Skip this rule if required keywords are missing
-      }
-
-      // Calculate probability: weighted by keyword importance and match count
-      const baseProbability = matchedKeywords.length / rule.keywords.length;
-
-      // Boost probability if required keywords are present
-      const requiredKeywordBonus = rule.requiredKeywords
-        ? (rule.requiredKeywords.filter((req) =>
-            normalizedSymptoms.some((symptom) =>
-              symptom.includes(req.toLowerCase()),
-            ),
-          ).length /
-            rule.requiredKeywords.length) *
-          0.3
-        : 0;
-
-      // Normalize probability to 0-1 range
-      const probability = Math.min(
-        1,
-        baseProbability * 0.7 +
-          requiredKeywordBonus +
-          (matchedKeywords.length > 0 ? 0.1 : 0),
-      );
-
-      // Determine if follow-up questions are needed
-      const needsFollowUp =
-        probability > 0 &&
-        probability < (rule.minProbability || 0.5) &&
-        rule.followUpQuestions &&
-        rule.followUpQuestions.length > 0;
-
-      return {
-        name: rule.name,
-        probability: Number(probability.toFixed(2)),
-        doctorCategory: rule.doctorCategory,
-        doctorSpecialization: rule.doctorSpecialization || [],
-        recommendation: rule.recommendation,
-        severity: rule.severity || 'medium',
-        needsFollowUp,
-        followUpQuestions:
-          needsFollowUp && rule.followUpQuestions
-            ? rule.followUpQuestions.slice(0, 3) // Limit to 3 questions
-            : undefined,
-      };
-    });
-
-    // Filter out null results and sort by probability
-    return results
-      .filter(
-        (r): r is NonNullable<typeof r> => r !== null && r.probability > 0,
-      )
-      .sort((a, b) => b.probability - a.probability)
-      .slice(0, 5); // Return top 5 predictions
+  private async analyzeSymptomsWithAI(
+    symptoms: string[],
+    additionalInfo?: {
+      severity?: string;
+      duration?: number;
+      location?: string;
+      medications?: string[];
+    },
+  ) {
+    return this.aiService.analyzeSymptoms(symptoms, additionalInfo);
   }
 
   /**
-   * Determine if follow-up questions are needed based on prediction results
-   * @param predictions - Array of disease predictions
-   * @returns Array of follow-up questions or null
+   * Infer doctor category based on disease name
+   * @param disease - Disease name
+   * @returns Doctor category string
    */
-  private determineFollowUpQuestions(
-    predictions: Array<{
-      name: string;
-      probability: number;
-      needsFollowUp?: boolean;
-      followUpQuestions?: string[];
-    }>,
-  ): string[] | null {
-    // If top prediction has low/medium probability and needs follow-up, return its questions
+  private inferDoctorCategory(disease: string): string {
+    const diseaseLower = disease.toLowerCase();
+
+    if (diseaseLower.includes('heart') || diseaseLower.includes('cardiac')) {
+      return 'Cardiologist';
+    }
     if (
-      predictions.length > 0 &&
-      predictions[0].needsFollowUp &&
-      predictions[0].followUpQuestions
+      diseaseLower.includes('lung') ||
+      diseaseLower.includes('respiratory') ||
+      diseaseLower.includes('pneumonia') ||
+      diseaseLower.includes('bronchitis')
     ) {
-      return predictions[0].followUpQuestions;
+      return 'Pulmonologist';
+    }
+    if (
+      diseaseLower.includes('stomach') ||
+      diseaseLower.includes('digestive') ||
+      diseaseLower.includes('gastro')
+    ) {
+      return 'Gastroenterologist';
+    }
+    if (diseaseLower.includes('skin') || diseaseLower.includes('rash')) {
+      return 'Dermatologist';
+    }
+    if (
+      diseaseLower.includes('mental') ||
+      diseaseLower.includes('depression') ||
+      diseaseLower.includes('anxiety')
+    ) {
+      return 'Psychiatrist';
+    }
+    if (
+      diseaseLower.includes('bone') ||
+      diseaseLower.includes('joint') ||
+      diseaseLower.includes('arthritis')
+    ) {
+      return 'Orthopedic Surgeon';
+    }
+    if (diseaseLower.includes('eye') || diseaseLower.includes('vision')) {
+      return 'Ophthalmologist';
+    }
+    if (
+      diseaseLower.includes('ear') ||
+      diseaseLower.includes('nose') ||
+      diseaseLower.includes('throat')
+    ) {
+      return 'ENT Specialist';
+    }
+    if (diseaseLower.includes('kidney') || diseaseLower.includes('urinary')) {
+      return 'Urologist';
+    }
+    if (
+      diseaseLower.includes('brain') ||
+      diseaseLower.includes('neurological') ||
+      diseaseLower.includes('migraine')
+    ) {
+      return 'Neurologist';
+    }
+    if (
+      diseaseLower.includes('infection') ||
+      diseaseLower.includes('fever') ||
+      diseaseLower.includes('flu') ||
+      diseaseLower.includes('cold')
+    ) {
+      return 'General Practitioner';
     }
 
-    // If all predictions are low probability, use default questions
-    if (
-      predictions.length > 0 &&
-      predictions.every((p) => p.probability < 0.4)
-    ) {
-      return defaultFollowUpQuestions.slice(0, 4);
-    }
-
-    return null;
+    // Default fallback
+    return 'General Practitioner';
   }
 
   /**
@@ -206,10 +161,15 @@ export class AiAnalysisService {
       throw new BadRequestException('Symptoms are required for analysis');
     }
 
-    // Analyze symptoms to get disease predictions
-    const predictions = this.analyzeSymptoms(dto.symptoms);
+    // Analyze symptoms using AI
+    const aiAnalysis = await this.analyzeSymptomsWithAI(dto.symptoms, {
+      severity: dto.severity,
+      duration: dto.duration,
+      location: dto.location,
+      medications: dto.medications,
+    });
 
-    if (predictions.length === 0) {
+    if (aiAnalysis.predictions.length === 0) {
       // If no predictions, create analysis with inconclusive result
       return this.prisma.analysis.create({
         data: {
@@ -224,25 +184,28 @@ export class AiAnalysisService {
     }
 
     // Get top prediction
-    const topPrediction = predictions[0];
-
-    // Determine follow-up questions
-    const followUpQuestions = this.determineFollowUpQuestions(predictions);
+    const topPrediction = aiAnalysis.predictions[0];
 
     // Get top recommendation
     const topRecommendation =
-      topPrediction.recommendation ||
+      aiAnalysis.recommendations[0] ||
       'Please consult with a healthcare professional for proper diagnosis and treatment.';
 
     // Determine if case should be forwarded to doctor
-    // Forward if probability is high enough (>= 0.5) or severity is high
-    const shouldForward =
-      topPrediction.probability >= 0.5 || topPrediction.severity === 'high';
+    // Forward if probability is high enough (>= 50%) - convert from percentage back to decimal
+    const shouldForward = topPrediction.probability >= 50;
 
     // Find appropriate doctor if forwarding is needed
     let forwardedDoctorId: string | null = null;
     if (shouldForward) {
-      forwardedDoctorId = await this.findDoctorForForwarding(topPrediction);
+      // For AI analysis, we need to determine doctor category based on the disease
+      // This is a simplified approach - in production, you'd want more sophisticated mapping
+      const doctorCategory = this.inferDoctorCategory(topPrediction.disease);
+      forwardedDoctorId = await this.findDoctorForForwarding({
+        doctorCategory,
+        doctorSpecialization: [],
+        severity: 'medium', // Default severity
+      });
     }
 
     // Create analysis record
@@ -250,7 +213,13 @@ export class AiAnalysisService {
       data: {
         patientId,
         symptoms: dto.symptoms,
-        predictedDiseases: predictions,
+        predictedDiseases: aiAnalysis.predictions.map((p) => ({
+          name: p.disease,
+          probability: p.probability / 100, // Convert back to decimal
+          description: p.description,
+          doctorCategory: this.inferDoctorCategory(p.disease),
+          recommendation: p.suggestedActions.join('. '),
+        })),
         recommendations: topRecommendation,
         status: forwardedDoctorId ? 'PENDING' : 'PENDING',
         doctorId: forwardedDoctorId || null,
@@ -288,7 +257,7 @@ export class AiAnalysisService {
           await this.prisma.notification.create({
             data: {
               title: 'New Patient Case Forwarded',
-              message: `A new case with predicted ${topPrediction.name} (probability: ${topPrediction.probability}) has been forwarded to you for review.`,
+              message: `A new case with predicted ${topPrediction.disease} (${topPrediction.probability}% probability) has been forwarded to you for review.`,
               userId: doctor.user.id,
               type: 'BOTH',
             },
@@ -300,29 +269,24 @@ export class AiAnalysisService {
     }
 
     // Transform predictions to match frontend interface
-    const transformedPredictions = predictions.map((pred) => ({
-      disease: pred.name,
-      probability: Math.round(pred.probability * 100), // Convert to percentage
-      description: `Potential ${pred.name} condition detected`,
-      suggestedActions: [
-        'Consult with a healthcare professional',
-        'Monitor symptoms closely',
-        'Keep a symptom diary',
-      ],
+    const transformedPredictions = aiAnalysis.predictions.map((pred) => ({
+      disease: pred.disease,
+      probability: pred.probability, // Already in percentage
+      description: pred.description,
+      suggestedActions: pred.suggestedActions,
     }));
 
     // Transform follow-up questions to match frontend interface
     const transformedFollowUpQuestions =
-      followUpQuestions?.map((question, index) => ({
+      aiAnalysis.followUpQuestions?.map((question, index) => ({
         id: `followup_${index}`,
         question,
         type: 'text' as const,
         required: false,
       })) || [];
 
-    // Calculate confidence based on top prediction probability
-    const confidence =
-      predictions.length > 0 ? Math.round(predictions[0].probability * 100) : 0;
+    // Use confidence from AI analysis
+    const confidence = aiAnalysis.confidence;
 
     // Format symptoms as SymptomInput object
     const symptomInput = {
@@ -372,34 +336,41 @@ export class AiAnalysisService {
       throw new NotFoundException('Symptom not found');
     }
 
-    // Analyze symptoms
-    const predictions = this.analyzeSymptoms(symptoms);
+    // Analyze symptoms using AI
+    const aiAnalysis = await this.analyzeSymptomsWithAI(symptoms);
 
-    if (predictions.length === 0) {
+    if (aiAnalysis.predictions.length === 0) {
       return null;
     }
 
-    // Determine follow-up questions
-    const followUpQuestions = this.determineFollowUpQuestions(predictions);
-
     // Get top prediction for forwarding
-    const topPrediction = predictions[0];
-    // Forward if probability is high enough (>= 0.5) or severity is high
-    const shouldForward =
-      topPrediction.probability >= 0.5 || topPrediction.severity === 'high';
+    const topPrediction = aiAnalysis.predictions[0];
+    // Forward if probability is high enough (>= 50%)
+    const shouldForward = topPrediction.probability >= 50;
 
     // Find doctor for forwarding
     let forwardedDoctorId: string | null = null;
     if (shouldForward) {
-      forwardedDoctorId = await this.findDoctorForForwarding(topPrediction);
+      const doctorCategory = this.inferDoctorCategory(topPrediction.disease);
+      forwardedDoctorId = await this.findDoctorForForwarding({
+        doctorCategory,
+        doctorSpecialization: [],
+        severity: 'medium',
+      });
     }
 
     // Create prediction record
     const prediction = await this.prisma.prediction.create({
       data: {
         symptomId,
-        results: predictions,
-        followUps: followUpQuestions ?? undefined,
+        results: aiAnalysis.predictions.map((p) => ({
+          name: p.disease,
+          probability: p.probability / 100, // Convert to decimal
+          description: p.description,
+          doctorCategory: this.inferDoctorCategory(p.disease),
+          recommendation: p.suggestedActions.join('. '),
+        })),
+        followUps: aiAnalysis.followUpQuestions ?? undefined,
         forwardedToId: forwardedDoctorId,
       },
       include: {
@@ -437,7 +408,7 @@ export class AiAnalysisService {
           await this.prisma.notification.create({
             data: {
               title: 'New Patient Case Forwarded',
-              message: `A new symptom case with predicted ${topPrediction.name} has been forwarded to you.`,
+              message: `A new symptom case with predicted ${topPrediction.disease} has been forwarded to you.`,
               userId: doctor.user.id,
               type: 'BOTH',
             },

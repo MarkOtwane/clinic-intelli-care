@@ -8,10 +8,10 @@ import {
   Post,
   UseGuards,
 } from '@nestjs/common';
-import { Roles } from '../auth/roles.decorator';
 import { CurrentUser } from '../auth/decorators/user.decorator';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
+import { Roles } from '../auth/roles.decorator';
 import { PrismaService } from '../prisma/prisma.service';
 import { AiAnalysisService } from './ai-analysis.service';
 import { CreateAnalysisDto } from './dto/create-analysis.dto';
@@ -66,7 +66,9 @@ export class AiAnalysisController {
     }
 
     if (!patientId) {
-      throw new BadRequestException('Patient profile not found and could not be created');
+      throw new BadRequestException(
+        'Patient profile not found and could not be created',
+      );
     }
 
     return this.aiService.create(dto, patientId);
