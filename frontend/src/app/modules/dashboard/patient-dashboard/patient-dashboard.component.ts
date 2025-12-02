@@ -6,11 +6,11 @@ import { MatGridListModule } from '@angular/material/grid-list';
 import { MatIconModule } from '@angular/material/icon';
 import { RouterModule } from '@angular/router';
 
+import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { MatSnackBarModule } from '@angular/material/snack-bar';
+import { Patient } from '../../../core/models/patient.model';
 import { AuthService } from '../../../core/services/auth.service';
 import { PatientService } from '../../../core/services/patient.service';
-import { Patient } from '../../../core/models/patient.model';
-import { MatSnackBarModule } from '@angular/material/snack-bar';
-import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 
 @Component({
   selector: 'app-patient-dashboard',
@@ -96,7 +96,7 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
           <mat-card-actions class="card-actions">
             <button
               mat-raised-button
-              routerLink="/appointments"
+              routerLink="appointments"
               class="btn-primary"
             >
               <mat-icon>arrow_forward</mat-icon>
@@ -143,7 +143,7 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
           <mat-card-actions class="card-actions">
             <button
               mat-raised-button
-              routerLink="/ai-analysis"
+              routerLink="analysis"
               class="btn-secondary"
             >
               <mat-icon>psychology</mat-icon>
@@ -194,7 +194,7 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
           <mat-card-actions class="card-actions">
             <button
               mat-raised-button
-              routerLink="/prescriptions"
+              routerLink="prescriptions"
               class="btn-primary"
             >
               <mat-icon>vaccines</mat-icon>
@@ -241,7 +241,7 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
           <mat-card-actions class="card-actions">
             <button
               mat-raised-button
-              routerLink="/notifications"
+              routerLink="notifications"
               class="btn-outline"
             >
               <mat-icon>notifications</mat-icon>
@@ -260,8 +260,14 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
       <div class="error-state" *ngIf="!isLoading && !patient">
         <mat-icon class="error-icon">info</mat-icon>
         <h2>Welcome to Your Health Dashboard</h2>
-        <p>Your patient profile is being set up. Please contact your healthcare provider to complete your registration.</p>
-        <p class="error-details">If you believe this is an error, please try refreshing the page or contact support.</p>
+        <p>
+          Your patient profile is being set up. Please contact your healthcare
+          provider to complete your registration.
+        </p>
+        <p class="error-details">
+          If you believe this is an error, please try refreshing the page or
+          contact support.
+        </p>
       </div>
     </ng-template>
   `,
@@ -630,7 +636,7 @@ export class PatientDashboardComponent implements OnInit {
   ) {}
 
   ngOnInit(): void {
-    this.authService.currentUser$.subscribe(user => {
+    this.authService.currentUser$.subscribe((user) => {
       if (user && user.role === 'PATIENT') {
         // Assuming user has patientId or id is patientId
         const patientId = user.patientId || user.id;
@@ -642,7 +648,7 @@ export class PatientDashboardComponent implements OnInit {
           error: (error) => {
             console.error('Error loading patient:', error);
             this.isLoading = false;
-          }
+          },
         });
       } else {
         this.isLoading = false;

@@ -1,6 +1,5 @@
 import { CommonModule } from '@angular/common';
 import { Component } from '@angular/core';
-import { RouterLink } from '@angular/router';
 import { MatButtonModule } from '@angular/material/button';
 import { MatCardModule } from '@angular/material/card';
 import { MatIconModule } from '@angular/material/icon';
@@ -8,7 +7,12 @@ import { MatIconModule } from '@angular/material/icon';
 @Component({
   selector: 'app-patient-prescriptions',
   standalone: true,
-  imports: [CommonModule, RouterLink, MatButtonModule, MatCardModule, MatIconModule],
+  imports: [
+    CommonModule,
+    MatButtonModule,
+    MatCardModule,
+    MatIconModule,
+  ],
   template: `
     <section class="portal-section">
       <header class="section-header">
@@ -19,7 +23,7 @@ import { MatIconModule } from '@angular/material/icon';
             Review active medications, dosage reminders, and refill requests.
           </p>
         </div>
-        <button mat-stroked-button color="primary" routerLink="/prescriptions">
+        <button mat-stroked-button color="primary" disabled>
           <mat-icon>history</mat-icon>
           View full history
         </button>
@@ -50,7 +54,7 @@ import { MatIconModule } from '@angular/material/icon';
               Request renewals directly from your prescribing doctor.
             </p>
           </div>
-          <button mat-flat-button color="primary" routerLink="/prescriptions">
+          <button mat-flat-button color="primary" disabled>
             Request refill
           </button>
         </mat-card-content>
@@ -126,4 +130,3 @@ import { MatIconModule } from '@angular/material/icon';
   ],
 })
 export class PatientPrescriptionsComponent {}
-
