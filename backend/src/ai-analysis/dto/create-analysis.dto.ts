@@ -1,14 +1,37 @@
-import { IsArray, IsOptional, IsString } from 'class-validator';
+import {
+  IsArray,
+  IsEnum,
+  IsNumber,
+  IsOptional,
+  IsString,
+} from 'class-validator';
+
+export enum SymptomSeverity {
+  MILD = 'MILD',
+  MODERATE = 'MODERATE',
+  SEVERE = 'SEVERE',
+}
 
 export class CreateAnalysisDto {
   @IsArray()
   symptoms: string[];
 
-  @IsOptional()
-  @IsString()
-  medications?: string;
+  @IsEnum(SymptomSeverity)
+  severity: SymptomSeverity;
+
+  @IsNumber()
+  duration: number;
 
   @IsOptional()
   @IsString()
-  notes?: string;
+  additionalInfo?: string;
+
+  @IsOptional()
+  @IsString()
+  location?: string;
+
+  @IsOptional()
+  @IsArray()
+  @IsString({ each: true })
+  medications?: string[];
 }

@@ -196,10 +196,10 @@ export class AiAnalysisService {
   }
 
   /**
-   * Create AI analysis from symptoms
+   * Analyze symptoms and create AI analysis
    * @param dto - Analysis creation data
    * @param patientId - Patient ID
-   * @returns Created analysis with predictions
+   * @returns Analysis response with formatted data
    */
   async create(dto: CreateAnalysisDto, patientId: string) {
     if (!dto.symptoms || dto.symptoms.length === 0) {
@@ -299,10 +299,57 @@ export class AiAnalysisService {
       }
     }
 
+    // Transform predictions to match frontend interface
+    const transformedPredictions = predictions.map((pred) => ({
+      disease: pred.name,
+      probability: Math.round(pred.probability * 100), // Convert to percentage
+      description: `Potential ${pred.name} condition detected`,
+      suggestedActions: [
+        'Consult with a healthcare professional',
+        'Monitor symptoms closely',
+        'Keep a symptom diary',
+      ],
+    }));
+
+    // Transform follow-up questions to match frontend interface
+    const transformedFollowUpQuestions =
+      followUpQuestions?.map((question, index) => ({
+        id: `followup_${index}`,
+        question,
+        type: 'text' as const,
+        required: false,
+      })) || [];
+
+    // Calculate confidence based on top prediction probability
+    const confidence =
+      predictions.length > 0 ? Math.round(predictions[0].probability * 100) : 0;
+
+    // Format symptoms as SymptomInput object
+    const symptomInput = {
+      symptoms: dto.symptoms,
+      severity: dto.severity,
+      duration: dto.duration,
+      additionalInfo: dto.additionalInfo,
+      location: dto.location,
+      medications: dto.medications,
+    };
+
+    // Return formatted response
     return {
-      ...analysis,
-      followUpQuestions,
-      forwarded: !!forwardedDoctorId,
+      analysis: {
+        id: analysis.id,
+        patientId: analysis.patientId,
+        symptoms: symptomInput,
+        predictions: transformedPredictions,
+        followUpQuestions: transformedFollowUpQuestions,
+        recommendations: [analysis.recommendations], // Convert to array
+        confidence,
+        status: analysis.status,
+        createdAt: analysis.createdAt,
+        updatedAt: analysis.updatedAt,
+      },
+      followUpRequired: transformedFollowUpQuestions.length > 0,
+      confidence,
     };
   }
 

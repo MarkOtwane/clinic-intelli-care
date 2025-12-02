@@ -30,11 +30,11 @@ export class AiAnalysisController {
   ) {}
 
   /**
-   * Create AI analysis from symptoms (PATIENT only)
+   * Analyze symptoms and create AI analysis (PATIENT only)
    */
-  @Post()
+  @Post('analyze')
   @Roles('PATIENT')
-  async create(
+  async analyzeSymptoms(
     @Body() dto: CreateAnalysisDto,
     @CurrentUser('id') userId: string,
   ) {
