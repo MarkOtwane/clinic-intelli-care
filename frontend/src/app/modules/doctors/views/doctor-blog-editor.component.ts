@@ -6,19 +6,19 @@ import {
   ReactiveFormsModule,
   Validators,
 } from '@angular/forms';
-import { ActivatedRoute, Router, RouterLink } from '@angular/router';
-import { MatCardModule } from '@angular/material/card';
-import { MatFormFieldModule } from '@angular/material/form-field';
-import { MatInputModule } from '@angular/material/input';
 import { MatButtonModule } from '@angular/material/button';
+import { MatCardModule } from '@angular/material/card';
 import { MatCheckboxModule } from '@angular/material/checkbox';
-import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
+import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatIconModule } from '@angular/material/icon';
+import { MatInputModule } from '@angular/material/input';
+import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { Subscription } from 'rxjs';
 
 import { Blog, CreateBlogDto } from '../../../core/models/blog.model';
-import { BlogService } from '../../../core/services/blog.service';
 import { MediaType } from '../../../core/models/media.model';
+import { BlogService } from '../../../core/services/blog.service';
 import {
   UploadProgress,
   UploadService,
@@ -76,7 +76,11 @@ import {
             <div class="image-upload">
               <label>Featured image (optional)</label>
               <div class="upload-row">
-                <input type="file" accept="image/*" (change)="handleImage($event)" />
+                <input
+                  type="file"
+                  accept="image/*"
+                  (change)="handleImage($event)"
+                />
                 <span class="hint">
                   {{ uploadProgressText || 'No file selected' }}
                 </span>
@@ -96,7 +100,9 @@ import {
             </div>
 
             <div class="actions">
-              <button mat-button type="button" (click)="cancel()">Cancel</button>
+              <button mat-button type="button" (click)="cancel()">
+                Cancel
+              </button>
               <button
                 mat-raised-button
                 color="primary"
@@ -197,7 +203,7 @@ export class DoctorBlogEditorComponent implements OnInit, OnDestroy {
     private uploadService: UploadService,
     private snackBar: MatSnackBar,
     private router: Router,
-    private route: ActivatedRoute,
+    private route: ActivatedRoute
   ) {
     this.blogForm = this.fb.group({
       title: ['', Validators.required],
@@ -269,7 +275,9 @@ export class DoctorBlogEditorComponent implements OnInit, OnDestroy {
         },
         error: () => {
           this.uploadProgressText = 'Upload failed';
-          this.snackBar.open('Image upload failed', 'Close', { duration: 4000 });
+          this.snackBar.open('Image upload failed', 'Close', {
+            duration: 4000,
+          });
         },
       });
   }
@@ -286,9 +294,16 @@ export class DoctorBlogEditorComponent implements OnInit, OnDestroy {
       imageIds: this.imageIds.length ? this.imageIds : undefined,
     };
 
-    const request$ = this.isEditing && this.blogId
-      ? this.blogService.updateBlog(this.blogId, payload)
-      : this.blogService.createBlog(payload);
+    // Helpful debug: log payload so devs can inspect what's being sent
+    // and help surface server validation issues during development.
+    // Remove or reduce logging in production as needed.
+    // eslint-disable-next-line no-console
+    console.log('Create blog payload:', payload);
+
+    const request$ =
+      this.isEditing && this.blogId
+        ? this.blogService.updateBlog(this.blogId, payload)
+        : this.blogService.createBlog(payload);
 
     request$.subscribe({
       next: () => {
@@ -296,10 +311,49 @@ export class DoctorBlogEditorComponent implements OnInit, OnDestroy {
         this.snackBar.open('Blog post saved', 'Close', { duration: 3000 });
         this.router.navigate(['/doctor/blog']);
       },
-      error: () => {
+      error: (err) => {
         this.isSubmitting = false;
-        this.snackBar.open('Failed to save blog post', 'Close', {
-          duration: 4000,
+        // Log full error for debugging
+        // eslint-disable-next-line no-console
+        console.error('Create blog error:', err);
+
+        // Try to extract a helpful message from the server response
+        let message = 'Failed to save blog post';
+        if (err && err.error) {
+          const body = err.error;
+          if (typeof body === 'string') {
+            message = body;
+          } else if (body.message) {
+            // class-validator often returns { message: [..], statusCode, error }
+            message = Array.isArray(body.message)
+              ? body.message.join(', ')
+              : body.message;
+          } else if (body.errors) {
+            message = JSON.stringify(body.errors);
+          }
+        }
+
+        // If the backend indicates the doctor profile is missing, automatically
+        // redirect the user to the Settings page to complete their doctor profile.
+        const lower = String(message).toLowerCase();
+        if (
+          lower.includes('doctor profile not found') ||
+          lower.includes('doctor profile')
+        ) {
+          // Optional brief feedback before redirecting
+          this.snackBar.open(
+            'Doctor profile missing — redirecting to Settings...',
+            undefined,
+            {
+              duration: 2000,
+            }
+          );
+          void this.router.navigate(['/settings']);
+          return;
+        }
+
+        this.snackBar.open(message, 'Close', {
+          duration: 6000,
         });
       },
     });
@@ -309,4 +363,3 @@ export class DoctorBlogEditorComponent implements OnInit, OnDestroy {
     this.router.navigate(['/doctor/blog']);
   }
 }
-

@@ -1,6 +1,7 @@
 import { NgModule } from '@angular/core';
 import { RouterModule, Routes } from '@angular/router';
 
+import { DoctorProfileGuard } from '../../core/guards/doctor-profile.guard';
 import { DoctorDashboardComponent } from './components/doctor-dashboard.component';
 import { DoctorPortalComponent } from './components/doctor-portal.component';
 
@@ -23,57 +24,59 @@ const routes: Routes = [
         path: 'appointments',
         loadComponent: () =>
           import('./views/doctor-appointments.component').then(
-            (m) => m.DoctorAppointmentsComponent,
+            (m) => m.DoctorAppointmentsComponent
           ),
       },
       {
         path: 'patients',
         loadComponent: () =>
           import('./views/doctor-patients.component').then(
-            (m) => m.DoctorPatientsComponent,
+            (m) => m.DoctorPatientsComponent
           ),
       },
       {
         path: 'prescriptions',
         loadComponent: () =>
           import('./views/doctor-prescriptions.component').then(
-            (m) => m.DoctorPrescriptionsComponent,
+            (m) => m.DoctorPrescriptionsComponent
           ),
       },
       {
         path: 'notifications',
         loadComponent: () =>
           import('./views/doctor-notifications.component').then(
-            (m) => m.DoctorNotificationsComponent,
+            (m) => m.DoctorNotificationsComponent
           ),
       },
       {
         path: 'analytics',
         loadComponent: () =>
           import('./views/doctor-analytics.component').then(
-            (m) => m.DoctorAnalyticsComponent,
+            (m) => m.DoctorAnalyticsComponent
           ),
       },
       {
         path: 'blog',
         loadComponent: () =>
           import('./views/doctor-blog-list.component').then(
-            (m) => m.DoctorBlogListComponent,
+            (m) => m.DoctorBlogListComponent
           ),
       },
       {
         path: 'blog/create',
         loadComponent: () =>
           import('./views/doctor-blog-editor.component').then(
-            (m) => m.DoctorBlogEditorComponent,
+            (m) => m.DoctorBlogEditorComponent
           ),
+        canActivate: [DoctorProfileGuard],
       },
       {
         path: 'blog/:id/edit',
         loadComponent: () =>
           import('./views/doctor-blog-editor.component').then(
-            (m) => m.DoctorBlogEditorComponent,
+            (m) => m.DoctorBlogEditorComponent
           ),
+        canActivate: [DoctorProfileGuard],
       },
       {
         path: '**',

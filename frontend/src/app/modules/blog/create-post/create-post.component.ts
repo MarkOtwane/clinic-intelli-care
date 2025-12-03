@@ -1,18 +1,23 @@
 import { CommonModule } from '@angular/common';
 import { Component, OnInit } from '@angular/core';
-import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
+import {
+  FormBuilder,
+  FormGroup,
+  ReactiveFormsModule,
+  Validators,
+} from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
 import { MatCardModule } from '@angular/material/card';
-import { MatFormFieldModule } from '@angular/material/form-field';
-import { MatInputModule } from '@angular/material/input';
-import { MatSnackBarModule, MatSnackBar } from '@angular/material/snack-bar';
-import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
-import { MatIconModule } from '@angular/material/icon';
 import { MatCheckboxModule } from '@angular/material/checkbox';
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatIconModule } from '@angular/material/icon';
+import { MatInputModule } from '@angular/material/input';
+import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { Router } from '@angular/router';
 
-import { BlogService } from '../../../core/services/blog.service';
 import { AuthService } from '../../../core/services/auth.service';
+import { BlogService } from '../../../core/services/blog.service';
 
 @Component({
   selector: 'app-create-post',
@@ -45,7 +50,11 @@ import { AuthService } from '../../../core/services/auth.service';
 
       <mat-card class="create-post-card">
         <mat-card-content>
-          <form [formGroup]="blogForm" (ngSubmit)="onSubmit()" class="blog-form">
+          <form
+            [formGroup]="blogForm"
+            (ngSubmit)="onSubmit()"
+            class="blog-form"
+          >
             <mat-form-field appearance="outline" class="full-width">
               <mat-label>Blog Title</mat-label>
               <input
@@ -62,7 +71,10 @@ import { AuthService } from '../../../core/services/auth.service';
               </mat-error>
             </mat-form-field>
 
-            <mat-form-field appearance="outline" class="full-width content-field">
+            <mat-form-field
+              appearance="outline"
+              class="full-width content-field"
+            >
               <mat-label>Content</mat-label>
               <textarea
                 matInput
@@ -84,9 +96,11 @@ import { AuthService } from '../../../core/services/auth.service';
                 Publish immediately
               </mat-checkbox>
               <p class="publish-hint">
-                {{ blogForm.get('published')?.value ?
-                  'Your blog post will be published and visible to all users' :
-                  'Your blog post will be saved as a draft and can be published later' }}
+                {{
+                  blogForm.get('published')?.value
+                    ? 'Your blog post will be published and visible to all users'
+                    : 'Your blog post will be saved as a draft and can be published later'
+                }}
               </p>
             </div>
 
@@ -112,7 +126,11 @@ import { AuthService } from '../../../core/services/auth.service';
                   color="accent"
                 ></mat-spinner>
                 <span *ngIf="!isSubmitting">
-                  {{ blogForm.get('published')?.value ? 'Publish Blog Post' : 'Save as Draft' }}
+                  {{
+                    blogForm.get('published')?.value
+                      ? 'Publish Blog Post'
+                      : 'Save as Draft'
+                  }}
                 </span>
               </button>
             </div>
@@ -269,11 +287,15 @@ export class CreatePostComponent implements OnInit {
 
   ngOnInit(): void {
     // Check if user is authenticated and is a doctor
-    this.authService.currentUser$.subscribe(user => {
+    this.authService.currentUser$.subscribe((user) => {
       if (!user || user.role !== 'DOCTOR') {
-        this.snackBar.open('You must be logged in as a doctor to create blog posts', 'Close', {
-          duration: 5000,
-        });
+        this.snackBar.open(
+          'You must be logged in as a doctor to create blog posts',
+          'Close',
+          {
+            duration: 5000,
+          }
+        );
         this.router.navigate(['/auth/login']);
       }
     });
@@ -284,6 +306,7 @@ export class CreatePostComponent implements OnInit {
       this.isSubmitting = true;
       const blogData = this.blogForm.value;
 
+      console.debug('Creating blog post payload:', blogData);
       this.blogService.createBlog(blogData).subscribe({
         next: (blog) => {
           this.isSubmitting = false;
@@ -298,10 +321,45 @@ export class CreatePostComponent implements OnInit {
         error: (error) => {
           this.isSubmitting = false;
           console.error('Error creating blog post:', error);
-          this.snackBar.open('Failed to create blog post. Please try again.', 'Close', {
-            duration: 5000,
+
+          // Prefer backend-provided message where available
+          const serverMessage = error?.error?.message || error?.message;
+
+          let userMsg = 'Failed to create blog post. Please try again.';
+          if (error?.status === 400) {
+            userMsg =
+              serverMessage || 'Invalid blog data. Please check the form.';
+          } else if (error?.status === 401) {
+            userMsg = 'Authentication required. Please log in again.';
+          } else if (error?.status === 403) {
+            userMsg =
+              serverMessage || 'You are not allowed to create blog posts.';
+          } else if (error?.status >= 500) {
+            userMsg = 'Server error while saving blog post. Try again later.';
+          } else if (serverMessage) {
+            userMsg = serverMessage;
+          }
+
+          this.snackBar.open(userMsg, 'Close', {
+            duration: 6000,
           });
-        }
+          // If backend indicates doctor profile is missing, redirect user to settings/profile
+          if (
+            serverMessage &&
+            serverMessage.toLowerCase().includes('doctor profile not found')
+          ) {
+            this.snackBar
+              .open(
+                'Please complete your doctor profile first.',
+                'Open profile',
+                {
+                  duration: 8000,
+                }
+              )
+              .onAction()
+              .subscribe(() => this.router.navigate(['/settings']));
+          }
+        },
       });
     } else {
       this.markFormGroupTouched();
@@ -313,7 +371,7 @@ export class CreatePostComponent implements OnInit {
   }
 
   private markFormGroupTouched(): void {
-    Object.keys(this.blogForm.controls).forEach(key => {
+    Object.keys(this.blogForm.controls).forEach((key) => {
       const control = this.blogForm.get(key);
       control?.markAsTouched();
     });

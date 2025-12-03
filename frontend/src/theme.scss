@@ -1,0 +1,176 @@
+// Use Angular Material prebuilt theme to ensure compatibility with the installed Material
+// packages and avoid mismatches between legacy theming APIs and M3 theming.
+
+// Basic CSS variables for brand accents (can be used in overrides below)
+:root {
+  --clinic-primary: #4a7aff;
+  --clinic-accent: #14b8a6;
+  --clinic-warn: #ef4444;
+  --clinic-surface: #ffffff;
+}
+
+// Custom component overrides for healthcare aesthetics
+.mat-mdc-card {
+  border-radius: 12px !important;
+  box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1) !important;
+  border: 1px solid #e5e7eb;
+  transition: all 0.2s ease;
+
+  &:hover {
+    box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1),
+      0 4px 6px -4px rgb(0 0 0 / 0.1) !important;
+    transform: translateY(-2px);
+  }
+}
+
+.mat-mdc-form-field {
+  .mat-mdc-text-field-wrapper {
+    border-radius: 8px;
+  }
+}
+
+.mat-mdc-button,
+.mat-mdc-raised-button,
+.mat-mdc-outlined-button {
+  border-radius: 8px !important;
+  font-weight: 500;
+  text-transform: none;
+  letter-spacing: 0.02em;
+  transition: all 0.2s ease;
+
+  &:hover {
+    transform: translateY(-1px);
+  }
+}
+
+.mat-mdc-fab,
+.mat-mdc-mini-fab {
+  box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1) !important;
+}
+
+// Toolbar customization
+.mat-toolbar {
+  background: white !important;
+  color: #1f2937 !important;
+  border-bottom: 1px solid #e5e7eb;
+  box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
+}
+
+// Menu customization
+.mat-mdc-menu-panel {
+  border-radius: 12px !important;
+  box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1) !important;
+}
+
+// Snackbar customization
+.mat-mdc-snack-bar-container {
+  border-radius: 8px !important;
+
+  &.success-snackbar {
+    background-color: #22c55e !important;
+  }
+
+  &.error-snackbar {
+    background-color: #ef4444 !important;
+  }
+
+  &.warning-snackbar {
+    background-color: #f59e0b !important;
+  }
+
+  &.info-snackbar {
+    background-color: #3b82f6 !important;
+  }
+}
+
+// Chip customization
+.mat-mdc-chip {
+  border-radius: 16px !important;
+  font-weight: 500;
+}
+
+// Badge customization
+.mat-badge-content {
+  font-weight: 600;
+  font-size: 0.75rem;
+}
+
+// Progress bar customization
+.mat-mdc-progress-bar {
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+// Table customization
+.mat-mdc-table {
+  border-radius: 12px;
+  overflow: hidden;
+
+  .mat-mdc-header-row {
+    background-color: #f9fafb;
+  }
+
+  .mat-mdc-row:hover {
+    background-color: #f0f8ff;
+  }
+}
+
+// Dialog customization
+.mat-mdc-dialog-container {
+  border-radius: 16px !important;
+  padding: 0 !important;
+}
+
+// Expansion panel customization
+.mat-expansion-panel {
+  border-radius: 12px !important;
+  box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1) !important;
+  border: 1px solid #e5e7eb;
+  margin-bottom: 16px;
+
+  &:not(.mat-expanded) {
+    .mat-expansion-panel-header:hover {
+      background: #f9fafb !important;
+    }
+  }
+}
+
+// Tabs customization
+.mat-mdc-tab-group {
+  .mat-mdc-tab-labels {
+    border-bottom: 2px solid #e5e7eb;
+  }
+
+  .mat-mdc-tab {
+    font-weight: 500;
+    text-transform: none;
+  }
+}
+
+// Slider customization
+.mat-mdc-slider {
+  .mdc-slider__track--active_fill {
+    border-color: #4a7aff;
+  }
+}
+
+// Checkbox and radio customization
+.mat-mdc-checkbox,
+.mat-mdc-radio-button {
+  .mdc-checkbox__background,
+  .mdc-radio__outer-circle {
+    border-width: 2px;
+  }
+}
+
+// Select customization
+.mat-mdc-select-panel {
+  border-radius: 8px !important;
+}
+
+// Tooltip customization
+.mat-mdc-tooltip {
+  border-radius: 6px;
+  font-size: 0.75rem;
+  padding: 6px 12px;
+}

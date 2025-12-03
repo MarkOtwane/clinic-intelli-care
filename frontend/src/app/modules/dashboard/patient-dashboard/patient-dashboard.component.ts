@@ -302,32 +302,87 @@ import { PatientService } from '../../../core/services/patient.service';
         font-size: var(--font-size-lg);
         color: var(--gray-600);
         margin: 0;
-        font-weight: 400;
+        line-height: 1.6;
         max-width: 600px;
       }
 
       .quick-stats {
         display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-        gap: var(--space-4);
-        margin-top: var(--space-6);
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        gap: var(--space-6);
       }
 
       .stat-card {
         background: white;
-        border-radius: var(--radius-lg);
+        border-radius: var(--radius-xl);
         padding: var(--space-6);
-        box-shadow: var(--shadow-md);
-        border: 1px solid var(--gray-200);
         display: flex;
-        align-items: center;
         gap: var(--space-4);
-        transition: all 0.2s ease;
+        box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1);
+        border: 1px solid var(--gray-200);
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        position: relative;
+        overflow: hidden;
+      }
+
+      .stat-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 4px;
+        background: var(--primary-500);
+        transform: scaleX(0);
+        transition: transform 0.3s ease;
       }
 
       .stat-card:hover {
-        box-shadow: var(--shadow-lg);
-        transform: translateY(-2px);
+        transform: translateY(-4px);
+        box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+      }
+
+      .stat-card:hover::before {
+        transform: scaleX(1);
+      }
+
+      .stat-card.primary::before {
+        background: var(--primary-500);
+      }
+
+      .stat-card.success::before {
+        background: var(--success-500);
+      }
+
+      .stat-card.info::before {
+        background: var(--secondary-500);
+      }
+
+      .stat-icon-wrapper {
+        width: 64px;
+        height: 64px;
+        border-radius: var(--radius-lg);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+        transition: transform 0.3s ease;
+      }
+
+      .stat-card.primary .stat-icon-wrapper {
+        background: linear-gradient(135deg, var(--primary-100), var(--primary-200));
+      }
+
+      .stat-card.success .stat-icon-wrapper {
+        background: linear-gradient(135deg, var(--success-50), var(--success-100));
+      }
+
+      .stat-card.info .stat-icon-wrapper {
+        background: linear-gradient(135deg, var(--secondary-100), var(--secondary-200));
+      }
+
+      .stat-card:hover .stat-icon-wrapper {
+        transform: scale(1.1) rotate(5deg);
       }
 
       .stat-icon {
@@ -336,22 +391,56 @@ import { PatientService } from '../../../core/services/patient.service';
         height: 32px;
       }
 
-      .stat-content {
-        display: flex;
-        flex-direction: column;
+      .stat-card.primary .stat-icon {
+        color: var(--primary-600);
       }
 
-      .stat-number {
-        font-size: var(--font-size-2xl);
-        font-weight: 700;
-        color: var(--gray-800);
-        line-height: 1;
+      .stat-card.success .stat-icon {
+        color: var(--success-600);
+      }
+
+      .stat-card.info .stat-icon {
+        color: var(--secondary-600);
+      }
+
+      .stat-content {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        gap: var(--space-2);
       }
 
       .stat-label {
         font-size: var(--font-size-sm);
         color: var(--gray-600);
-        margin-top: var(--space-1);
+        font-weight: 500;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+      }
+
+      .stat-number {
+        font-size: var(--font-size-3xl);
+        font-weight: 700;
+        color: var(--gray-900);
+        line-height: 1;
+      }
+
+      .stat-change {
+        display: flex;
+        align-items: center;
+        gap: var(--space-1);
+        font-size: var(--font-size-xs);
+        color: var(--gray-500);
+      }
+
+      .stat-change mat-icon {
+        font-size: 14px;
+        width: 14px;
+        height: 14px;
+      }
+
+      .stat-change.positive {
+        color: var(--success-600);
       }
 
       .dashboard-grid {
@@ -654,5 +743,12 @@ export class PatientDashboardComponent implements OnInit {
         this.isLoading = false;
       }
     });
+  }
+
+  getTimeOfDay(): string {
+    const hour = new Date().getHours();
+    if (hour < 12) return 'morning';
+    if (hour < 18) return 'afternoon';
+    return 'evening';
   }
 }

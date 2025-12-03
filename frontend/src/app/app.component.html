@@ -1,8 +1,8 @@
 <div class="hms-app">
   <!-- Navigation Header -->
   <header class="app-header" *ngIf="isAuthenticated">
-    <mat-toolbar color="primary">
-      <button mat-icon-button [matMenuTriggerFor]="menu" aria-label="Menu">
+    <mat-toolbar>
+      <button mat-icon-button [matMenuTriggerFor]="menu" aria-label="Main menu" class="menu-trigger">
         <mat-icon>menu</mat-icon>
       </button>
       <mat-menu #menu="matMenu">
@@ -86,33 +86,55 @@
       <span class="app-title">Clinic IntelliCare</span>
       <span class="spacer"></span>
       
-      <!-- Notifications -->
-      <button mat-icon-button routerLink="/notifications" aria-label="Notifications">
-        <mat-icon [matBadge]="unreadNotifications" matBadgeColor="warn" aria-hidden="false">notifications</mat-icon>
-      </button>
-      
-      <!-- User Profile -->
-      <button mat-icon-button [matMenuTriggerFor]="userMenu" aria-label="User Menu">
-        <mat-icon>account_circle</mat-icon>
-      </button>
-      <mat-menu #userMenu="matMenu">
+      <!-- Quick Actions -->
+      <div class="header-actions">
+        <!-- Notifications -->
+        <button 
+          mat-icon-button 
+          routerLink="/notifications" 
+          aria-label="View notifications"
+          class="notification-btn">
+          <mat-icon 
+            [matBadge]="unreadNotifications > 0 ? unreadNotifications : null" 
+            [matBadgeHidden]="unreadNotifications === 0"
+            matBadgeColor="warn" 
+            matBadgeSize="small">
+            notifications
+          </mat-icon>
+        </button>
+        
+        <!-- User Profile -->
+        <button 
+          mat-icon-button 
+          [matMenuTriggerFor]="userMenu" 
+          aria-label="User menu"
+          class="user-menu-btn">
+          <mat-icon>account_circle</mat-icon>
+        </button>
+      </div>
+      <mat-menu #userMenu="matMenu" class="user-dropdown-menu">
         <div class="user-info">
-          <div class="user-name">{{ currentUser?.firstName }} {{ currentUser?.lastName }}</div>
-          <div class="user-role">{{ currentUser?.role }}</div>
+          <div class="user-avatar">
+            <mat-icon>account_circle</mat-icon>
+          </div>
+          <div class="user-details">
+            <div class="user-name">{{ currentUser?.firstName }} {{ currentUser?.lastName }}</div>
+            <div class="user-role">{{ currentUser?.role }}</div>
+          </div>
         </div>
         <mat-divider></mat-divider>
         <button mat-menu-item routerLink="/profile">
           <mat-icon>person</mat-icon>
-          <span>Profile</span>
+          <span>My Profile</span>
         </button>
         <button mat-menu-item routerLink="/settings">
           <mat-icon>settings</mat-icon>
           <span>Settings</span>
         </button>
         <mat-divider></mat-divider>
-        <button mat-menu-item (click)="logout()">
+        <button mat-menu-item (click)="logout()" class="logout-item">
           <mat-icon>logout</mat-icon>
-          <span>Logout</span>
+          <span>Sign Out</span>
         </button>
       </mat-menu>
     </mat-toolbar>
@@ -130,7 +152,9 @@
     color="warn" 
     class="emergency-button"
     routerLink="/emergency"
-    aria-label="Emergency">
+    aria-label="Emergency contact"
+    matTooltip="Emergency Contact"
+    matTooltipPosition="left">
     <mat-icon>emergency</mat-icon>
   </button>
 </div>
