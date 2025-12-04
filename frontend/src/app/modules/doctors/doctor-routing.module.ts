@@ -79,6 +79,20 @@ const routes: Routes = [
         canActivate: [DoctorProfileGuard],
       },
       {
+        path: 'profile',
+        loadComponent: () =>
+          import('./views/doctor-profile.component').then(
+            (m) => m.DoctorProfileComponent
+          ),
+      },
+      {
+        path: 'settings',
+        loadComponent: () =>
+          import('./views/doctor-settings.component').then(
+            (m) => m.DoctorSettingsComponent
+          ),
+      },
+      {
         path: '**',
         redirectTo: 'dashboard',
       },

@@ -2,7 +2,12 @@
   <!-- Navigation Header -->
   <header class="app-header" *ngIf="isAuthenticated">
     <mat-toolbar>
-      <button mat-icon-button [matMenuTriggerFor]="menu" aria-label="Main menu" class="menu-trigger">
+      <button
+        mat-icon-button
+        [matMenuTriggerFor]="menu"
+        aria-label="Main menu"
+        class="menu-trigger"
+      >
         <mat-icon>menu</mat-icon>
       </button>
       <mat-menu #menu="matMenu">
@@ -82,33 +87,36 @@
           <span>Logout</span>
         </button>
       </mat-menu>
-      
+
       <span class="app-title">Clinic IntelliCare</span>
       <span class="spacer"></span>
-      
+
       <!-- Quick Actions -->
       <div class="header-actions">
         <!-- Notifications -->
-        <button 
-          mat-icon-button 
-          routerLink="/notifications" 
+        <button
+          mat-icon-button
+          routerLink="/notifications"
           aria-label="View notifications"
-          class="notification-btn">
-          <mat-icon 
-            [matBadge]="unreadNotifications > 0 ? unreadNotifications : null" 
+          class="notification-btn"
+        >
+          <mat-icon
+            [matBadge]="unreadNotifications > 0 ? unreadNotifications : null"
             [matBadgeHidden]="unreadNotifications === 0"
-            matBadgeColor="warn" 
-            matBadgeSize="small">
+            matBadgeColor="warn"
+            matBadgeSize="small"
+          >
             notifications
           </mat-icon>
         </button>
-        
+
         <!-- User Profile -->
-        <button 
-          mat-icon-button 
-          [matMenuTriggerFor]="userMenu" 
+        <button
+          mat-icon-button
+          [matMenuTriggerFor]="userMenu"
           aria-label="User menu"
-          class="user-menu-btn">
+          class="user-menu-btn"
+        >
           <mat-icon>account_circle</mat-icon>
         </button>
       </div>
@@ -123,11 +131,11 @@
           </div>
         </div>
         <mat-divider></mat-divider>
-        <button mat-menu-item routerLink="/profile">
+        <button mat-menu-item (click)="goToProfile()">
           <mat-icon>person</mat-icon>
           <span>My Profile</span>
         </button>
-        <button mat-menu-item routerLink="/settings">
+        <button mat-menu-item (click)="goToSettings()">
           <mat-icon>settings</mat-icon>
           <span>Settings</span>
         </button>
@@ -146,24 +154,22 @@
   </main>
 
   <!-- Emergency Button (for Patients) -->
-  <button 
-    *ngIf="currentUser?.role === 'PATIENT'" 
-    mat-fab 
-    color="warn" 
+  <button
+    *ngIf="currentUser?.role === 'PATIENT'"
+    mat-fab
+    color="warn"
     class="emergency-button"
     routerLink="/emergency"
     aria-label="Emergency contact"
     matTooltip="Emergency Contact"
-    matTooltipPosition="left">
+    matTooltipPosition="left"
+  >
     <mat-icon>emergency</mat-icon>
   </button>
 </div>
 
 <!-- Global Loading Indicator -->
-<mat-progress-bar 
-  mode="indeterminate" 
-  class="global-loading"
-  *ngIf="isLoading">
+<mat-progress-bar mode="indeterminate" class="global-loading" *ngIf="isLoading">
 </mat-progress-bar>
 
 <!-- Global Snackbar -->
