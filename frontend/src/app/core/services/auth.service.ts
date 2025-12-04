@@ -88,20 +88,20 @@ export class AuthService {
   }
 
   logout(): void {
-    // notify backend to clear refresh cookie, include credentials so cookie present
+    // Clear local state immediately for instant UI feedback
+    localStorage.removeItem('accessToken');
+    localStorage.removeItem('currentUser');
+    this.currentUserSubject.next(null);
+
+    // Notify backend to clear refresh cookie in background
     this.http
       .post(`${this.apiUrl}/logout`, {}, { withCredentials: true })
       .subscribe({
         next: () => {
-          localStorage.removeItem('accessToken');
-          localStorage.removeItem('currentUser');
-          this.currentUserSubject.next(null);
+          // Backend logout successful
         },
         error: () => {
-          // still clear local state even if backend fails
-          localStorage.removeItem('accessToken');
-          localStorage.removeItem('currentUser');
-          this.currentUserSubject.next(null);
+          // Backend logout failed, but local state is already cleared
         },
       });
   }
