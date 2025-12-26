@@ -11,9 +11,12 @@ async function bootstrap() {
   const configService = app.get(ConfigService);
 
   // Enable CORS for frontend communication
+  const frontendUrl = configService.get<string>('FRONTEND_URL');
+  // Only allow credentials when a specific frontend origin is configured.
+  // Browsers reject Access-Control-Allow-Origin: * together with Allow-Credentials: true.
   app.enableCors({
-    origin: configService.get<string>('FRONTEND_URL') || '*',
-    credentials: true,
+    origin: frontendUrl || '*',
+    credentials: !!frontendUrl,
     methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization'],
   });

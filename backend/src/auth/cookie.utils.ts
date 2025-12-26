@@ -8,21 +8,36 @@ export function setRefreshTokenCookie(
   token: string,
   config: ConfigService,
 ) {
-  const secure = config.get<string>('REFRESH_TOKEN_COOKIE_SECURE') === 'true';
+  const secureEnv = config.get<string>('REFRESH_TOKEN_COOKIE_SECURE');
+  // Default secure:true in production when not explicitly set
+  const nodeEnv = config.get<string>('NODE_ENV') || 'development';
+  const secure =
+    secureEnv !== undefined ? secureEnv === 'true' : nodeEnv === 'production';
+
+  const sameSiteEnv = config.get<string>('REFRESH_TOKEN_COOKIE_SAMESITE');
+  const sameSite = (sameSiteEnv || 'lax') as 'lax' | 'strict' | 'none';
+
+  const domain = config.get<string>('REFRESH_TOKEN_COOKIE_DOMAIN') || undefined;
+
   const maxAge = msFromEnv(
     config.get<string>('REFRESH_TOKEN_EXPIRES_IN') || '30d',
   );
 
-  res.cookie(COOKIE_NAME, token, {
+  const cookieOptions: any = {
     httpOnly: true,
     secure,
-    sameSite: 'lax',
+    sameSite,
     path: '/',
     maxAge,
-  });
+  };
+
+  if (domain) cookieOptions.domain = domain;
+
+  res.cookie(COOKIE_NAME, token, cookieOptions);
 }
 
 export function clearRefreshTokenCookie(res: Response) {
+  // Clear cookie with same attributes (domain/path) if set
   res.clearCookie(COOKIE_NAME, { httpOnly: true, path: '/' });
 }
 

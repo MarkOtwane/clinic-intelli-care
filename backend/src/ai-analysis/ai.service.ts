@@ -4,6 +4,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import axios from 'axios';
+import OpenAI from 'openai';
 
 export interface AISymptomAnalysis {
   predictions: Array<{
@@ -30,8 +31,90 @@ interface GeminiResponse {
 @Injectable()
 export class AIService {
   private readonly logger = new Logger(AIService.name);
+  private openai: OpenAI;
 
-  constructor(private configService: ConfigService) {}
+  constructor(private configService: ConfigService) {
+    const openaiApiKey = this.configService.get<string>('OPENAI_API_KEY');
+    if (openaiApiKey) {
+      this.openai = new OpenAI({ apiKey: openaiApiKey });
+    }
+  }
+
+  /**
+   * Analyze symptoms using Google Gemini AI or OpenAI ChatGPT
+   * @param symptoms - Array of symptom strings
+   * @param additionalInfo - Additional context information
+   * @returns AI-powered analysis results
+   */
+  async analyzeSymptoms(
+    symptoms: string[],
+    additionalInfo?: {
+      severity?: string;
+      duration?: number;
+      location?: string;
+      medications?: string[];
+    },
+  ): Promise<AISymptomAnalysis> {
+    try {
+      // Try ChatGPT first if API key is available
+      const useOpenAI = this.configService.get<boolean>('USE_OPENAI', false);
+
+      if (useOpenAI && this.openai) {
+        return await this.analyzeSymptomsWithChatGPT(symptoms, additionalInfo);
+      }
+
+      // Fall back to Gemini
+      return await this.analyzeSymptomsWithGemini(symptoms, additionalInfo);
+    } catch (error) {
+      this.logger.error('AI analysis failed:', error);
+      // Fallback to basic analysis if AI fails
+      return this.fallbackAnalysis(symptoms);
+    }
+  }
+
+  /**
+   * Analyze symptoms using ChatGPT API
+   * @param symptoms - Array of symptom strings
+   * @param additionalInfo - Additional context information
+   * @returns AI-powered analysis results
+   */
+  private async analyzeSymptomsWithChatGPT(
+    symptoms: string[],
+    additionalInfo?: {
+      severity?: string;
+      duration?: number;
+      location?: string;
+      medications?: string[];
+    },
+  ): Promise<AISymptomAnalysis> {
+    try {
+      const prompt = this.buildAnalysisPrompt(symptoms, additionalInfo);
+
+      const response = await this.openai.chat.completions.create({
+        model: 'gpt-4-turbo',
+        messages: [
+          {
+            role: 'system',
+            content:
+              'You are a medical AI assistant analyzing patient symptoms. Provide analysis in valid JSON format only.',
+          },
+          {
+            role: 'user',
+            content: prompt,
+          },
+        ],
+        temperature: 0.1,
+        max_tokens: 2048,
+      });
+
+      const aiResponse =
+        response.choices[0].message.content || 'Unable to analyze symptoms';
+      return this.parseAIResponse(aiResponse);
+    } catch (error) {
+      this.logger.error('ChatGPT analysis failed:', error);
+      throw error;
+    }
+  }
 
   /**
    * Analyze symptoms using Google Gemini AI
@@ -39,7 +122,7 @@ export class AIService {
    * @param additionalInfo - Additional context information
    * @returns AI-powered analysis results
    */
-  async analyzeSymptoms(
+  private async analyzeSymptomsWithGemini(
     symptoms: string[],
     additionalInfo?: {
       severity?: string;
