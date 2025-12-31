@@ -82,7 +82,7 @@ export class AuthService {
     const payload = { sub: userId, email, role };
     return this.jwtService.sign(payload, {
       secret: this.config.get<string>('JWT_SECRET'),
-      expiresIn: parseInt(this.config.get<string>('JWT_EXPIRES_IN') || '900'),
+      expiresIn: this.config.get<string>('JWT_EXPIRES_IN') || '900s',
     });
   }
 

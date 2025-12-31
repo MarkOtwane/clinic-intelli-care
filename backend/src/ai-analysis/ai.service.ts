@@ -60,14 +60,26 @@ export class AIService {
       const useOpenAI = this.configService.get<boolean>('USE_OPENAI', false);
 
       if (useOpenAI && this.openai) {
-        return await this.analyzeSymptomsWithChatGPT(symptoms, additionalInfo);
+        try {
+          return await this.analyzeSymptomsWithChatGPT(
+            symptoms,
+            additionalInfo,
+          );
+        } catch (chatgptError) {
+          this.logger.warn(
+            'ChatGPT analysis failed, falling back to Gemini:',
+            chatgptError,
+          );
+          // Fall back to Gemini if ChatGPT fails
+          return await this.analyzeSymptomsWithGemini(symptoms, additionalInfo);
+        }
       }
 
-      // Fall back to Gemini
+      // Use Gemini by default
       return await this.analyzeSymptomsWithGemini(symptoms, additionalInfo);
     } catch (error) {
       this.logger.error('AI analysis failed:', error);
-      // Fallback to basic analysis if AI fails
+      // Fallback to basic analysis if both AI services fail
       return this.fallbackAnalysis(symptoms);
     }
   }
@@ -89,9 +101,13 @@ export class AIService {
   ): Promise<AISymptomAnalysis> {
     try {
       const prompt = this.buildAnalysisPrompt(symptoms, additionalInfo);
+      const model = this.configService.get<string>(
+        'OPENAI_MODEL',
+        'gpt-3.5-turbo',
+      );
 
       const response = await this.openai.chat.completions.create({
-        model: 'gpt-4-turbo',
+        model: model,
         messages: [
           {
             role: 'system',
@@ -112,6 +128,7 @@ export class AIService {
       return this.parseAIResponse(aiResponse);
     } catch (error) {
       this.logger.error('ChatGPT analysis failed:', error);
+      // Re-throw to allow outer error handler to fall back to Gemini
       throw error;
     }
   }

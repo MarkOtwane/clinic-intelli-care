@@ -1,111 +1,10 @@
-/* App Component Styles - Enhanced Healthcare UI */
+/* App Component Styles */
 
 .hms-app {
   min-height: 100vh;
   display: flex;
   flex-direction: column;
   background: var(--gray-50);
-}
-
-/* Header Styles */
-.app-header {
-  position: sticky;
-  top: 0;
-  z-index: 1000;
-  box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
-}
-
-.app-header .mat-toolbar {
-  height: 64px;
-  padding: 0 var(--space-6);
-  background: white;
-  color: var(--gray-800);
-  border-bottom: 1px solid var(--gray-200);
-}
-
-.app-title {
-  font-size: var(--font-size-xl);
-  font-weight: 600;
-  color: var(--gray-800);
-  margin-left: var(--space-4);
-  display: flex;
-  align-items: center;
-  gap: var(--space-2);
-}
-
-.app-title::before {
-  content: '';
-  width: 32px;
-  height: 32px;
-  background: var(--primary-500);
-  border-radius: var(--radius-md);
-  display: inline-block;
-  mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='currentColor'%3E%3Cpath d='M12 2L2 7v10c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V7l-10-5z'/%3E%3C/svg%3E") no-repeat center;
-  mask-size: contain;
-}
-
-.spacer {
-  flex: 1 1 auto;
-}
-
-/* User Menu Styles */
-.user-info {
-  padding: var(--space-4);
-  border-bottom: 1px solid var(--gray-200);
-}
-
-.user-name {
-  font-weight: 600;
-  color: var(--gray-800);
-  font-size: var(--font-size-base);
-}
-
-.user-role {
-  font-size: var(--font-size-xs);
-  color: var(--gray-500);
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  margin-top: var(--space-1);
-}
-
-/* Main Content */
-.app-content {
-  flex: 1;
-  padding: 0;
-}
-
-.app-content.authenticated {
-  padding: var(--space-6);
-  max-width: 1400px;
-  margin: 0 auto;
-  width: 100%;
-}
-
-/* Emergency Button */
-.emergency-button {
-  position: fixed;
-  bottom: var(--space-8);
-  right: var(--space-8);
-  z-index: 1000;
-  width: 64px;
-  height: 64px;
-  box-shadow: 0 10px 15px -3px rgb(239 68 68 / 0.4), 0 4px 6px -4px rgb(239 68 68 / 0.2);
-  animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
-}
-
-@keyframes pulse {
-  0%, 100% {
-    opacity: 1;
-  }
-  50% {
-    opacity: 0.8;
-    transform: scale(1.05);
-  }
-}
-
-.emergency-button:hover {
-  transform: scale(1.1);
-  box-shadow: 0 20px 25px -5px rgb(239 68 68 / 0.4), 0 8px 10px -6px rgb(239 68 68 / 0.2);
 }
 
 /* Global Loading */
@@ -117,80 +16,8 @@
   z-index: 2000;
 }
 
-/* Menu Item Enhancements */
-.mat-mdc-menu-item {
-  display: flex;
-  align-items: center;
-  gap: var(--space-3);
-  padding: var(--space-3) var(--space-4);
-  transition: background-color 0.2s ease;
-}
-
-.mat-mdc-menu-item:hover {
-  background-color: var(--primary-50);
-}
-
-.mat-mdc-menu-item mat-icon {
-  color: var(--gray-600);
-  margin-right: 0;
-}
-
-.mat-mdc-menu-item:hover mat-icon {
-  color: var(--primary-600);
-}
-
-/* Notification Badge */
-.mat-badge-content {
-  background-color: var(--error-500);
-  color: white;
-  font-weight: 600;
-}
-
-/* Responsive Styles */
-@media (max-width: 768px) {
-  .app-header .mat-toolbar {
-    padding: 0 var(--space-4);
-  }
-
-  .app-title {
-    font-size: var(--font-size-lg);
-  }
-
-  .app-content.authenticated {
-    padding: var(--space-4);
-  }
-
-  .emergency-button {
-    bottom: var(--space-4);
-    right: var(--space-4);
-    width: 56px;
-    height: 56px;
-  }
-}
-
-/* Icon Animations */
-@keyframes iconBounce {
-  0%, 100% {
-    transform: translateY(0);
-  }
-  50% {
-    transform: translateY(-4px);
-  }
-}
-
-.mat-icon:hover {
-  animation: iconBounce 0.5s ease;
-}
-
-/* Accessibility Improvements */
-.mat-mdc-menu-item:focus {
-  background-color: var(--primary-50);
-  outline: 2px solid var(--primary-300);
-  outline-offset: -2px;
-}
-
-/* Smooth Transitions */
-* {
+/* Smooth Transitions - careful with global selector, limiting scope */
+.hms-app * {
   transition-property: background-color, border-color, color, fill, stroke, opacity, box-shadow, transform;
   transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
   transition-duration: 150ms;
