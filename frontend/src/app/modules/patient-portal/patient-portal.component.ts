@@ -6,7 +6,7 @@ import {
 } from '../../shared/components/dashboard-layout/dashboard-layout.component';
 
 @Component({
-  selector: 'app-patient-portal',
+  selector: 'app-patient-layout',
   standalone: true,
   imports: [DashboardLayoutComponent, RouterOutlet],
   template: `
@@ -19,14 +19,15 @@ import {
     </app-dashboard-layout>
   `,
 })
-export class PatientPortalComponent {
+export class PatientLayoutComponent {
   title = 'Patient workspace';
   subtitle =
     'Track your care plan, appointments, and prescriptions from one secure place.';
 
   links: DashboardNavLink[] = [
-    { label: 'Appointments', icon: 'event', route: 'appointments' },
+    { label: 'Dashboard', icon: 'space_dashboard', route: 'dashboard' },
     { label: 'AI Analysis', icon: 'smart_toy', route: 'analysis' },
+    { label: 'Appointments', icon: 'event', route: 'appointments' },
     { label: 'Prescriptions', icon: 'vaccines', route: 'prescriptions' },
     { label: 'Notifications', icon: 'notifications', route: 'notifications' },
   ];
