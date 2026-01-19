@@ -14,6 +14,7 @@ import { RolesGuard } from '../auth/guards/roles.guard';
 import { Roles } from '../auth/roles.decorator';
 import { PrismaService } from '../prisma/prisma.service';
 import { AiAnalysisService } from './ai-analysis.service';
+import { AIService } from './ai.service';
 import { CreateAnalysisDto } from './dto/create-analysis.dto';
 import { UpdateAnalysisDto } from './dto/update-analysis.dto';
 
@@ -26,6 +27,7 @@ import { UpdateAnalysisDto } from './dto/update-analysis.dto';
 export class AiAnalysisController {
   constructor(
     private readonly aiService: AiAnalysisService,
+    private readonly rawAiService: AIService,
     private prisma: PrismaService,
   ) {}
 
@@ -72,6 +74,15 @@ export class AiAnalysisController {
     }
 
     return this.aiService.create(dto, patientId);
+  }
+
+  /**
+   * Debug endpoint to list available Gemini models for this API key (ADMIN only)
+   */
+  @Get('gemini/models')
+  @Roles('ADMIN')
+  async listGeminiModels() {
+    return this.rawAiService.listGeminiModels();
   }
 
   /**

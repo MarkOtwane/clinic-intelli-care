@@ -28,6 +28,14 @@ interface GeminiResponse {
   }>;
 }
 
+interface GeminiListModelsResponse {
+  models: Array<{
+    name: string;
+    supportedGenerationMethods?: string[];
+    displayName?: string;
+  }>;
+}
+
 @Injectable()
 export class AIService {
   private readonly logger = new Logger(AIService.name);
@@ -82,6 +90,34 @@ export class AIService {
       // Fallback to basic analysis if both AI services fail
       return this.fallbackAnalysis(symptoms);
     }
+  }
+
+  async listGeminiModels() {
+    const apiKey = this.configService.get<string>('AI_API_KEY');
+    if (!apiKey) {
+      throw new Error('AI API key (AI_API_KEY) is missing');
+    }
+
+    const response = await axios.get<GeminiListModelsResponse>(
+      'https://generativelanguage.googleapis.com/v1beta/models',
+      {
+        headers: {
+          'x-goog-api-key': apiKey,
+        },
+      },
+    );
+
+    const models = response.data.models || [];
+    // Return only models that explicitly support generateContent
+    return models
+      .filter((m) =>
+        (m.supportedGenerationMethods || []).includes('generateContent'),
+      )
+      .map((m) => ({
+        name: m.name,
+        displayName: m.displayName,
+        supportedGenerationMethods: m.supportedGenerationMethods,
+      }));
   }
 
   /**
@@ -150,18 +186,25 @@ export class AIService {
   ): Promise<AISymptomAnalysis> {
     try {
       const apiKey = this.configService.get<string>('AI_API_KEY');
-      const apiUrl = this.configService.get<string>('AI_API_URL');
+      const geminiModel =
+        this.configService.get<string>('GEMINI_MODEL') || 'gemini-flash-latest';
 
-      if (!apiKey || !apiUrl) {
-        throw new Error('AI API configuration is missing');
+      if (!apiKey) {
+        throw new Error('AI API key (AI_API_KEY) is missing');
       }
 
       // Build the prompt for medical symptom analysis
       const prompt = this.buildAnalysisPrompt(symptoms, additionalInfo);
 
+      // Construct the Gemini API endpoint using v1beta/models/{model}:generateContent
+      const normalizedModel = geminiModel.startsWith('models/')
+        ? geminiModel
+        : `models/${geminiModel}`;
+      const apiUrl = `https://generativelanguage.googleapis.com/v1beta/${normalizedModel}:generateContent`;
+
       // Call Gemini API
       const response = await axios.post<GeminiResponse>(
-        `${apiUrl}?key=${apiKey}`,
+        apiUrl,
         {
           contents: [
             {
@@ -177,11 +220,13 @@ export class AIService {
             topK: 40,
             topP: 0.95,
             maxOutputTokens: 2048,
+            responseMimeType: 'application/json', // Request JSON response
           },
         },
         {
           headers: {
             'Content-Type': 'application/json',
+            'x-goog-api-key': apiKey,
           },
         },
       );
@@ -190,7 +235,14 @@ export class AIService {
       const aiResponse = response.data.candidates[0].content.parts[0].text;
       return this.parseAIResponse(aiResponse);
     } catch (error) {
-      this.logger.error('AI analysis failed:', error);
+      this.logger.error('Gemini AI analysis failed:', error);
+      if (axios.isAxiosError(error)) {
+        this.logger.error('API Error Details:', {
+          status: error.response?.status,
+          statusText: error.response?.statusText,
+          data: error.response?.data,
+        });
+      }
       // Fallback to basic analysis if AI fails
       return this.fallbackAnalysis(symptoms);
     }
