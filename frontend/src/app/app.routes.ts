@@ -74,13 +74,7 @@ export const routes: Routes = [
               (m) => m.AppointmentsModule
             ),
         },
-        {
-          path: 'ai-analysis',
-          loadChildren: () =>
-            import('./modules/ai-analysis/ai-analysis.module').then(
-              (m) => m.AiAnalysisModule
-            ),
-        },
+
         {
           path: 'prescriptions',
           loadChildren: () =>
@@ -93,6 +87,13 @@ export const routes: Routes = [
           loadChildren: () =>
             import('./modules/notifications/notifications.module').then(
               (m) => m.NotificationsModule
+            ),
+        },
+        {
+          path: 'ai-analysis',
+          loadChildren: () =>
+            import('./modules/ai-analysis/ai-analysis.module').then(
+              (m) => m.AiAnalysisModule
             ),
         },
         {

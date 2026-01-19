@@ -10,60 +10,47 @@ const routes: Routes = [
       {
         path: '',
         pathMatch: 'full',
-        redirectTo: 'dashboard',
-      },
-      {
-        path: 'dashboard',
-        loadComponent: () =>
-          import(
-            '../dashboard/patient-dashboard/patient-dashboard.component'
-          ).then((m) => m.PatientDashboardComponent),
+        redirectTo: 'appointments',
       },
       {
         path: 'appointments',
         loadComponent: () =>
           import('./views/patient-appointments.component').then(
-            (m) => m.PatientAppointmentsComponent
-          ),
-      },
-      {
-        path: 'analysis',
-        loadComponent: () =>
-          import('./views/patient-analysis.component').then(
-            (m) => m.PatientAnalysisComponent
+            (m) => m.PatientAppointmentsComponent,
           ),
       },
       {
         path: 'prescriptions',
         loadComponent: () =>
           import('./views/patient-prescriptions.component').then(
-            (m) => m.PatientPrescriptionsComponent
+            (m) => m.PatientPrescriptionsComponent,
           ),
       },
       {
         path: 'notifications',
         loadComponent: () =>
           import('./views/patient-notifications.component').then(
-            (m) => m.PatientNotificationsComponent
+            (m) => m.PatientNotificationsComponent,
           ),
       },
       {
         path: 'profile',
         loadComponent: () =>
           import('./views/patient-profile.component').then(
-            (m) => m.PatientProfileComponent
+            (m) => m.PatientProfileComponent,
           ),
       },
       {
         path: 'settings',
         loadComponent: () =>
           import('./views/patient-settings.component').then(
-            (m) => m.PatientSettingsComponent
+            (m) => m.PatientSettingsComponent,
           ),
       },
+
       {
         path: '**',
-        redirectTo: 'dashboard',
+        redirectTo: 'appointments',
       },
     ],
   },

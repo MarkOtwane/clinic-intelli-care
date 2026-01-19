@@ -25,7 +25,6 @@ export class PatientPortalComponent {
     'Track your care plan, appointments, and prescriptions from one secure place.';
 
   links: DashboardNavLink[] = [
-    { label: 'Overview', icon: 'space_dashboard', route: 'dashboard' },
     { label: 'Appointments', icon: 'event', route: 'appointments' },
     { label: 'AI Analysis', icon: 'smart_toy', route: 'analysis' },
     { label: 'Prescriptions', icon: 'vaccines', route: 'prescriptions' },
