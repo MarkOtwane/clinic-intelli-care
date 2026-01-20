@@ -10,6 +10,7 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatSnackBarModule, MatSnackBar } from '@angular/material/snack-bar';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatCheckboxModule } from '@angular/material/checkbox';
+import { FormsModule } from '@angular/forms';
 
 import { AppointmentsService } from '../../../core/services/appointments.service';
 
@@ -27,6 +28,7 @@ interface AvailabilitySlot {
   imports: [
     CommonModule,
     ReactiveFormsModule,
+    FormsModule,
     MatDialogModule,
     MatFormFieldModule,
     MatInputModule,

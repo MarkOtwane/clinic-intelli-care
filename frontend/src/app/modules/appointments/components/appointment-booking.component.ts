@@ -18,7 +18,7 @@ import { MatBadgeModule } from '@angular/material/badge';
 import { AppointmentsService } from '../../../core/services/appointments.service';
 import { AuthService } from '../../../core/services/auth.service';
 import { User } from '../../../core/models/user.model';
-import { Appointment, AppointmentStatus, AppointmentType } from '../../../core/models/appointment.model';
+import { Appointment, AppointmentStatus, AppointmentType, CreateAppointmentRequest } from '../../../core/models/appointment.model';
 
 interface Doctor {
   id: string;
@@ -31,6 +31,11 @@ interface Doctor {
     startTime: string;
     endTime: string;
   }>;
+}
+
+interface TimeSlotResponse {
+  startTime: string;
+  endTime: string;
 }
 
 interface TimeSlot {
@@ -131,7 +136,7 @@ interface TimeSlot {
               <div class="selected-doctor" *ngIf="selectedDoctor">
                 <mat-chip color="primary" selected>
                   <mat-icon>person</mat-icon>
-                  {{ selectedDoctor.name }} - {{ selectedDoctor.specialty }}
+                  {{ selectedDoctor.name }} - {{ selectedDoctor.specialization }}
                 </mat-chip>
               </div>
 
@@ -653,9 +658,9 @@ export class AppointmentBookingComponent implements OnInit {
     }
     
     const term = searchTerm.toLowerCase();
-    this.filteredDoctors = this.doctors.filter(doctor => 
+    this.filteredDoctors = this.doctors.filter(doctor =>
       doctor.name.toLowerCase().includes(term) ||
-      doctor.specialty.toLowerCase().includes(term)
+      doctor.specialization.toLowerCase().includes(term)
     );
   }
 
@@ -673,7 +678,7 @@ export class AppointmentBookingComponent implements OnInit {
       this.selectedDoctor.id,
       selectedDate
     ).subscribe({
-      next: (slots) => {
+      next: (slots: string[]) => {
         this.availableSlots = slots.map((time: string) => ({
           time,
           available: true
@@ -714,12 +719,11 @@ export class AppointmentBookingComponent implements OnInit {
 
     this.isBooking = true;
 
-    const appointmentRequest = {
+    const appointmentRequest: CreateAppointmentRequest = {
       doctorId: this.selectedDoctor.id,
       date: this.scheduleForm.get('selectedDate')?.value?.toISOString().split('T')[0],
       time: this.scheduleForm.get('selectedTime')?.value,
       notes: this.detailsForm.get('notes')?.value,
-      reason: this.detailsForm.get('reason')?.value,
       type: this.detailsForm.get('appointmentType')?.value,
       isEmergency: this.detailsForm.get('isEmergency')?.value
     };

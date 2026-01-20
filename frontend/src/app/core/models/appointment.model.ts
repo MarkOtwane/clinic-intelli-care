@@ -40,6 +40,15 @@ export interface AppointmentRequest {
   isEmergency: boolean;
 }
 
+export interface CreateAppointmentRequest {
+  doctorId: string;
+  date: string;
+  time: string;
+  notes?: string;
+  type?: AppointmentType;
+  isEmergency?: boolean;
+}
+
 export interface DoctorSchedule {
   doctorId: string;
   date: Date;

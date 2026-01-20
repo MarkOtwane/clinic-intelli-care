@@ -111,30 +111,30 @@ model Doctor {
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
 
-  user         User?          @relation("DoctorUser")
-  appointments Appointment[]
-  blogPosts    BlogPost[]
-  userId       String?        @unique
-  Prediction   Prediction[]
-  Prescription Prescription[]
+  user           User?                @relation("DoctorUser")
+  appointments   Appointment[]
+  blogPosts      BlogPost[]
+  userId         String?              @unique
+  Prediction     Prediction[]
+  Prescription   Prescription[]
   availabilities DoctorAvailability[]
 
   Analysis Analysis[]
 }
 
 model DoctorAvailability {
-  id        String @id @default(uuid())
-  doctorId  String
-  dayOfWeek Int // 0 = Sunday, 1 = Monday, etc.
-  startTime String // HH:mm format
-  endTime   String // HH:mm format
-  isAvailable Boolean @default(true)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id          String   @id @default(uuid())
+  doctorId    String
+  dayOfWeek   Int // 0 = Sunday, 1 = Monday, etc.
+  startTime   String // HH:mm format
+  endTime     String // HH:mm format
+  isAvailable Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
 
   doctor Doctor @relation(fields: [doctorId], references: [id], onDelete: Cascade)
 
-  @@index([doctorId, dayOfWeek])
+  @@unique([doctorId, dayOfWeek])
   @@index([dayOfWeek])
 }
 

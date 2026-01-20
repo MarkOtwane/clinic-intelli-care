@@ -1,7 +1,7 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
-import { Appointment, AppointmentStatus, AppointmentType, AppointmentRequest } from '../models/appointment.model';
+import { Appointment, AppointmentStatus, AppointmentType, AppointmentRequest, CreateAppointmentRequest } from '../models/appointment.model';
 
 @Injectable({
   providedIn: 'root',
@@ -34,7 +34,7 @@ export class AppointmentsService {
     return this.http.get<Appointment>(`${this.apiUrl}/${id}`);
   }
 
-  createAppointment(appointment: AppointmentRequest): Observable<Appointment> {
+  createAppointment(appointment: CreateAppointmentRequest): Observable<Appointment> {
     return this.http.post<Appointment>(this.apiUrl, appointment);
   }
 
@@ -76,9 +76,9 @@ export class AppointmentsService {
   }
 
   // Availability and scheduling
-  getAvailableSlots(doctorId: string, date: Date): Observable<{startTime: string, endTime: string}[]> {
-    return this.http.get<{startTime: string, endTime: string}[]>(
-      `${this.apiUrl}/availability/${doctorId}/${date.toISOString().split('T')[0]}`
+  getAvailableSlots(doctorId: string, date: Date): Observable<string[]> {
+    return this.http.get<string[]>(
+      `${this.apiUrl}/available-slots/${doctorId}?date=${date.toISOString().split('T')[0]}`
     );
   }
 
