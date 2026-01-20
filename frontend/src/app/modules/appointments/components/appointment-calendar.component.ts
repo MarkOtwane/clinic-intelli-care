@@ -24,7 +24,7 @@ import { Subject, takeUntil } from 'rxjs';
 import { AppointmentsService } from '../../../core/services/appointments.service';
 import { AuthService } from '../../../core/services/auth.service';
 import { Appointment, AppointmentStatus } from '../../../core/models/appointment.model';
-import { User } from '../../../core/models/user.model';
+import { User, UserRole } from '../../../core/models/user.model';
 
 interface CalendarDay {
   date: Date;
@@ -723,8 +723,16 @@ export class AppointmentCalendarComponent implements OnInit, OnDestroy {
     
     this.isLoading = true;
     
-    // Load all appointments for now - in real implementation, filter by user role
-    this.appointmentsService.getAllAppointments()
+    // Use role-appropriate endpoints (backend enforces RBAC):
+    // - GET /api/appointments is ADMIN-only (patients will get 403)
+    const source$ =
+      this.currentUser.role === UserRole.ADMIN
+        ? this.appointmentsService.getAllAppointments()
+        : this.currentUser.role === UserRole.DOCTOR
+          ? this.appointmentsService.getMyDoctorAppointments()
+          : this.appointmentsService.getMyAppointments();
+
+    source$
       .pipe(takeUntil(this.destroy$))
       .subscribe({
         next: (appointments) => {

@@ -197,4 +197,76 @@ export class AppointmentsController {
       user.patientProfile.id,
     );
   }
+
+  /**
+   * Get available doctors (PATIENT only)
+   */
+  @Get('doctors')
+  @Roles('PATIENT')
+  getAvailableDoctors() {
+    return this.appointmentsService.getAvailableDoctors();
+  }
+
+  /**
+   * Set doctor availability (DOCTOR only, own availability)
+   */
+  @Post('availability')
+  @Roles('DOCTOR')
+  async setDoctorAvailability(
+    @Body() body: { dayOfWeek: number; startTime: string; endTime: string; isAvailable: boolean },
+    @CurrentUser('id') userId: string,
+  ) {
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+      include: { doctorProfile: true },
+    });
+
+    if (!user || !user.doctorProfile) {
+      throw new BadRequestException('Doctor profile not found');
+    }
+
+    return this.appointmentsService.setDoctorAvailability(
+      user.doctorProfile.id,
+      body.dayOfWeek,
+      body.startTime,
+      body.endTime,
+      body.isAvailable,
+    );
+  }
+
+  /**
+   * Get doctor availability (DOCTOR only, own availability)
+   */
+  @Get('availability')
+  @Roles('DOCTOR')
+  async getDoctorAvailability(@CurrentUser('id') userId: string) {
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+      include: { doctorProfile: true },
+    });
+
+    if (!user || !user.doctorProfile) {
+      throw new BadRequestException('Doctor profile not found');
+    }
+
+    return this.appointmentsService.getDoctorAvailability(user.doctorProfile.id);
+  }
+
+  /**
+   * Get patient AI analyses for doctor (DOCTOR only, patients who booked appointments)
+   */
+  @Get('patient-analyses')
+  @Roles('DOCTOR')
+  async getPatientAnalysesForDoctor(@CurrentUser('id') userId: string) {
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+      include: { doctorProfile: true },
+    });
+
+    if (!user || !user.doctorProfile) {
+      throw new BadRequestException('Doctor profile not found');
+    }
+
+    return this.appointmentsService.getPatientAnalysesForDoctor(user.doctorProfile.id);
+  }
 }

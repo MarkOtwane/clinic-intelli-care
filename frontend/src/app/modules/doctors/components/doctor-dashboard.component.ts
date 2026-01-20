@@ -24,6 +24,7 @@ import { AuthService } from '../../../core/services/auth.service';
 import { AiAnalysisService } from '../../../core/services/ai-analysis.service';
 import { DoctorsService, Doctor } from '../../../core/services/doctors.service';
 import { AppointmentsService } from '../../../core/services/appointments.service';
+import { AvailabilityDialogComponent } from './availability-dialog.component';
 
 // Models
 import { AIAnalysis, AnalysisStatus } from '../../../core/models/ai-analysis.model';
@@ -32,6 +33,7 @@ import { User } from '../../../core/models/user.model';
 
 interface DoctorDashboard {
   pendingCases: AIAnalysis[];
+  patientAnalyses: any[];
   todayAppointments: Appointment[];
   weeklyStats: {
     totalAppointments: number;
@@ -154,12 +156,92 @@ interface DoctorDashboard {
 
       <!-- Main Content Tabs -->
       <mat-tab-group class="dashboard-tabs">
+        <!-- Patient Analyses Tab -->
+        <mat-tab label="Patient Analyses">
+          <div class="tab-content">
+            <mat-card class="section-card">
+              <mat-card-header>
+                <mat-card-title>Patient AI Analyses</mat-card-title>
+                <mat-card-subtitle>View AI analysis reports for patients who have booked appointments with you</mat-card-subtitle>
+              </mat-card-header>
+
+              <mat-card-content>
+                <div class="analyses-list" *ngIf="patientAnalyses?.length; else noAnalyses">
+                  <mat-card class="analysis-card" *ngFor="let analysis of patientAnalyses">
+                    <mat-card-header>
+                      <div class="analysis-header">
+                        <mat-card-title>Analysis #{{ analysis.id.slice(-8) }}</mat-card-title>
+                        <mat-chip [color]="getConfidenceColor(analysis.confidence)" selected>
+                          {{ analysis.confidence }}% confidence
+                        </mat-chip>
+                      </div>
+                      <mat-card-subtitle>
+                        Patient: {{ analysis.patient?.name || 'Unknown' }} |
+                        Created: {{ analysis.createdAt | date:'short' }}
+                      </mat-card-subtitle>
+                    </mat-card-header>
+
+                    <mat-card-content>
+                      <div class="analysis-details">
+                        <div class="symptoms-section">
+                          <h4>Symptoms:</h4>
+                          <mat-chip-set>
+                            <mat-chip *ngFor="let symptom of analysis.symptoms?.symptoms || []">
+                              {{ symptom }}
+                            </mat-chip>
+                          </mat-chip-set>
+                        </div>
+
+                        <div class="predictions-section">
+                          <h4>AI Predictions:</h4>
+                          <div class="prediction-item" *ngFor="let prediction of analysis.predictedDiseases || []">
+                            <div class="prediction-header">
+                              <span class="disease-name">{{ prediction.name }}</span>
+                              <mat-chip [color]="getProbabilityColor(prediction.probability)">
+                                {{ prediction.probability }}%
+                              </mat-chip>
+                            </div>
+                          </div>
+                        </div>
+
+                        <div class="recommendations-section">
+                          <h4>AI Recommendations:</h4>
+                          <p>{{ analysis.recommendations || 'No specific recommendations' }}</p>
+                        </div>
+                      </div>
+                    </mat-card-content>
+
+                    <mat-card-actions>
+                      <button mat-button color="primary" (click)="viewFullAnalysis(analysis)">
+                        <mat-icon>visibility</mat-icon>
+                        View Full Report
+                      </button>
+                      <button mat-button color="accent" (click)="scheduleFollowUp(analysis)">
+                        <mat-icon>event</mat-icon>
+                        Schedule Follow-up
+                      </button>
+                    </mat-card-actions>
+                  </mat-card>
+                </div>
+
+                <ng-template #noAnalyses>
+                  <div class="empty-state">
+                    <mat-icon>analytics</mat-icon>
+                    <h3>No patient analyses yet</h3>
+                    <p>AI analysis reports for your patients will appear here</p>
+                  </div>
+                </ng-template>
+              </mat-card-content>
+            </mat-card>
+          </div>
+        </mat-tab>
+
         <!-- AI Cases Tab -->
         <mat-tab label="AI Cases">
           <div class="tab-content">
             <mat-card class="section-card">
               <mat-card-header>
-                <mat-card-title>Patient Cases from AI Analysis</mat-card-title>
+                <mat-card-title>Pending AI Cases</mat-card-title>
                 <mat-card-subtitle>Review and respond to AI-suggested patient cases</mat-card-subtitle>
               </mat-card-header>
               
@@ -626,6 +708,7 @@ interface DoctorDashboard {
 export class DoctorDashboardComponent implements OnInit, OnDestroy {
   currentUser: User | null = null;
   dashboardData: DoctorDashboard | null = null;
+  patientAnalyses: any[] = [];
   isLoading = false;
   currentDate = new Date();
   
@@ -661,33 +744,45 @@ export class DoctorDashboardComponent implements OnInit, OnDestroy {
 
   private loadDashboardData(): void {
     if (!this.currentUser) return;
-    
+
     this.isLoading = true;
-    
-    // Load pending AI cases
+
+    // Load patient analyses for this doctor
+    this.appointmentsService.getPatientAnalysesForDoctor()
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (analyses) => {
+          this.patientAnalyses = analyses;
+        },
+        error: () => {
+          this.patientAnalyses = [];
+        }
+      });
+
+    // Load pending AI cases (this might be different from patient analyses)
     this.aiAnalysisService.getPatientAnalyses(this.currentUser.id)
       .pipe(takeUntil(this.destroy$))
       .subscribe({
         next: (analyses) => {
           const pendingCases = analyses.filter(a => a.status === 'COMPLETED');
-          
+
           // Load today's appointments
           this.appointmentsService.getDoctorAppointments(this.currentUser!.id)
             .pipe(takeUntil(this.destroy$))
             .subscribe({
               next: (appointments) => {
-                const todayAppointments = appointments.filter(a => 
+                const todayAppointments = appointments.filter(a =>
                   new Date(a.date).toDateString() === new Date().toDateString()
                 );
-                
+
                 // Calculate weekly stats
                 const weeklyStats = {
                   totalAppointments: appointments.length,
                   completedConsultations: appointments.filter(a => a.status === 'COMPLETED').length,
                   newPatients: 0, // This would come from a more specific API
-                  aiAnalysesReviewed: pendingCases.length
+                  aiAnalysesReviewed: this.patientAnalyses.length
                 };
-                
+
                 // Mock recent activity
                 const recentActivity = [
                   {
@@ -703,14 +798,15 @@ export class DoctorDashboardComponent implements OnInit, OnDestroy {
                     timestamp: new Date(Date.now() - 4 * 60 * 60 * 1000)
                   }
                 ];
-                
+
                 this.dashboardData = {
                   pendingCases,
+                  patientAnalyses: this.patientAnalyses,
                   todayAppointments,
                   weeklyStats,
                   recentActivity
                 };
-                
+
                 this.isLoading = false;
               },
               error: () => {
@@ -779,8 +875,27 @@ export class DoctorDashboardComponent implements OnInit, OnDestroy {
   }
 
   openAvailabilityDialog(): void {
-    this.snackBar.open('Opening availability management...', 'Close', { duration: 2000 });
-    // Open availability management dialog
+    const dialogRef = this.dialog.open(AvailabilityDialogComponent, {
+      width: '600px',
+      data: { doctorId: this.currentUser?.id }
+    });
+
+    dialogRef.afterClosed().subscribe(result => {
+      if (result) {
+        this.snackBar.open('Availability updated successfully', 'Close', { duration: 3000 });
+        // Reload dashboard data if needed
+      }
+    });
+  }
+
+  viewFullAnalysis(analysis: any): void {
+    this.snackBar.open(`Viewing full analysis for ${analysis.patient?.name || 'patient'}`, 'Close', { duration: 2000 });
+    // Navigate to detailed analysis view
+  }
+
+  scheduleFollowUp(analysis: any): void {
+    this.snackBar.open(`Scheduling follow-up for ${analysis.patient?.name || 'patient'}`, 'Close', { duration: 2000 });
+    // Open appointment scheduling dialog with patient info pre-filled
   }
 
   getConfidenceColor(confidence: number): string {

@@ -134,7 +134,7 @@ export class AppointmentsService {
 
     if (!isAvailable) {
       throw new BadRequestException(
-        'Doctor is not available at the selected date and time',
+        'Doctor unavailable at this time. Please choose another day or time.',
       );
     }
 
@@ -484,6 +484,21 @@ export class AppointmentsService {
    */
   async getAvailableTimeSlots(doctorId: string, date: string) {
     const appointmentDate = new Date(date);
+    const dayOfWeek = appointmentDate.getDay(); // 0 = Sunday, 1 = Monday, etc.
+
+    // Check if doctor has availability set for this day
+    const doctorAvailabilities = await this.prisma.doctorAvailability.findMany({
+      where: {
+        doctorId,
+        dayOfWeek,
+        isAvailable: true,
+      },
+      orderBy: { startTime: 'asc' },
+    });
+
+    if (doctorAvailabilities.length === 0) {
+      return []; // Doctor not available on this day
+    }
 
     // Get all appointments for the doctor on this date
     const appointments = await this.prisma.appointment.findMany({
@@ -503,20 +518,176 @@ export class AppointmentsService {
 
     const bookedTimes = appointments.map((apt) => apt.time);
 
-    // Generate available time slots (e.g., 9 AM to 5 PM, 30-minute intervals)
+    // Generate available time slots based on doctor's availability
     const availableSlots: string[] = [];
-    const startHour = 9;
-    const endHour = 17;
 
-    for (let hour = startHour; hour < endHour; hour++) {
-      for (let minute = 0; minute < 60; minute += 30) {
-        const timeSlot = `${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}`;
+    for (const availability of doctorAvailabilities) {
+      const [startHour, startMinute] = availability.startTime.split(':').map(Number);
+      const [endHour, endMinute] = availability.endTime.split(':').map(Number);
+
+      let currentHour = startHour;
+      let currentMinute = startMinute;
+
+      while (
+        currentHour < endHour ||
+        (currentHour === endHour && currentMinute < endMinute)
+      ) {
+        const timeSlot = `${currentHour.toString().padStart(2, '0')}:${currentMinute.toString().padStart(2, '0')}`;
+
         if (!bookedTimes.includes(timeSlot)) {
           availableSlots.push(timeSlot);
+        }
+
+        // Add 30 minutes
+        currentMinute += 30;
+        if (currentMinute >= 60) {
+          currentHour += 1;
+          currentMinute = 0;
         }
       }
     }
 
     return availableSlots;
+  }
+
+  /**
+   * Get available doctors for appointment booking
+   * @returns Array of available doctors with basic info
+   */
+  async getAvailableDoctors() {
+    const doctors = await this.prisma.doctor.findMany({
+      where: {
+        available: true,
+        availabilities: {
+          some: {
+            isAvailable: true,
+          },
+        },
+      },
+      select: {
+        id: true,
+        name: true,
+        specialization: true,
+        experience: true,
+        bio: true,
+        availabilities: {
+          select: {
+            dayOfWeek: true,
+            startTime: true,
+            endTime: true,
+          },
+        },
+      },
+    });
+
+    // Transform to include available days
+    return doctors.map(doctor => ({
+      id: doctor.id,
+      name: doctor.name,
+      specialization: doctor.specialization,
+      experience: doctor.experience,
+      bio: doctor.bio,
+      availability: doctor.availabilities.map(avail => ({
+        day: avail.dayOfWeek,
+        startTime: avail.startTime,
+        endTime: avail.endTime,
+      })),
+    }));
+  }
+
+  /**
+   * Set doctor availability for a specific day
+   * @param doctorId - Doctor ID
+   * @param dayOfWeek - Day of week (0-6)
+   * @param startTime - Start time (HH:mm)
+   * @param endTime - End time (HH:mm)
+   * @param isAvailable - Whether available
+   * @returns Updated availability
+   */
+  async setDoctorAvailability(
+    doctorId: string,
+    dayOfWeek: number,
+    startTime: string,
+    endTime: string,
+    isAvailable: boolean,
+  ) {
+    return this.prisma.doctorAvailability.upsert({
+      where: {
+        doctorId_dayOfWeek: {
+          doctorId,
+          dayOfWeek,
+        },
+      },
+      update: {
+        startTime,
+        endTime,
+        isAvailable,
+      },
+      create: {
+        doctorId,
+        dayOfWeek,
+        startTime,
+        endTime,
+        isAvailable,
+      },
+    });
+  }
+
+  /**
+   * Get doctor availability
+   * @param doctorId - Doctor ID
+   * @returns Array of availability slots
+   */
+  async getDoctorAvailability(doctorId: string) {
+    return this.prisma.doctorAvailability.findMany({
+      where: { doctorId },
+      orderBy: { dayOfWeek: 'asc' },
+    });
+  }
+
+  /**
+   * Get patient AI analyses for a doctor (patients who have booked appointments)
+   * @param doctorId - Doctor ID
+   * @returns Array of analyses with patient info
+   */
+  async getPatientAnalysesForDoctor(doctorId: string) {
+    // Get all appointments for this doctor
+    const appointments = await this.prisma.appointment.findMany({
+      where: {
+        doctorId,
+        status: {
+          in: ['PENDING', 'CONFIRMED', 'COMPLETED'],
+        },
+      },
+      select: {
+        patientId: true,
+      },
+    });
+
+    const patientIds = [...new Set(appointments.map(apt => apt.patientId))];
+
+    if (patientIds.length === 0) {
+      return [];
+    }
+
+    // Get analyses for these patients
+    return this.prisma.analysis.findMany({
+      where: {
+        patientId: {
+          in: patientIds,
+        },
+      },
+      include: {
+        patient: {
+          select: {
+            id: true,
+            name: true,
+            age: true,
+            gender: true,
+          },
+        },
+      },
+      orderBy: { createdAt: 'desc' },
+    });
   }
 }

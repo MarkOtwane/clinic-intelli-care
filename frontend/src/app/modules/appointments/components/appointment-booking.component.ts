@@ -23,9 +23,14 @@ import { Appointment, AppointmentStatus, AppointmentType } from '../../../core/m
 interface Doctor {
   id: string;
   name: string;
-  specialty: string;
-  availability: string[];
-  rating: number;
+  specialization: string;
+  experience?: number;
+  bio?: string;
+  availability: Array<{
+    day: number;
+    startTime: string;
+    endTime: string;
+  }>;
 }
 
 interface TimeSlot {
@@ -92,16 +97,14 @@ interface TimeSlot {
                     <mat-card-content>
                       <div class="doctor-info">
                         <h4>{{ doctor.name }}</h4>
-                        <p class="specialty">{{ doctor.specialty }}</p>
-                        <div class="rating">
-                          <mat-icon *ngFor="let star of [1,2,3,4,5]" 
-                                   [class.filled]="star <= doctor.rating">star</mat-icon>
-                          <span>({{ doctor.rating }}.0)</span>
+                        <p class="specialty">{{ doctor.specialization }}</p>
+                        <div class="experience" *ngIf="doctor.experience">
+                          {{ doctor.experience }} years experience
                         </div>
-                        <div class="availability">
+                        <div class="availability" *ngIf="doctor.availability.length > 0">
                           <mat-chip-set>
-                            <mat-chip *ngFor="let day of doctor.availability.slice(0, 3)">
-                              {{ day }}
+                            <mat-chip *ngFor="let avail of doctor.availability.slice(0, 3)">
+                              {{ getDayName(avail.day) }}
                             </mat-chip>
                           </mat-chip-set>
                         </div>
@@ -374,28 +377,10 @@ interface TimeSlot {
       margin: 0 0 8px 0;
     }
 
-    .rating {
-      display: flex;
-      align-items: center;
-      gap: 2px;
-      margin-bottom: 8px;
-    }
-
-    .rating mat-icon {
-      font-size: 16px;
-      width: 16px;
-      height: 16px;
-      color: #ddd;
-    }
-
-    .rating mat-icon.filled {
-      color: #ffc107;
-    }
-
-    .rating span {
-      margin-left: 8px;
-      font-size: 14px;
+    .experience {
       color: #7f8c8d;
+      font-size: 14px;
+      margin-bottom: 8px;
     }
 
     .selected-doctor {
@@ -633,7 +618,7 @@ export class AppointmentBookingComponent implements OnInit {
 
   ngOnInit(): void {
     this.loadUserData();
-    this.loadMockDoctors();
+    this.loadDoctors();
     this.setupFormSubscriptions();
   }
 
@@ -643,46 +628,16 @@ export class AppointmentBookingComponent implements OnInit {
     });
   }
 
-  private loadMockDoctors(): void {
-    // Mock data for demonstration
-    this.doctors = [
-      {
-        id: '1',
-        name: 'Dr. Sarah Johnson',
-        specialty: 'Cardiology',
-        availability: ['Mon', 'Wed', 'Fri'],
-        rating: 4.8
+  private loadDoctors(): void {
+    this.appointmentsService.getAvailableDoctors().subscribe({
+      next: (doctors) => {
+        this.doctors = doctors;
+        this.filteredDoctors = [...this.doctors];
       },
-      {
-        id: '2',
-        name: 'Dr. Michael Chen',
-        specialty: 'Internal Medicine',
-        availability: ['Tue', 'Thu', 'Sat'],
-        rating: 4.6
-      },
-      {
-        id: '3',
-        name: 'Dr. Emily Davis',
-        specialty: 'Pediatrics',
-        availability: ['Mon', 'Tue', 'Thu'],
-        rating: 4.9
-      },
-      {
-        id: '4',
-        name: 'Dr. Robert Wilson',
-        specialty: 'Orthopedics',
-        availability: ['Wed', 'Thu', 'Fri'],
-        rating: 4.7
-      },
-      {
-        id: '5',
-        name: 'Dr. Lisa Anderson',
-        specialty: 'Dermatology',
-        availability: ['Mon', 'Wed', 'Sat'],
-        rating: 4.5
+      error: () => {
+        this.snackBar.open('Failed to load available doctors', 'Close', { duration: 3000 });
       }
-    ];
-    this.filteredDoctors = [...this.doctors];
+    });
   }
 
   private setupFormSubscriptions(): void {
@@ -709,21 +664,26 @@ export class AppointmentBookingComponent implements OnInit {
   }
 
   loadAvailableSlots(): void {
-    // Mock available slots
-    this.availableSlots = [
-      { time: '09:00', available: true },
-      { time: '09:30', available: false, appointmentId: 'apt1' },
-      { time: '10:00', available: true },
-      { time: '10:30', available: true },
-      { time: '11:00', available: true },
-      { time: '11:30', available: false, appointmentId: 'apt2' },
-      { time: '14:00', available: true },
-      { time: '14:30', available: true },
-      { time: '15:00', available: true },
-      { time: '15:30', available: false, appointmentId: 'apt3' },
-      { time: '16:00', available: true },
-      { time: '16:30', available: true }
-    ];
+    if (!this.selectedDoctor) return;
+
+    const selectedDate = this.scheduleForm.get('selectedDate')?.value;
+    if (!selectedDate) return;
+
+    this.appointmentsService.getAvailableSlots(
+      this.selectedDoctor.id,
+      selectedDate
+    ).subscribe({
+      next: (slots) => {
+        this.availableSlots = slots.map((time: string) => ({
+          time,
+          available: true
+        }));
+      },
+      error: () => {
+        this.availableSlots = [];
+        this.snackBar.open('Failed to load available time slots', 'Close', { duration: 3000 });
+      }
+    });
   }
 
   onDateSelected(date: Date): void {
@@ -751,27 +711,29 @@ export class AppointmentBookingComponent implements OnInit {
 
   bookAppointment(): void {
     if (!this.currentUser || !this.selectedDoctor) return;
-    
+
     this.isBooking = true;
-    
+
     const appointmentRequest = {
       doctorId: this.selectedDoctor.id,
-      preferredDate: this.scheduleForm.get('selectedDate')?.value,
-      preferredTime: this.scheduleForm.get('selectedTime')?.value,
+      date: this.scheduleForm.get('selectedDate')?.value?.toISOString().split('T')[0],
+      time: this.scheduleForm.get('selectedTime')?.value,
+      notes: this.detailsForm.get('notes')?.value,
       reason: this.detailsForm.get('reason')?.value,
-      type: this.detailsForm.get('appointmentType')?.value as AppointmentType,
+      type: this.detailsForm.get('appointmentType')?.value,
       isEmergency: this.detailsForm.get('isEmergency')?.value
     };
-    
+
     this.appointmentsService.createAppointment(appointmentRequest).subscribe({
       next: (appointment) => {
         this.isBooking = false;
         this.confirmedAppointment = appointment;
         this.snackBar.open('Appointment booked successfully!', 'Close', { duration: 3000 });
       },
-      error: () => {
+      error: (error) => {
         this.isBooking = false;
-        this.snackBar.open('Failed to book appointment. Please try again.', 'Close', { duration: 3000 });
+        const errorMessage = error.error?.message || 'Failed to book appointment. Please try again.';
+        this.snackBar.open(errorMessage, 'Close', { duration: 5000 });
       }
     });
   }
@@ -803,5 +765,10 @@ export class AppointmentBookingComponent implements OnInit {
   goHome(): void {
     // Navigate to dashboard (would use Router in real implementation)
     this.snackBar.open('Redirecting to dashboard...', 'Close', { duration: 2000 });
+  }
+
+  getDayName(dayOfWeek: number): string {
+    const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+    return days[dayOfWeek] || 'Unknown';
   }
 }

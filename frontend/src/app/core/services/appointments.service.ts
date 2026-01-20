@@ -16,6 +16,20 @@ export class AppointmentsService {
     return this.http.get<Appointment[]>(this.apiUrl);
   }
 
+  /**
+   * PATIENT-only endpoint (backend): GET /api/appointments/my-appointments
+   */
+  getMyAppointments(): Observable<Appointment[]> {
+    return this.http.get<Appointment[]>(`${this.apiUrl}/my-appointments`);
+  }
+
+  /**
+   * DOCTOR-only endpoint (backend): GET /api/appointments/my-doctor-appointments
+   */
+  getMyDoctorAppointments(): Observable<Appointment[]> {
+    return this.http.get<Appointment[]>(`${this.apiUrl}/my-doctor-appointments`);
+  }
+
   getAppointmentById(id: string): Observable<Appointment> {
     return this.http.get<Appointment>(`${this.apiUrl}/${id}`);
   }
@@ -102,13 +116,13 @@ export class AppointmentsService {
     type?: AppointmentType;
   }): Observable<Appointment[]> {
     const params: any = {};
-    
+
     if (filters.doctorId) params.doctorId = filters.doctorId;
     if (filters.patientId) params.patientId = filters.patientId;
     if (filters.status) params.status = filters.status;
     if (filters.date) params.date = filters.date.toISOString().split('T')[0];
     if (filters.type) params.type = filters.type;
-    
+
     return this.http.get<Appointment[]>(`${this.apiUrl}/search`, { params });
   }
 
@@ -119,5 +133,28 @@ export class AppointmentsService {
 
   getEmergencyAppointments(): Observable<Appointment[]> {
     return this.http.get<Appointment[]>(`${this.apiUrl}/emergency`);
+  }
+
+  // Doctor availability management
+  getAvailableDoctors(): Observable<any[]> {
+    return this.http.get<any[]>(`${this.apiUrl}/doctors`);
+  }
+
+  setDoctorAvailability(availability: {
+    dayOfWeek: number;
+    startTime: string;
+    endTime: string;
+    isAvailable: boolean;
+  }): Observable<any> {
+    return this.http.post(`${this.apiUrl}/availability`, availability);
+  }
+
+  getDoctorAvailability(): Observable<any[]> {
+    return this.http.get<any[]>(`${this.apiUrl}/availability`);
+  }
+
+  // Patient AI analyses for doctors
+  getPatientAnalysesForDoctor(): Observable<any[]> {
+    return this.http.get<any[]>(`${this.apiUrl}/patient-analyses`);
   }
 }
