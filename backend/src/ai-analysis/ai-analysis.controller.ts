@@ -77,6 +77,25 @@ export class AiAnalysisController {
   }
 
   /**
+   * Save an analysis (PATIENT only)
+   * Matches frontend: POST /api/ai-analysis/{analysisId}/save
+   */
+  @Post(':id/save')
+  @Roles('PATIENT')
+  async saveAnalysis(@Param('id') id: string, @CurrentUser('id') userId: string) {
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+      include: { patientProfile: true },
+    });
+
+    if (!user || !user.patientProfile) {
+      throw new BadRequestException('Patient profile not found');
+    }
+
+    return this.aiService.save(id, user.patientProfile.id);
+  }
+
+  /**
    * Debug endpoint to list available Gemini models for this API key (ADMIN only)
    */
   @Get('gemini/models')

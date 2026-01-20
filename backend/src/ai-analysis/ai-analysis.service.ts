@@ -559,6 +559,26 @@ export class AiAnalysisService {
   }
 
   /**
+   * Persist/save an existing analysis (PATIENT only).
+   * Frontend calls POST /ai-analysis/:id/save after analysis is shown.
+   * We keep AI logic unchanged; this only verifies ownership and updates the record timestamp.
+   */
+  async save(id: string, patientId: string) {
+    const analysis = await this.prisma.analysis.findFirst({
+      where: { id, patientId },
+    });
+
+    if (!analysis) {
+      throw new NotFoundException('Analysis not found');
+    }
+
+    return this.prisma.analysis.update({
+      where: { id },
+      data: { updatedAt: new Date() },
+    });
+  }
+
+  /**
    * Confirm analysis diagnosis (by doctor)
    * @param id - Analysis ID
    * @param doctorId - Doctor ID confirming
