@@ -364,7 +364,7 @@ export class LoginComponent implements OnInit {
         this.router.navigate(['/doctor/dashboard']);
         break;
       case UserRole.ADMIN:
-        this.router.navigate(['/admin/dashboard']);
+        this.router.navigate(['/admin']);
         break;
       default:
         this.router.navigate(['/dashboard']);
