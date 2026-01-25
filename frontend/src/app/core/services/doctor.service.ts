@@ -1,10 +1,14 @@
-import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
+import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
-import { Doctor, CreateDoctorDto, UpdateDoctorDto } from '../models/doctor.model';
+import {
+  CreateDoctorDto,
+  Doctor,
+  UpdateDoctorDto,
+} from '../models/doctor.model';
 
 @Injectable({
-  providedIn: 'root'
+  providedIn: 'root',
 })
 export class DoctorService {
   private apiUrl = '/api/doctors';
@@ -25,6 +29,12 @@ export class DoctorService {
 
   updateDoctor(id: string, doctor: UpdateDoctorDto): Observable<Doctor> {
     return this.http.patch<Doctor>(`${this.apiUrl}/${id}`, doctor);
+  }
+
+  setDoctorAvailability(id: string, available: boolean): Observable<Doctor> {
+    return this.http.patch<Doctor>(`${this.apiUrl}/${id}/status`, {
+      available,
+    });
   }
 
   deleteDoctor(id: string): Observable<void> {

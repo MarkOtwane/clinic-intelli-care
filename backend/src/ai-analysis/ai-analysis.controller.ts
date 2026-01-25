@@ -82,7 +82,10 @@ export class AiAnalysisController {
    */
   @Post(':id/save')
   @Roles('PATIENT')
-  async saveAnalysis(@Param('id') id: string, @CurrentUser('id') userId: string) {
+  async saveAnalysis(
+    @Param('id') id: string,
+    @CurrentUser('id') userId: string,
+  ) {
     const user = await this.prisma.user.findUnique({
       where: { id: userId },
       include: { patientProfile: true },

@@ -1,7 +1,7 @@
 import {
+  ForbiddenException,
   Injectable,
   NotFoundException,
-  ForbiddenException,
 } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateDoctorDto } from './dtos/create-doctor.dto';
@@ -11,11 +11,39 @@ import { UpdateDoctorDto } from './dtos/update-doctor.dto';
 export class DoctorsService {
   constructor(private prisma: PrismaService) {}
 
-  async createDoctor(dto: CreateDoctorDto, userId: string) {
+  async createDoctor(dto: CreateDoctorDto) {
+    let userConnect:
+      | {
+          connect: {
+            id: string;
+          };
+        }
+      | undefined;
+
+    if (dto.userId) {
+      const user = await this.prisma.user.findUnique({
+        where: { id: dto.userId },
+      });
+
+      if (!user) throw new NotFoundException('User not found');
+
+      // Ensure the linked user has the DOCTOR role
+      if (user.role !== 'DOCTOR') {
+        await this.prisma.user.update({
+          where: { id: dto.userId },
+          data: { role: 'DOCTOR' },
+        });
+      }
+
+      userConnect = { connect: { id: dto.userId } };
+    }
+
+    const { userId, ...doctorData } = dto;
+
     return this.prisma.doctor.create({
       data: {
-        ...dto,
-        user: { connect: { id: userId } },
+        ...doctorData,
+        ...(userConnect ? { user: userConnect } : {}),
       },
     });
   }
@@ -58,6 +86,16 @@ export class DoctorsService {
     return this.prisma.doctor.update({
       where: { id },
       data: dto,
+    });
+  }
+
+  async setAvailability(id: string, available: boolean) {
+    const doctor = await this.prisma.doctor.findUnique({ where: { id } });
+    if (!doctor) throw new NotFoundException('Doctor not found');
+
+    return this.prisma.doctor.update({
+      where: { id },
+      data: { available },
     });
   }
 

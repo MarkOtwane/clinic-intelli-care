@@ -8,6 +8,10 @@ import {
 
 export class CreateDoctorDto {
   @IsString()
+  @IsOptional()
+  userId?: string;
+
+  @IsString()
   @IsNotEmpty()
   name: string;
 

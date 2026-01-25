@@ -1,20 +1,21 @@
 import {
-  Controller,
-  Get,
-  Post,
   Body,
+  Controller,
+  Delete,
+  Get,
   Param,
   Patch,
-  Delete,
+  Post,
   UseGuards,
 } from '@nestjs/common';
-import { DoctorsService } from './doctors.service';
-import { CreateDoctorDto } from './dtos/create-doctor.dto';
-import { UpdateDoctorDto } from './dtos/update-doctor.dto';
+import { CurrentUser } from '../auth/decorators/user.decorator';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
 import { Roles } from '../auth/roles.decorator';
-import { CurrentUser } from '../auth/decorators/user.decorator';
+import { DoctorsService } from './doctors.service';
+import { CreateDoctorDto } from './dtos/create-doctor.dto';
+import { UpdateDoctorStatusDto } from './dtos/update-doctor-status.dto';
+import { UpdateDoctorDto } from './dtos/update-doctor.dto';
 
 @Controller('doctors')
 @UseGuards(JwtAuthGuard, RolesGuard)
@@ -23,12 +24,9 @@ export class DoctorsController {
 
   @Post()
   @Roles('ADMIN')
-  createDoctor(
-    @Body() dto: CreateDoctorDto,
-    @CurrentUser('id') userId: string,
-  ) {
-    // Admins create doctor users after user signup
-    return this.doctorsService.createDoctor(dto, userId);
+  createDoctor(@Body() dto: CreateDoctorDto) {
+    // Admins can create doctor profiles and link them to a user account via userId
+    return this.doctorsService.createDoctor(dto);
   }
 
   @Get()
@@ -56,6 +54,12 @@ export class DoctorsController {
       user.id,
       user.role === 'ADMIN',
     );
+  }
+
+  @Patch(':id/status')
+  @Roles('ADMIN')
+  setDoctorStatus(@Param('id') id: string, @Body() dto: UpdateDoctorStatusDto) {
+    return this.doctorsService.setAvailability(id, dto.available);
   }
 
   @Delete(':id')

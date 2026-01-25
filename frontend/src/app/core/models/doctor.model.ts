@@ -7,6 +7,8 @@ export interface Doctor {
   experience?: number;
   available?: boolean;
   email?: string;
+  userId?: string;
+  user?: { id: string; email: string; role: string };
   licenseNumber?: string;
   hospital?: string;
   totalPatients?: number;
@@ -23,6 +25,7 @@ export interface CreateDoctorDto {
   phone?: string;
   experience?: number;
   available?: boolean;
+  userId?: string;
   email?: string;
   licenseNumber?: string;
   hospital?: string;
