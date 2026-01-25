@@ -13,6 +13,7 @@ import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
 import { Roles } from '../auth/roles.decorator';
 import { DoctorsService } from './doctors.service';
+import { CreateDoctorAccountDto } from './dtos/create-doctor-account.dto';
 import { CreateDoctorDto } from './dtos/create-doctor.dto';
 import { UpdateDoctorStatusDto } from './dtos/update-doctor-status.dto';
 import { UpdateDoctorDto } from './dtos/update-doctor.dto';
@@ -21,6 +22,12 @@ import { UpdateDoctorDto } from './dtos/update-doctor.dto';
 @UseGuards(JwtAuthGuard, RolesGuard)
 export class DoctorsController {
   constructor(private readonly doctorsService: DoctorsService) {}
+
+  @Post('account')
+  @Roles('ADMIN')
+  createDoctorAccount(@Body() dto: CreateDoctorAccountDto) {
+    return this.doctorsService.createDoctorAccount(dto);
+  }
 
   @Post()
   @Roles('ADMIN')

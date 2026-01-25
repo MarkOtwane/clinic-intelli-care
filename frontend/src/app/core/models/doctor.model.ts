@@ -8,7 +8,12 @@ export interface Doctor {
   available?: boolean;
   email?: string;
   userId?: string;
-  user?: { id: string; email: string; role: string };
+  user?: {
+    id: string;
+    email: string;
+    role: string;
+    mustChangePassword?: boolean;
+  };
   licenseNumber?: string;
   hospital?: string;
   totalPatients?: number;

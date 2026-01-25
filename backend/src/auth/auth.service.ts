@@ -72,9 +72,15 @@ export class AuthService {
     const refreshToken = await this.createAndStoreRefreshToken(user.id);
 
     return {
-      user: { id: user.id, email: user.email, role: user.role },
+      user: {
+        id: user.id,
+        email: user.email,
+        role: user.role,
+        mustChangePassword: user.mustChangePassword,
+      },
       accessToken,
       refreshToken,
+      requirePasswordChange: user.mustChangePassword,
     };
   }
 
@@ -170,9 +176,11 @@ export class AuthService {
         id: record.user.id,
         email: record.user.email,
         role: record.user.role,
+        mustChangePassword: record.user.mustChangePassword,
       },
       accessToken,
       refreshToken: newRaw,
+      requirePasswordChange: record.user.mustChangePassword,
     };
   }
 
@@ -185,5 +193,27 @@ export class AuthService {
 
   async revokeAllUserTokens(userId: string) {
     await this.prisma.refreshToken.deleteMany({ where: { userId } });
+  }
+
+  async changePassword(
+    userId: string,
+    currentPassword: string,
+    newPassword: string,
+  ) {
+    const user = await this.prisma.user.findUnique({ where: { id: userId } });
+    if (!user) throw new UnauthorizedException('User not found');
+
+    const valid = await bcrypt.compare(currentPassword, user.password);
+    if (!valid) throw new UnauthorizedException('Invalid current password');
+
+    const hashed = await bcrypt.hash(newPassword, this.SALT_ROUNDS);
+    await this.prisma.user.update({
+      where: { id: userId },
+      data: { password: hashed, mustChangePassword: false },
+    });
+
+    await this.revokeAllUserTokens(userId);
+
+    return { message: 'Password updated successfully. Please sign in again.' };
   }
 }

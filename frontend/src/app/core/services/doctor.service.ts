@@ -41,6 +41,10 @@ export class DoctorService {
     return this.http.delete<void>(`${this.apiUrl}/${id}`);
   }
 
+  createDoctorAccount(doctorAccountData: any): Observable<Doctor> {
+    return this.http.post<Doctor>(`${this.apiUrl}/account`, doctorAccountData);
+  }
+
   getDoctorStats(id: string): Observable<{
     totalPatients: number;
     totalAppointments: number;

@@ -40,19 +40,77 @@ export class DoctorsService {
 
     const { userId, ...doctorData } = dto;
 
-    return this.prisma.doctor.create({
+    const doctor = await this.prisma.doctor.create({
       data: {
         ...doctorData,
         ...(userConnect ? { user: userConnect } : {}),
       },
     });
+
+    if (userConnect) {
+      await this.prisma.user.update({
+        where: { id: dto.userId },
+        data: { doctorId: doctor.id },
+      });
+    }
+
+    return doctor;
+  }
+
+  async createDoctorAccount(dto: CreateDoctorAccountDto) {
+    const existing = await this.prisma.user.findUnique({
+      where: { email: dto.email },
+    });
+    if (existing) throw new ConflictException('Email already registered');
+
+    const hashed = await bcrypt.hash(dto.password, 12);
+    const user = await this.prisma.user.create({
+      data: {
+        email: dto.email,
+        password: hashed,
+        role: 'DOCTOR',
+        mustChangePassword: true,
+      },
+    });
+
+    const doctor = await this.prisma.doctor.create({
+      data: {
+        name: dto.name,
+        specialization: dto.specialization,
+        phone: dto.phone,
+        bio: dto.bio,
+        experience: dto.experience,
+        available: true,
+        user: { connect: { id: user.id } },
+      },
+    });
+
+    await this.prisma.user.update({
+      where: { id: user.id },
+      data: { doctorId: doctor.id },
+    });
+
+    return {
+      ...doctor,
+      user: {
+        id: user.id,
+        email: user.email,
+        role: user.role,
+        mustChangePassword: user.mustChangePassword,
+      },
+    };
   }
 
   async getAllDoctors() {
     return this.prisma.doctor.findMany({
       include: {
         user: {
-          select: { id: true, email: true, role: true },
+          select: {
+            id: true,
+            email: true,
+            role: true,
+            mustChangePassword: true,
+          },
         },
       },
       orderBy: { createdAt: 'desc' },

@@ -6,6 +6,7 @@ import { map } from 'rxjs/operators';
 interface LoginResponse {
   accessToken: string;
   user: any;
+  requirePasswordChange?: boolean;
 }
 
 interface SignupResponse {
@@ -57,7 +58,7 @@ export class AuthService {
       .pipe(
         tap((response) => {
           this.persistSession(response.user, response.accessToken);
-        })
+        }),
       );
   }
 
@@ -75,15 +76,14 @@ export class AuthService {
    */
   refresh(): Observable<{ accessToken: string; user: any }> {
     return this.http
-      .post<{ accessToken: string; user: any }>(
-        `${this.apiUrl}/refresh`,
-        {},
-        { withCredentials: true }
-      )
+      .post<{
+        accessToken: string;
+        user: any;
+      }>(`${this.apiUrl}/refresh`, {}, { withCredentials: true })
       .pipe(
         tap((res) => {
           this.persistSession(res.user, res.accessToken);
-        })
+        }),
       );
   }
 
@@ -122,7 +122,23 @@ export class AuthService {
         tap((user) => {
           localStorage.setItem('currentUser', JSON.stringify(user));
           this.currentUserSubject.next(user);
-        })
+        }),
+      );
+  }
+
+  changePassword(
+    currentPassword: string,
+    newPassword: string,
+  ): Observable<{ message: string }> {
+    return this.http
+      .post<{
+        message: string;
+      }>(`${this.apiUrl}/change-password`, { currentPassword, newPassword }, { withCredentials: true })
+      .pipe(
+        tap(() => {
+          // Password changed successfully, will need to login again
+          this.logout();
+        }),
       );
   }
 

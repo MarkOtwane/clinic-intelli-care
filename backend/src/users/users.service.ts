@@ -14,9 +14,10 @@ export class UsersService {
     firstName?: string,
     lastName?: string,
     phone?: string,
+    mustChangePassword = false,
   ) {
     const user = await this.prisma.user.create({
-      data: { email, password, role: role as any },
+      data: { email, password, role: role as any, mustChangePassword },
     });
 
     // Create profile if additional fields are provided

@@ -22,6 +22,7 @@ import { AuthService } from './auth.service';
 import { clearRefreshTokenCookie, setRefreshTokenCookie } from './cookie.utils';
 import { Public } from './decorators/public.decorator';
 import { LoginDto, SignupDto } from './dtos/auth-credentials.dto';
+import { ChangePasswordDto } from './dtos/change-password.dto';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
 
 @Controller('auth')
@@ -87,5 +88,15 @@ export class AuthController {
   @Get('me')
   async me(@Req() req: any) {
     return req.user;
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Post('change-password')
+  async changePassword(@Req() req: any, @Body() dto: ChangePasswordDto) {
+    return this.authService.changePassword(
+      req.user.id,
+      dto.currentPassword,
+      dto.newPassword,
+    );
   }
 }
