@@ -69,8 +69,23 @@ export class PatientsService {
       include: { patientProfile: true },
     });
 
-    if (!user || !user.patientProfile) {
-      throw new NotFoundException('Patient profile not found for this user');
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+
+    // Auto-provision a basic patient profile if missing so patient dashboards never 404
+    if (!user.patientProfile) {
+      const created = await this.prisma.patient.create({
+        data: {
+          user: { connect: { id: user.id } },
+          name: user.email?.split('@')[0] || 'New Patient',
+          age: 0,
+          gender: 'OTHER',
+          phone: '',
+          address: '',
+        },
+      });
+      return this.getPatientDashboard(created.id);
     }
 
     return this.getPatientDashboard(user.patientProfile.id);

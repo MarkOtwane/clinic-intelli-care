@@ -16,7 +16,7 @@ export class AuthInterceptor implements HttpInterceptor {
 
   intercept(
     req: HttpRequest<any>,
-    next: HttpHandler
+    next: HttpHandler,
   ): Observable<HttpEvent<any>> {
     const auth = this.injector.get(AuthService);
 
@@ -51,11 +51,16 @@ export class AuthInterceptor implements HttpInterceptor {
                 withCredentials: req.withCredentials ?? true,
               });
               return next.handle(newReq);
-            })
+            }),
+            catchError((refreshErr) => {
+              // Refresh failed (likely missing/expired refresh cookie). Clear session.
+              auth.logout();
+              return throwError(() => refreshErr);
+            }),
           );
         }
         return throwError(() => err);
-      })
+      }),
     );
   }
 }

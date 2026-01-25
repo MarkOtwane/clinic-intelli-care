@@ -10,10 +10,11 @@ import {
   Query,
   UseGuards,
 } from '@nestjs/common';
-import { Roles } from '../auth/roles.decorator';
+import { Public } from '../auth/decorators/public.decorator';
 import { CurrentUser } from '../auth/decorators/user.decorator';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
+import { Roles } from '../auth/roles.decorator';
 import { PrismaService } from '../prisma/prisma.service';
 import { AppointmentsService } from './appointments.service';
 import { CreateAppointmentDto } from './dtos/create-appointment.dto';
@@ -199,10 +200,10 @@ export class AppointmentsController {
   }
 
   /**
-   * Get available doctors (PATIENT only)
+   * Get available doctors (publicly accessible for booking)
    */
+  @Public()
   @Get('doctors')
-  @Roles('PATIENT')
   getAvailableDoctors() {
     return this.appointmentsService.getAvailableDoctors();
   }
@@ -213,7 +214,13 @@ export class AppointmentsController {
   @Post('availability')
   @Roles('DOCTOR')
   async setDoctorAvailability(
-    @Body() body: { dayOfWeek: number; startTime: string; endTime: string; isAvailable: boolean },
+    @Body()
+    body: {
+      dayOfWeek: number;
+      startTime: string;
+      endTime: string;
+      isAvailable: boolean;
+    },
     @CurrentUser('id') userId: string,
   ) {
     const user = await this.prisma.user.findUnique({
@@ -249,7 +256,9 @@ export class AppointmentsController {
       throw new BadRequestException('Doctor profile not found');
     }
 
-    return this.appointmentsService.getDoctorAvailability(user.doctorProfile.id);
+    return this.appointmentsService.getDoctorAvailability(
+      user.doctorProfile.id,
+    );
   }
 
   /**
@@ -267,6 +276,8 @@ export class AppointmentsController {
       throw new BadRequestException('Doctor profile not found');
     }
 
-    return this.appointmentsService.getPatientAnalysesForDoctor(user.doctorProfile.id);
+    return this.appointmentsService.getPatientAnalysesForDoctor(
+      user.doctorProfile.id,
+    );
   }
 }

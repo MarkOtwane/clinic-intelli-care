@@ -522,7 +522,9 @@ export class AppointmentsService {
     const availableSlots: string[] = [];
 
     for (const availability of doctorAvailabilities) {
-      const [startHour, startMinute] = availability.startTime.split(':').map(Number);
+      const [startHour, startMinute] = availability.startTime
+        .split(':')
+        .map(Number);
       const [endHour, endMinute] = availability.endTime.split(':').map(Number);
 
       let currentHour = startHour;
@@ -552,18 +554,10 @@ export class AppointmentsService {
 
   /**
    * Get available doctors for appointment booking
-   * @returns Array of available doctors with basic info
+   * @returns Array of doctors with basic info and availability
    */
   async getAvailableDoctors() {
     const doctors = await this.prisma.doctor.findMany({
-      where: {
-        available: true,
-        availabilities: {
-          some: {
-            isAvailable: true,
-          },
-        },
-      },
       select: {
         id: true,
         name: true,
@@ -578,16 +572,19 @@ export class AppointmentsService {
           },
         },
       },
+      orderBy: {
+        name: 'asc',
+      },
     });
 
     // Transform to include available days
-    return doctors.map(doctor => ({
+    return doctors.map((doctor) => ({
       id: doctor.id,
       name: doctor.name,
       specialization: doctor.specialization,
       experience: doctor.experience,
       bio: doctor.bio,
-      availability: doctor.availabilities.map(avail => ({
+      availability: doctor.availabilities.map((avail) => ({
         day: avail.dayOfWeek,
         startTime: avail.startTime,
         endTime: avail.endTime,
@@ -664,7 +661,7 @@ export class AppointmentsService {
       },
     });
 
-    const patientIds = [...new Set(appointments.map(apt => apt.patientId))];
+    const patientIds = [...new Set(appointments.map((apt) => apt.patientId))];
 
     if (patientIds.length === 0) {
       return [];

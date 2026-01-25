@@ -12,6 +12,7 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { MatTableModule } from '@angular/material/table';
 import { MatTabsModule } from '@angular/material/tabs';
+import { RouterLink } from '@angular/router';
 import { Subject, takeUntil } from 'rxjs';
 
 import { User } from '../../../core/models/user.model';
@@ -55,6 +56,7 @@ interface AdminDashboard {
   standalone: true,
   imports: [
     CommonModule,
+    RouterLink,
 
     // Material modules
     MatCardModule,
@@ -81,15 +83,15 @@ interface AdminDashboard {
           </p>
         </div>
         <div class="quick-actions">
-          <button mat-raised-button color="primary">
+          <button mat-raised-button color="primary" routerLink="/admin/users">
             <mat-icon>people</mat-icon>
             Manage Users
           </button>
-          <button mat-raised-button color="accent">
+          <button mat-raised-button color="accent" routerLink="/admin/reports">
             <mat-icon>analytics</mat-icon>
             View Reports
           </button>
-          <button mat-raised-button>
+          <button mat-raised-button routerLink="/admin/settings">
             <mat-icon>settings</mat-icon>
             System Settings
           </button>
@@ -782,9 +784,11 @@ export class AdminDashboardComponent implements OnInit, OnDestroy {
       },
       error: (error) => {
         console.error('Error loading dashboard data:', error);
-        this.snackBar.open('Failed to load dashboard data', 'Close', { duration: 3000 });
+        this.snackBar.open('Failed to load dashboard data', 'Close', {
+          duration: 3000,
+        });
         this.isLoading = false;
-        
+
         // Fallback to mock data if API fails
         this.dashboardData = {
           systemStats: {
@@ -807,7 +811,7 @@ export class AdminDashboardComponent implements OnInit, OnDestroy {
           },
           recentActivity: [],
         };
-      }
+      },
     });
   }
 

@@ -1,12 +1,16 @@
-import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Observable, BehaviorSubject } from 'rxjs';
+import { Injectable } from '@angular/core';
+import { BehaviorSubject, Observable } from 'rxjs';
 import { tap } from 'rxjs/operators';
-import { Patient, CreatePatientDto, UpdatePatientDto } from '../models/patient.model';
 import { environment } from '../../../enviroments/enviroment';
+import {
+  CreatePatientDto,
+  Patient,
+  UpdatePatientDto,
+} from '../models/patient.model';
 
 @Injectable({
-  providedIn: 'root'
+  providedIn: 'root',
 })
 export class PatientService {
   private apiUrl = `${environment.apiUrl}/patients`;
@@ -26,9 +30,9 @@ export class PatientService {
    * Get patient by ID
    */
   getPatientById(id: string): Observable<Patient> {
-    return this.http.get<Patient>(`${this.apiUrl}/${id}`).pipe(
-      tap(patient => this.selectedPatientSubject.next(patient))
-    );
+    return this.http
+      .get<Patient>(`${this.apiUrl}/${id}`)
+      .pipe(tap((patient) => this.selectedPatientSubject.next(patient)));
   }
 
   /**
@@ -41,13 +45,16 @@ export class PatientService {
   /**
    * Update patient
    */
-  updatePatient(id: string, patientData: UpdatePatientDto): Observable<Patient> {
+  updatePatient(
+    id: string,
+    patientData: UpdatePatientDto,
+  ): Observable<Patient> {
     return this.http.patch<Patient>(`${this.apiUrl}/${id}`, patientData).pipe(
-      tap(patient => {
+      tap((patient) => {
         if (this.selectedPatientSubject.value?.id === id) {
           this.selectedPatientSubject.next(patient);
         }
-      })
+      }),
     );
   }
 
@@ -60,7 +67,7 @@ export class PatientService {
         if (this.selectedPatientSubject.value?.id === id) {
           this.selectedPatientSubject.next(null);
         }
-      })
+      }),
     );
   }
 
@@ -69,7 +76,7 @@ export class PatientService {
    */
   searchPatients(query: string): Observable<Patient[]> {
     return this.http.get<Patient[]>(`${this.apiUrl}/search`, {
-      params: { q: query }
+      params: { q: query },
     });
   }
 
@@ -84,7 +91,10 @@ export class PatientService {
    * Add medical history entry
    */
   addMedicalHistory(patientId: string, historyData: any): Observable<any> {
-    return this.http.post<any>(`${this.apiUrl}/${patientId}/medical-history`, historyData);
+    return this.http.post<any>(
+      `${this.apiUrl}/${patientId}/medical-history`,
+      historyData,
+    );
   }
 
   /**
@@ -99,6 +109,15 @@ export class PatientService {
    */
   getPatientPrescriptions(patientId: string): Observable<any[]> {
     return this.http.get<any[]>(`${this.apiUrl}/${patientId}/prescriptions`);
+  }
+
+  /**
+   * Get the authenticated patient's dashboard data (resolves patient by userId server-side)
+   */
+  getMyDashboard(): Observable<Patient> {
+    return this.http
+      .get<Patient>(`${this.apiUrl}/dashboard`)
+      .pipe(tap((patient) => this.selectedPatientSubject.next(patient)));
   }
 
   /**

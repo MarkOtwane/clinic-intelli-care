@@ -7,9 +7,9 @@ import {
   Patch,
   UseGuards,
 } from '@nestjs/common';
-import { Roles } from '../auth/roles.decorator';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
+import { Roles } from '../auth/roles.decorator';
 import { AdminService } from './admin.service';
 import { ManageRoleDto } from './dto/manage-role.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
@@ -19,6 +19,12 @@ import { UpdateUserDto } from './dto/update-user.dto';
 @Roles('ADMIN')
 export class AdminController {
   constructor(private adminService: AdminService) {}
+
+  // --- DASHBOARD ---
+  @Get('dashboard')
+  getDashboard() {
+    return this.adminService.getDashboardData();
+  }
 
   // --- USERS ---
   @Get('users')

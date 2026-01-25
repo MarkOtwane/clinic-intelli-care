@@ -339,7 +339,9 @@ import { PatientService } from '../../../core/services/patient.service';
 
       .stat-card:hover {
         transform: translateY(-4px);
-        box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+        box-shadow:
+          0 10px 15px -3px rgb(0 0 0 / 0.1),
+          0 4px 6px -4px rgb(0 0 0 / 0.1);
       }
 
       .stat-card:hover::before {
@@ -370,15 +372,27 @@ import { PatientService } from '../../../core/services/patient.service';
       }
 
       .stat-card.primary .stat-icon-wrapper {
-        background: linear-gradient(135deg, var(--primary-100), var(--primary-200));
+        background: linear-gradient(
+          135deg,
+          var(--primary-100),
+          var(--primary-200)
+        );
       }
 
       .stat-card.success .stat-icon-wrapper {
-        background: linear-gradient(135deg, var(--success-50), var(--success-100));
+        background: linear-gradient(
+          135deg,
+          var(--success-50),
+          var(--success-100)
+        );
       }
 
       .stat-card.info .stat-icon-wrapper {
-        background: linear-gradient(135deg, var(--secondary-100), var(--secondary-200));
+        background: linear-gradient(
+          135deg,
+          var(--secondary-100),
+          var(--secondary-200)
+        );
       }
 
       .stat-card:hover .stat-icon-wrapper {
@@ -721,21 +735,21 @@ export class PatientDashboardComponent implements OnInit {
 
   constructor(
     private authService: AuthService,
-    private patientService: PatientService
+    private patientService: PatientService,
   ) {}
 
   ngOnInit(): void {
     this.authService.currentUser$.subscribe((user) => {
       if (user && user.role === 'PATIENT') {
-        // Assuming user has patientId or id is patientId
-        const patientId = user.patientId || user.id;
-        this.patientService.getPatientById(patientId).subscribe({
+        this.patientService.getMyDashboard().subscribe({
           next: (patient) => {
             this.patient = patient;
             this.isLoading = false;
           },
           error: (error) => {
-            console.error('Error loading patient:', error);
+            // Gracefully handle missing patient profile
+            console.error('Error loading patient dashboard:', error);
+            this.patient = null;
             this.isLoading = false;
           },
         });
