@@ -191,12 +191,10 @@ import { PrescriptionService } from '../../../core/services/prescription.service
                 <mat-icon class="medication-icon">pill</mat-icon>
                 <div class="medication-info">
                   <div class="medication-name">
-                    {{ medication.medications[0]?.name || 'Medication' }}
+                    {{ medication.medications[0].name || 'Medication' }}
                   </div>
                   <div class="medication-schedule">
-                    {{
-                      medication.medications[0]?.frequency || 'Not specified'
-                    }}
+                    {{ medication.medications[0].frequency || 'Not specified' }}
                   </div>
                 </div>
               </div>
