@@ -232,8 +232,21 @@ export class AIService {
       );
 
       // Parse the AI response
+      if (!response.data?.candidates?.[0]?.content?.parts?.[0]?.text) {
+        this.logger.warn('Invalid Gemini response structure, using fallback');
+        return this.fallbackAnalysis(symptoms);
+      }
+
       const aiResponse = response.data.candidates[0].content.parts[0].text;
-      return this.parseAIResponse(aiResponse);
+      try {
+        return this.parseAIResponse(aiResponse);
+      } catch (parseError) {
+        this.logger.error(
+          'Failed to parse Gemini response, using fallback:',
+          parseError,
+        );
+        return this.fallbackAnalysis(symptoms);
+      }
     } catch (error) {
       this.logger.error('Gemini AI analysis failed:', error);
       if (axios.isAxiosError(error)) {
@@ -329,16 +342,42 @@ Guidelines:
         jsonString = jsonString.replace(/```\s*/, '').replace(/```\s*$/, '');
       }
 
+      // Fix incomplete JSON arrays by closing them if needed
+      const openBrackets = (jsonString.match(/\{/g) || []).length;
+      const closeBrackets = (jsonString.match(/\}/g) || []).length;
+      const openSquareBrackets = (jsonString.match(/\[/g) || []).length;
+      const closeSquareBrackets = (jsonString.match(/\]/g) || []).length;
+
+      if (openBrackets > closeBrackets) {
+        jsonString += '}'.repeat(openBrackets - closeBrackets);
+      }
+      if (openSquareBrackets > closeSquareBrackets) {
+        jsonString += ']'.repeat(openSquareBrackets - closeSquareBrackets);
+      }
+
       // Parse JSON
       const parsed: any = JSON.parse(jsonString);
 
+      // Normalize predictions - handle different field names
+      let predictions = parsed.predictions || [];
+      if (Array.isArray(predictions)) {
+        predictions = predictions.map((pred: any) => ({
+          disease:
+            pred.disease || pred.condition || pred.name || 'Unknown Condition',
+          probability: pred.probability || pred.likelihood || pred.prob || 50,
+          description: pred.description || pred.notes || pred.details || '',
+          suggestedActions:
+            pred.suggestedActions || pred.actions || pred.recommendations || [],
+        }));
+      }
+
       // Validate and normalize the response
       return {
-        predictions: (parsed.predictions ||
-          []) as AISymptomAnalysis['predictions'],
-        recommendations: parsed.recommendations || [],
+        predictions: predictions as AISymptomAnalysis['predictions'],
+        recommendations:
+          parsed.recommendations || parsed.generalRecommendations || [],
         confidence: Math.min(100, Math.max(0, parsed.confidence || 50)),
-        followUpQuestions: parsed.followUpQuestions || [],
+        followUpQuestions: parsed.followUpQuestions || parsed.followUp || [],
       };
     } catch (error) {
       this.logger.error('Failed to parse AI response:', error);

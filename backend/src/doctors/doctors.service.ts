@@ -50,13 +50,6 @@ export class DoctorsService {
       },
     });
 
-    if (userConnect) {
-      await this.prisma.user.update({
-        where: { id: dto.userId },
-        data: { doctorId: doctor.id },
-      });
-    }
-
     return doctor;
   }
 
@@ -84,13 +77,8 @@ export class DoctorsService {
         bio: dto.bio,
         experience: dto.experience,
         available: true,
-        user: { connect: { id: user.id } },
+        userId: user.id,
       },
-    });
-
-    await this.prisma.user.update({
-      where: { id: user.id },
-      data: { doctorId: doctor.id },
     });
 
     return {

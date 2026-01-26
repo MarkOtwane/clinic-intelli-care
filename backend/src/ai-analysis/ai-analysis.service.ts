@@ -161,7 +161,7 @@ export class AiAnalysisService {
       throw new BadRequestException('Symptoms are required for analysis');
     }
 
-    // Analyze symptoms using AI
+    // Analyze symptoms using AI (has built-in fallback)
     const aiAnalysis = await this.analyzeSymptomsWithAI(dto.symptoms, {
       severity: dto.severity,
       duration: dto.duration,

@@ -41,40 +41,57 @@ export class AiAnalysisController {
     @Body() dto: CreateAnalysisDto,
     @CurrentUser('id') userId: string,
   ) {
-    // Get patient ID from user
-    const user = await this.prisma.user.findUnique({
-      where: { id: userId },
-      include: { patientProfile: true },
-    });
-
-    if (!user) {
-      throw new BadRequestException('User not found');
-    }
-
-    let patientId = user.patientProfile?.id;
-
-    // Create patient profile if it doesn't exist for PATIENT role users
-    if (!patientId && user.role === 'PATIENT') {
-      const patient = await this.prisma.patient.create({
-        data: {
-          user: { connect: { id: userId } },
-          name: `${user.email}`, // Use email as fallback name
-          age: 0,
-          gender: 'OTHER',
-          phone: '',
-          address: '',
-        },
+    try {
+      // Get patient ID from user
+      const user = await this.prisma.user.findUnique({
+        where: { id: userId },
+        include: { patientProfile: true },
       });
-      patientId = patient.id;
-    }
 
-    if (!patientId) {
-      throw new BadRequestException(
-        'Patient profile not found and could not be created',
-      );
-    }
+      if (!user) {
+        throw new BadRequestException('User not found');
+      }
 
-    return this.aiService.create(dto, patientId);
+      let patientId = user.patientProfile?.id;
+
+      // Create patient profile if it doesn't exist for PATIENT role users
+      if (!patientId && user.role === 'PATIENT') {
+        try {
+          const patient = await this.prisma.patient.create({
+            data: {
+              userId: userId,
+              name: user.email,
+              age: 0,
+              gender: 'OTHER',
+              phone: '',
+              address: '',
+            },
+          });
+          patientId = patient.id;
+        } catch (error) {
+          // If patient already exists, try to find it
+          const existingPatient = await this.prisma.patient.findUnique({
+            where: { userId: userId },
+          });
+          if (existingPatient) {
+            patientId = existingPatient.id;
+          } else {
+            throw error;
+          }
+        }
+      }
+
+      if (!patientId) {
+        throw new BadRequestException(
+          'Patient profile not found and could not be created',
+        );
+      }
+
+      return await this.aiService.create(dto, patientId);
+    } catch (error) {
+      console.error('Error in analyzeSymptoms:', error);
+      throw error;
+    }
   }
 
   /**

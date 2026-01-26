@@ -23,10 +23,8 @@ model User {
   updatedAt          DateTime @updatedAt
 
   // Relationships
-  patientProfile Patient? @relation("PatientUser", fields: [patientId], references: [id])
-  patientId      String?  @unique
-  doctorProfile  Doctor?  @relation("DoctorUser", fields: [doctorId], references: [id])
-  doctorId       String?  @unique
+  patientProfile Patient? @relation("PatientUser")
+  doctorProfile  Doctor?  @relation("DoctorUser")
 
   refreshTokens RefreshToken[]
 
@@ -80,6 +78,7 @@ model Media {
 
 model Patient {
   id          String   @id @default(uuid())
+  userId      String   @unique
   name        String
   age         Int?
   gender      String?
@@ -89,7 +88,7 @@ model Patient {
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
-  user         User?         @relation("PatientUser")
+  user         User?         @relation("PatientUser", fields: [userId], references: [id])
   appointments Appointment[]
 
   Prescription Prescription[]
@@ -103,6 +102,7 @@ model Patient {
 
 model Doctor {
   id             String   @id @default(uuid())
+  userId         String   @unique
   name           String
   specialization String
   bio            String?
@@ -112,10 +112,9 @@ model Doctor {
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
 
-  user           User?                @relation("DoctorUser")
+  user           User?                @relation("DoctorUser", fields: [userId], references: [id])
   appointments   Appointment[]
   blogPosts      BlogPost[]
-  userId         String?              @unique
   Prediction     Prediction[]
   Prescription   Prescription[]
   availabilities DoctorAvailability[]
