@@ -196,15 +196,20 @@ model Prescription {
 }
 
 model Analysis {
-  id                String   @id @default(uuid())
-  patientId         String
-  doctorId          String? // assigned later after AI recommendation or review
-  symptoms          Json
-  predictedDiseases Json // e.g. [{ name: 'Malaria', probability: 0.82 }]
-  recommendations   String?
-  status            String   @default("PENDING") // PENDING | REVIEWED | CONFIRMED
-  createdAt         DateTime @default(now())
-  updatedAt         DateTime @updatedAt
+  id                  String   @id @default(uuid())
+  patientId           String
+  doctorId            String? // assigned later after AI recommendation or review
+  symptoms            Json
+  initialAnalysis     Json? // stores the first AI analysis response
+  predictedDiseases   Json // e.g. [{ name: 'Malaria', probability: 0.82 }]
+  recommendations     String?
+  followUpQuestions   Json? // AI-generated follow-up questions based on initial analysis
+  followUpAnswers     Json? // patient answers to follow-up questions
+  conversationHistory Json? // stores full conversation: [{type: 'INITIAL'|'FOLLOW_UP'|'FINAL', analysis: Json, timestamp: DateTime}]
+  analysisStatus      String   @default("INITIAL") // INITIAL | AWAITING_ANSWERS | COMPLETED
+  status              String   @default("PENDING") // PENDING | REVIEWED | CONFIRMED
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
 
   patient       Patient        @relation(fields: [patientId], references: [id])
   doctor        Doctor?        @relation(fields: [doctorId], references: [id])

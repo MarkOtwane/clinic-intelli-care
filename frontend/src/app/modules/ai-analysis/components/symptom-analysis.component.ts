@@ -1,10 +1,10 @@
 import { CommonModule } from '@angular/common';
 import { Component, OnInit } from '@angular/core';
 import {
-  FormBuilder,
-  FormGroup,
-  ReactiveFormsModule,
-  Validators,
+    FormBuilder,
+    FormGroup,
+    ReactiveFormsModule,
+    Validators,
 } from '@angular/forms';
 import { MatBadgeModule } from '@angular/material/badge';
 import { MatButtonModule } from '@angular/material/button';
@@ -23,10 +23,10 @@ import { MatTableModule } from '@angular/material/table';
 import { Router } from '@angular/router';
 
 import {
-  AIAnalysis,
-  AnalysisStatus,
-  SymptomInput,
-  SymptomSeverity,
+    AIAnalysis,
+    AnalysisStatus,
+    SymptomInput,
+    SymptomSeverity,
 } from '../../../core/models/ai-analysis.model';
 import { AiAnalysisService } from '../../../core/services/ai-analysis.service';
 import { AuthService } from '../../../core/services/auth.service';
@@ -263,6 +263,14 @@ import { AuthService } from '../../../core/services/auth.service';
               <mat-icon>dashboard</mat-icon>
               Return to Dashboard
             </button>
+            <button 
+              mat-button 
+              (click)="requestFollowUpQuestions()"
+              [disabled]="analysisStatus !== 'INITIAL' || isLoadingFollowUp"
+            >
+              <mat-icon>help_outline</mat-icon>
+              Get More Info
+            </button>
             <button mat-button (click)="newAnalysis()">
               <mat-icon>add</mat-icon>
               New Analysis
@@ -271,114 +279,136 @@ import { AuthService } from '../../../core/services/auth.service';
               <mat-icon>save</mat-icon>
               Save Results
             </button>
+            <button 
+              mat-button 
+              (click)="toggleConversationHistory()"
+              *ngIf="analysisStatus === 'COMPLETED'"
+            >
+              <mat-icon>history</mat-icon>
+              Conversation History
+            </button>
           </mat-card-actions>
         </mat-card>
       </div>
 
-      <!-- Follow-up Questions -->
-      <mat-card
-        class="followup-card"
-        *ngIf="currentAnalysis?.followUpQuestions?.length"
+      <!-- Follow-up Questions Section -->
+      <mat-card 
+        class="followup-card" 
+        *ngIf="analysisStatus === 'AWAITING_ANSWERS' && followUpQuestions.length > 0"
       >
         <mat-card-header>
           <mat-card-title>
             <mat-icon color="accent">help_outline</mat-icon>
             Additional Information Needed
           </mat-card-title>
+          <mat-card-subtitle>
+            To provide a more accurate final analysis, please answer these clarifying questions
+          </mat-card-subtitle>
         </mat-card-header>
 
         <mat-card-content>
           <p>
-            To provide more accurate results, please answer these follow-up
-            questions:
+            Based on the initial analysis, AI has generated specific questions to better understand your condition:
           </p>
 
-          <div
-            class="followup-question"
-            *ngFor="let question of currentAnalysis?.followUpQuestions || []"
-          >
-            <h4>{{ question.question }}</h4>
-
-            <div [ngSwitch]="question.type">
-              <!-- Yes/No Questions -->
-              <mat-form-field
-                appearance="outline"
-                *ngSwitchCase="'yes_no'"
-                class="full-width"
-              >
-                <mat-select>
-                  <mat-option value="yes">Yes</mat-option>
-                  <mat-option value="no">No</mat-option>
-                </mat-select>
-              </mat-form-field>
-
-              <!-- Multiple Choice -->
-              <mat-form-field
-                appearance="outline"
-                *ngSwitchCase="'multiple_choice'"
-                class="full-width"
-              >
-                <mat-select>
-                  <mat-option
-                    *ngFor="let option of question.options"
-                    [value]="option"
-                  >
-                    {{ option }}
-                  </mat-option>
-                </mat-select>
-              </mat-form-field>
-
-              <!-- Text Input -->
-              <mat-form-field
-                appearance="outline"
-                *ngSwitchCase="'text'"
-                class="full-width"
-              >
-                <input matInput />
+          <form [formGroup]="followUpForm" (ngSubmit)="submitFollowUpAnswers()">
+            <div
+              class="followup-question"
+              *ngFor="let question of followUpQuestions; let i = index"
+            >
+              <mat-form-field appearance="outline" class="full-width">
+                <mat-label>{{ i + 1 }}. {{ question.question }}</mat-label>
+                <textarea
+                  matInput
+                  [formControlName]="question.questionId || 'q_' + question.id"
+                  rows="2"
+                  placeholder="Please provide your answer"
+                >
+                </textarea>
+                <mat-hint *ngIf="question.description">{{ question.description }}</mat-hint>
               </mat-form-field>
             </div>
-          </div>
 
-          <div class="button-row">
-            <button
-              mat-raised-button
-              color="primary"
-              (click)="submitFollowUp()"
-            >
-              Submit Answers
-            </button>
-          </div>
+            <div class="button-row">
+              <button
+                mat-raised-button
+                color="primary"
+                type="submit"
+                [disabled]="!followUpForm.valid || isSubmittingAnswers"
+              >
+                <mat-spinner diameter="20" *ngIf="isSubmittingAnswers"></mat-spinner>
+                <mat-icon *ngIf="!isSubmittingAnswers">check_circle</mat-icon>
+                <span *ngIf="!isSubmittingAnswers">Submit Answers & Get Final Analysis</span>
+                <span *ngIf="isSubmittingAnswers">Processing...</span>
+              </button>
+            </div>
+          </form>
         </mat-card-content>
       </mat-card>
 
-      <!-- Previous Analyses -->
-      <mat-card class="history-card" *ngIf="analysisHistory.length > 0">
+      <!-- Conversation History Section -->
+      <mat-card 
+        class="history-card" 
+        *ngIf="showConversationHistory && analysisStatus === 'COMPLETED'"
+      >
         <mat-card-header>
           <mat-card-title>
             <mat-icon>history</mat-icon>
-            Previous Analyses
+            Conversation History
           </mat-card-title>
         </mat-card-header>
 
         <mat-card-content>
-          <div class="history-item" *ngFor="let analysis of analysisHistory">
-            <div class="history-info">
-              <strong>{{ analysis.createdAt | date : 'short' }}</strong>
-              <span class="confidence-badge"
-                >{{ analysis.confidence }}% confidence</span
-              >
-            </div>
-            <div class="history-predictions">
-              <mat-chip
-                *ngFor="let prediction of analysis.predictions.slice(0, 2)"
-              >
-                {{ prediction.disease }} ({{ prediction.probability }}%)
-              </mat-chip>
-            </div>
-            <button mat-button (click)="viewAnalysis(analysis)">
-              View Details
-            </button>
-          </div>
+          <mat-accordion>
+            <mat-expansion-panel *ngFor="let entry of conversationHistory; let i = index">
+              <mat-expansion-panel-header>
+                <mat-panel-title>
+                  <mat-icon class="step-icon">
+                    {{ 
+                      entry.type === 'INITIAL' ? 'start' : 
+                      entry.type === 'FOLLOW_UP_QUESTIONS' ? 'help_outline' : 
+                      'done'
+                    }}
+                  </mat-icon>
+                  {{ entry.type | titlecase }}
+                </mat-panel-title>
+                <mat-panel-description>
+                  {{ entry.timestamp | date: 'short' }}
+                </mat-panel-description>
+              </mat-expansion-panel-header>
+
+              <!-- Initial Analysis Entry -->
+              <div *ngIf="entry.type === 'INITIAL'">
+                <h4>Initial Symptoms & Analysis</h4>
+                <p><strong>Symptoms:</strong> {{ entry.analysis?.symptoms?.join(', ') }}</p>
+                <p><strong>Predictions:</strong></p>
+                <div *ngFor="let pred of entry.analysis?.predictions">
+                  - {{ pred.name }} ({{ pred.probability * 100 | number: '1.0-0' }}%)
+                </div>
+              </div>
+
+              <!-- Follow-up Questions Entry -->
+              <div *ngIf="entry.type === 'FOLLOW_UP_QUESTIONS'">
+                <h4>Questions Generated</h4>
+                <div *ngFor="let q of entry.questions" class="history-question">
+                  <p><strong>{{ q.question }}</strong></p>
+                  <p class="question-desc">{{ q.description }}</p>
+                </div>
+              </div>
+
+              <!-- Final Analysis Entry -->
+              <div *ngIf="entry.type === 'FINAL_ANALYSIS'">
+                <h4>Final Analysis</h4>
+                <p><strong>Diagnosis:</strong> {{ entry.analysis?.diagnosis }}</p>
+                <p><strong>Probability:</strong> {{ entry.analysis?.probability * 100 | number: '1.0-0' }}%</p>
+                <p><strong>Reasoning:</strong> {{ entry.analysis?.reasoning }}</p>
+                <p><strong>Recommendations:</strong></p>
+                <ul>
+                  <li *ngFor="let rec of entry.analysis?.recommendations">{{ rec }}</li>
+                </ul>
+              </div>
+            </mat-expansion-panel>
+          </mat-accordion>
         </mat-card-content>
       </mat-card>
     </div>
@@ -503,6 +533,7 @@ import { AuthService } from '../../../core/services/auth.service';
 
       .history-card {
         border-left: 4px solid #3498db;
+        margin-top: 24px;
       }
 
       .history-item {
@@ -533,6 +564,23 @@ import { AuthService } from '../../../core/services/auth.service';
         gap: 8px;
       }
 
+      .step-icon {
+        margin-right: 8px;
+      }
+
+      .history-question {
+        margin-bottom: 16px;
+        padding: 8px;
+        background: #f5f5f5;
+        border-radius: 4px;
+      }
+
+      .question-desc {
+        color: #7f8c8d;
+        font-size: 12px;
+        margin-top: 4px;
+      }
+
       mat-spinner {
         margin-right: 8px;
       }
@@ -541,10 +589,20 @@ import { AuthService } from '../../../core/services/auth.service';
 })
 export class SymptomAnalysisComponent implements OnInit {
   symptomForm: FormGroup;
+  followUpForm: FormGroup;
   currentAnalysis: AIAnalysis | null = null;
   analysisHistory: AIAnalysis[] = [];
   isAnalyzing = false;
+  isLoadingFollowUp = false;
+  isSubmittingAnswers = false;
   availableSymptoms: { name: string; category: string }[] = [];
+  
+  // Multi-step flow state
+  analysisStatus: 'INITIAL' | 'AWAITING_ANSWERS' | 'COMPLETED' = 'INITIAL';
+  followUpQuestions: any[] = [];
+  followUpAnswers: { questionId: string; question: string; answer: string }[] = [];
+  conversationHistory: any[] = [];
+  showConversationHistory = false;
 
   severityLevels = [
     {
@@ -579,6 +637,8 @@ export class SymptomAnalysisComponent implements OnInit {
       medications: [''],
       location: [''],
     });
+    
+    this.followUpForm = this.fb.group({});
   }
 
   ngOnInit(): void {
@@ -608,6 +668,7 @@ export class SymptomAnalysisComponent implements OnInit {
         next: (response) => {
           this.isAnalyzing = false;
           this.currentAnalysis = response.analysis;
+          this.analysisStatus = 'INITIAL';
           this.aiAnalysisService.setCurrentAnalysis(response.analysis);
 
           this.snackBar.open('Analysis completed successfully!', 'Close', {
@@ -624,6 +685,124 @@ export class SymptomAnalysisComponent implements OnInit {
         },
       });
     }
+  }
+
+  /**
+   * Request follow-up questions based on initial analysis
+   */
+  requestFollowUpQuestions(): void {
+    if (!this.currentAnalysis) {
+      this.snackBar.open('No analysis found', 'Close', { duration: 3000 });
+      return;
+    }
+
+    this.isLoadingFollowUp = true;
+    this.aiAnalysisService.getFollowUpQuestions(this.currentAnalysis.id).subscribe({
+      next: (response) => {
+        this.isLoadingFollowUp = false;
+        this.followUpQuestions = response.questions || [];
+        this.analysisStatus = 'AWAITING_ANSWERS';
+        
+        // Initialize form controls for follow-up questions
+        this.initializeFollowUpForm();
+
+        this.snackBar.open('Follow-up questions generated!', 'Close', {
+          duration: 3000,
+        });
+      },
+      error: (error) => {
+        this.isLoadingFollowUp = false;
+        this.snackBar.open(
+          error.error?.message || 'Failed to generate follow-up questions.',
+          'Close',
+          { duration: 5000 }
+        );
+      },
+    });
+  }
+
+  /**
+   * Initialize form controls for follow-up questions
+   */
+  private initializeFollowUpForm(): void {
+    const group: { [key: string]: any } = {};
+    this.followUpQuestions.forEach((question: any) => {
+      group[question.questionId || `q_${question.id}`] = ['', Validators.required];
+    });
+    this.followUpForm = this.fb.group(group);
+  }
+
+  /**
+   * Submit follow-up answers and get final analysis
+   */
+  submitFollowUpAnswers(): void {
+    if (!this.currentAnalysis || !this.followUpForm.valid) {
+      this.snackBar.open('Please answer all questions', 'Close', { duration: 3000 });
+      return;
+    }
+
+    this.isSubmittingAnswers = true;
+    const formValue = this.followUpForm.value;
+    
+    // Build answers array from form values
+    const answers = this.followUpQuestions.map((question: any) => ({
+      questionId: question.questionId || `q_${question.id}`,
+      question: question.question,
+      answer: formValue[question.questionId || `q_${question.id}`],
+    }));
+
+    this.followUpAnswers = answers;
+
+    this.aiAnalysisService.submitFollowUpAnswers(this.currentAnalysis.id, answers).subscribe({
+      next: (response) => {
+        this.isSubmittingAnswers = false;
+        // Replace current analysis with final analysis
+        this.currentAnalysis = response.analysis;
+        this.analysisStatus = 'COMPLETED';
+        this.followUpQuestions = []; // Clear follow-up questions section
+        
+        this.snackBar.open('Final analysis generated!', 'Close', {
+          duration: 3000,
+        });
+
+        // Optionally load conversation history
+        this.loadConversationHistory();
+      },
+      error: (error) => {
+        this.isSubmittingAnswers = false;
+        this.snackBar.open(
+          error.error?.message || 'Failed to submit answers.',
+          'Close',
+          { duration: 5000 }
+        );
+      },
+    });
+  }
+
+  /**
+   * Load conversation history for the analysis
+   */
+  loadConversationHistory(): void {
+    if (!this.currentAnalysis) return;
+
+    this.aiAnalysisService.getConversationHistory(this.currentAnalysis.id).subscribe({
+      next: (response) => {
+        this.conversationHistory = response.history || [];
+      },
+      error: (error) => {
+        console.error('Failed to load conversation history:', error);
+      },
+    });
+  }
+
+  /**
+   * Toggle conversation history display
+   */
+  toggleConversationHistory(): void {
+    if (!this.showConversationHistory && this.conversationHistory.length === 0) {
+      this.loadConversationHistory();
+    }
+    this.showConversationHistory = !this.showConversationHistory;
   }
 
   newAnalysis(): void {

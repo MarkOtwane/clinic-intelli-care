@@ -16,6 +16,7 @@ import { PrismaService } from '../prisma/prisma.service';
 import { AiAnalysisService } from './ai-analysis.service';
 import { AIService } from './ai.service';
 import { CreateAnalysisDto } from './dto/create-analysis.dto';
+import { SubmitFollowUpAnswersDto } from './dto/follow-up.dto';
 import { UpdateAnalysisDto } from './dto/update-analysis.dto';
 
 /**
@@ -224,5 +225,67 @@ export class AiAnalysisController {
     }
 
     return this.aiService.reviewAnalysis(id, user.doctorProfile.id);
+  }
+
+  /**
+   * Get follow-up questions based on initial analysis (PATIENT only)
+   * After reviewing initial analysis, patient can request follow-up questions
+   */
+  @Post(':id/follow-up-questions')
+  @Roles('PATIENT')
+  async getFollowUpQuestions(
+    @Param('id') id: string,
+    @CurrentUser('id') userId: string,
+  ) {
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+      include: { patientProfile: true },
+    });
+
+    if (!user || !user.patientProfile) {
+      throw new BadRequestException('Patient profile not found');
+    }
+
+    return this.aiService.generateFollowUpQuestions(id, user.patientProfile.id);
+  }
+
+  /**
+   * Submit follow-up answers and get final analysis (PATIENT only)
+   * Patient answers follow-up questions and gets refined final analysis
+   */
+  @Post(':id/submit-answers')
+  @Roles('PATIENT')
+  async submitFollowUpAnswers(
+    @Param('id') id: string,
+    @Body() dto: SubmitFollowUpAnswersDto,
+    @CurrentUser('id') userId: string,
+  ) {
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+      include: { patientProfile: true },
+    });
+
+    if (!user || !user.patientProfile) {
+      throw new BadRequestException('Patient profile not found');
+    }
+
+    return this.aiService.submitFollowUpAnswers(
+      id,
+      dto,
+      user.patientProfile.id,
+    );
+  }
+
+  /**
+   * Get conversation history for an analysis (PATIENT and assigned DOCTOR)
+   * Shows all interactions: initial analysis, follow-up questions, final analysis
+   */
+  @Get(':id/history')
+  @Roles('PATIENT', 'DOCTOR', 'ADMIN')
+  async getConversationHistory(
+    @Param('id') id: string,
+    @CurrentUser('id') userId: string,
+  ) {
+    return this.aiService.getConversationHistory(id, userId);
   }
 }

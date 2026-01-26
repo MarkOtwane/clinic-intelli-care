@@ -438,4 +438,133 @@ Guidelines:
       ],
     };
   }
+
+  /**
+   * Ask a generic question to the AI and get a response
+   * Used for follow-up questions generation and final analysis
+   * @param prompt - The prompt/question to send to AI
+   * @returns AI response text
+   */
+  async askQuestion(prompt: string): Promise<string> {
+    try {
+      const useOpenAI = this.configService.get<boolean>('USE_OPENAI', false);
+
+      if (useOpenAI && this.openai) {
+        try {
+          return await this.askQuestionWithChatGPT(prompt);
+        } catch (chatgptError) {
+          this.logger.warn(
+            'ChatGPT question failed, falling back to Gemini:',
+            chatgptError,
+          );
+          return await this.askQuestionWithGemini(prompt);
+        }
+      }
+
+      return await this.askQuestionWithGemini(prompt);
+    } catch (error) {
+      this.logger.error('AI question failed:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Ask question using ChatGPT API
+   * @param prompt - The prompt to send
+   * @returns AI response text
+   */
+  private async askQuestionWithChatGPT(prompt: string): Promise<string> {
+    const model = this.configService.get<string>(
+      'OPENAI_MODEL',
+      'gpt-3.5-turbo',
+    );
+
+    const response = await this.openai.chat.completions.create({
+      model: model,
+      messages: [
+        {
+          role: 'system',
+          content:
+            'You are a medical AI assistant. Respond with only valid JSON data when requested.',
+        },
+        {
+          role: 'user',
+          content: prompt,
+        },
+      ],
+      temperature: 0.1,
+      max_tokens: 2048,
+    });
+
+    return response.choices[0].message.content || '';
+  }
+
+  /**
+   * Ask question using Google Gemini AI
+   * @param prompt - The prompt to send
+   * @returns AI response text
+   */
+  private async askQuestionWithGemini(prompt: string): Promise<string> {
+    const apiKey = this.configService.get<string>('AI_API_KEY');
+    const geminiModel =
+      this.configService.get<string>('GEMINI_MODEL') || 'gemini-flash-latest';
+
+    if (!apiKey) {
+      throw new Error('AI API key (AI_API_KEY) is missing');
+    }
+
+    const normalizedModel = geminiModel.startsWith('models/')
+      ? geminiModel
+      : `models/${geminiModel}`;
+
+    const response = await axios.post<GeminiResponse>(
+      `https://generativelanguage.googleapis.com/v1beta/models/${normalizedModel}:generateContent`,
+      {
+        contents: [
+          {
+            parts: [
+              {
+                text: prompt,
+              },
+            ],
+          },
+        ],
+        generationConfig: {
+          temperature: 0.1,
+          maxOutputTokens: 2048,
+        },
+        safetySettings: [
+          {
+            category: 'HARM_CATEGORY_HARASSMENT',
+            threshold: 'BLOCK_NONE',
+          },
+          {
+            category: 'HARM_CATEGORY_HATE_SPEECH',
+            threshold: 'BLOCK_NONE',
+          },
+          {
+            category: 'HARM_CATEGORY_SEXUALLY_EXPLICIT',
+            threshold: 'BLOCK_NONE',
+          },
+          {
+            category: 'HARM_CATEGORY_DANGEROUS_CONTENT',
+            threshold: 'BLOCK_NONE',
+          },
+        ],
+      },
+      {
+        headers: {
+          'x-goog-api-key': apiKey,
+          'Content-Type': 'application/json',
+        },
+      },
+    );
+
+    const content = response.data.candidates?.[0]?.content?.parts?.[0]?.text;
+    if (!content) {
+      throw new Error('No response from Gemini API');
+    }
+
+    return content;
+  }
 }

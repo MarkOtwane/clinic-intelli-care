@@ -48,12 +48,12 @@ export class AiAnalysisService {
    * Submit symptoms for AI analysis
    */
   analyzeSymptoms(
-    request: SymptomAnalysisRequest
+    request: SymptomAnalysisRequest,
   ): Observable<SymptomAnalysisResponse> {
     return this.http.post<SymptomAnalysisResponse>(
       `${this.apiUrl}/analyze`,
       request,
-      this.httpOptions
+      this.httpOptions,
     );
   }
 
@@ -64,7 +64,7 @@ export class AiAnalysisService {
     return this.http.post<AIAnalysis>(
       `${this.apiUrl}/${analysisId}/follow-up`,
       { answers },
-      this.httpOptions
+      this.httpOptions,
     );
   }
 
@@ -74,7 +74,7 @@ export class AiAnalysisService {
   getAnalysis(analysisId: string): Observable<AIAnalysis> {
     return this.http.get<AIAnalysis>(
       `${this.apiUrl}/${analysisId}`,
-      this.httpOptions
+      this.httpOptions,
     );
   }
 
@@ -84,7 +84,7 @@ export class AiAnalysisService {
   getPatientAnalyses(patientId: string): Observable<AIAnalysis[]> {
     return this.http.get<AIAnalysis[]>(
       `${this.apiUrl}/patient/${patientId}`,
-      this.httpOptions
+      this.httpOptions,
     );
   }
 
@@ -94,7 +94,7 @@ export class AiAnalysisService {
   getAvailableSymptoms(): Observable<{ name: string; category: string }[]> {
     return this.http.get<{ name: string; category: string }[]>(
       `${this.apiUrl}/symptoms`,
-      this.httpOptions
+      this.httpOptions,
     );
   }
 
@@ -103,12 +103,12 @@ export class AiAnalysisService {
    */
   updateAnalysisStatus(
     analysisId: string,
-    status: AnalysisStatus
+    status: AnalysisStatus,
   ): Observable<AIAnalysis> {
     return this.http.patch<AIAnalysis>(
       `${this.apiUrl}/${analysisId}/status`,
       { status },
-      this.httpOptions
+      this.httpOptions,
     );
   }
 
@@ -119,7 +119,7 @@ export class AiAnalysisService {
     return this.http.post<AIAnalysis>(
       `${this.apiUrl}/${analysisId}/save`,
       {},
-      this.httpOptions
+      this.httpOptions,
     );
   }
 
@@ -129,7 +129,7 @@ export class AiAnalysisService {
   getDiseaseInfo(diseaseName: string): Observable<any> {
     return this.http.get(
       `${this.apiUrl}/diseases/${encodeURIComponent(diseaseName)}`,
-      this.httpOptions
+      this.httpOptions,
     );
   }
 
@@ -160,7 +160,7 @@ export class AiAnalysisService {
   validateSymptoms(
     symptoms: string[],
     duration: number,
-    severity: string
+    severity: string,
   ): { isValid: boolean; errors: string[] } {
     const errors: string[] = [];
 
@@ -180,5 +180,48 @@ export class AiAnalysisService {
       isValid: errors.length === 0,
       errors,
     };
+  }
+
+  /**
+   * Request follow-up questions for an existing analysis
+   * @param analysisId - The analysis ID to get follow-up questions for
+   * @returns Observable with follow-up questions
+   */
+  getFollowUpQuestions(analysisId: string): Observable<any> {
+    return this.http.post<any>(
+      `${this.apiUrl}/${analysisId}/follow-up-questions`,
+      {},
+      this.httpOptions,
+    );
+  }
+
+  /**
+   * Submit follow-up answers to get final analysis
+   * @param analysisId - The analysis ID
+   * @param answers - Array of answers to follow-up questions
+   * @returns Observable with final analysis
+   */
+  submitFollowUpAnswers(
+    analysisId: string,
+    answers: { questionId: string; question: string; answer: string }[],
+  ): Observable<any> {
+    return this.http.post<any>(
+      `${this.apiUrl}/${analysisId}/submit-answers`,
+      { analysisId, answers },
+      this.httpOptions,
+    );
+  }
+
+  /**
+   * Get conversation history for an analysis
+   * Shows all interactions: initial analysis, follow-up questions, final analysis
+   * @param analysisId - The analysis ID
+   * @returns Observable with conversation history
+   */
+  getConversationHistory(analysisId: string): Observable<any> {
+    return this.http.get<any>(
+      `${this.apiUrl}/${analysisId}/history`,
+      this.httpOptions,
+    );
   }
 }

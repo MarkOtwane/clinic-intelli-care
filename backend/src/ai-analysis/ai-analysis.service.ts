@@ -639,4 +639,394 @@ export class AiAnalysisService {
       },
     });
   }
+
+  /**
+   * Generate follow-up questions based on initial analysis
+   * AI will ask clarifying questions about the most probable disease
+   * @param analysisId - Analysis ID to generate questions for
+   * @param patientId - Patient ID for authorization
+   * @returns Follow-up questions
+   */
+  async generateFollowUpQuestions(
+    analysisId: string,
+    patientId: string,
+  ): Promise<any> {
+    // Verify analysis exists and belongs to patient
+    const analysis = await this.prisma.analysis.findUnique({
+      where: { id: analysisId },
+      include: {
+        patient: true,
+      },
+    });
+
+    if (!analysis) {
+      throw new NotFoundException('Analysis not found');
+    }
+
+    if (analysis.patientId !== patientId) {
+      throw new BadRequestException('You do not have access to this analysis');
+    }
+
+    // Don't generate new questions if already in final state
+    if (analysis.analysisStatus === 'COMPLETED') {
+      throw new BadRequestException(
+        'Final analysis already generated. No more follow-up questions available.',
+      );
+    }
+
+    // Get the top predicted disease from initial analysis
+    const predictedDiseases = analysis.predictedDiseases as any[];
+    if (!predictedDiseases || predictedDiseases.length === 0) {
+      throw new BadRequestException('No predicted diseases in analysis');
+    }
+
+    const topDisease = predictedDiseases[0];
+    const symptoms = analysis.symptoms as any[];
+
+    // Generate follow-up questions using AI
+    let followUpQuestions: any[] = [];
+    try {
+      // Call AI service to generate specific questions based on the disease
+      const prompt = `
+Based on the patient reporting these symptoms: ${symptoms.join(', ')}
+And the AI analysis predicting: ${topDisease.name} (${topDisease.probability * 100}% probability)
+
+Generate 3-5 specific follow-up questions to clarify the diagnosis. The questions should:
+1. Help differentiate this disease from similar conditions
+2. Explore specific symptoms or risk factors relevant to ${topDisease.name}
+3. Be easy for the patient to understand and answer
+
+Return ONLY a JSON array with no additional text, in this format:
+[
+  {
+    "questionId": "q1",
+    "question": "Question text here?",
+    "description": "Why this question helps the diagnosis"
+  }
+]
+`;
+
+      // Use the raw AI service to generate questions
+      const aiResponse = await this.aiService.askQuestion(prompt);
+
+      // Parse the response - it should be JSON array
+      try {
+        followUpQuestions = JSON.parse(aiResponse);
+      } catch {
+        // If parsing fails, create default questions
+        followUpQuestions = [
+          {
+            questionId: 'q1',
+            question: `Have you experienced any worsening of your ${topDisease.name} symptoms?`,
+            description: 'To assess disease progression',
+          },
+          {
+            questionId: 'q2',
+            question: `Do you have any other symptoms not mentioned initially?`,
+            description: 'To identify additional clinical signs',
+          },
+          {
+            questionId: 'q3',
+            question: `How is your overall condition affecting your daily activities?`,
+            description: 'To understand severity and impact',
+          },
+        ];
+      }
+    } catch (error) {
+      console.error('Error generating follow-up questions:', error);
+      throw new BadRequestException(
+        'Failed to generate follow-up questions. Please try again.',
+      );
+    }
+
+    // Store follow-up questions in the analysis
+    const updatedAnalysis = await this.prisma.analysis.update({
+      where: { id: analysisId },
+      data: {
+        followUpQuestions,
+        analysisStatus: 'AWAITING_ANSWERS',
+        updatedAt: new Date(),
+      },
+    });
+
+    // Store in conversation history
+    const conversationHistory = (analysis.conversationHistory || []) as any[];
+    conversationHistory.push({
+      type: 'FOLLOW_UP_QUESTIONS',
+      timestamp: new Date(),
+      questions: followUpQuestions,
+    });
+
+    await this.prisma.analysis.update({
+      where: { id: analysisId },
+      data: {
+        conversationHistory,
+      },
+    });
+
+    return {
+      analysisId,
+      disease: topDisease.name,
+      probability: topDisease.probability,
+      questions: followUpQuestions,
+    };
+  }
+
+  /**
+   * Submit follow-up answers and generate final analysis
+   * @param analysisId - Analysis ID
+   * @param dto - Follow-up answers from patient
+   * @param patientId - Patient ID for authorization
+   * @returns Final analysis
+   */
+  async submitFollowUpAnswers(
+    analysisId: string,
+    dto: any, // SubmitFollowUpAnswersDto
+    patientId: string,
+  ): Promise<any> {
+    // Verify analysis exists and belongs to patient
+    const analysis = await this.prisma.analysis.findUnique({
+      where: { id: analysisId },
+      include: {
+        patient: true,
+      },
+    });
+
+    if (!analysis) {
+      throw new NotFoundException('Analysis not found');
+    }
+
+    if (analysis.patientId !== patientId) {
+      throw new BadRequestException('You do not have access to this analysis');
+    }
+
+    if (analysis.analysisStatus !== 'AWAITING_ANSWERS') {
+      throw new BadRequestException(
+        'This analysis is not awaiting answers. Follow-up answers cannot be submitted.',
+      );
+    }
+
+    if (!dto.answers || dto.answers.length === 0) {
+      throw new BadRequestException('Please provide answers to the questions');
+    }
+
+    // Store answers
+    const answers = dto.answers.map((a: any) => ({
+      questionId: a.questionId,
+      question: a.question,
+      answer: a.answer,
+    }));
+
+    // Prepare prompt for final analysis with all available information
+    const symptoms = analysis.symptoms as any[];
+    const predictedDiseases = analysis.predictedDiseases as any[];
+    const topDisease = predictedDiseases?.[0];
+
+    const answersText = answers
+      .map((a: any) => `Q: ${a.question}\nA: ${a.answer}`)
+      .join('\n\n');
+
+    const finalAnalysisPrompt = `
+You are a medical AI assistant. A patient presented with these symptoms: ${Array.isArray(symptoms) ? symptoms.join(', ') : symptoms}
+
+Initial AI Analysis predicted: ${topDisease?.name} (${(topDisease?.probability || 0) * 100}% probability)
+
+The patient has now provided additional information in response to follow-up questions:
+${answersText}
+
+Based on ALL this information (initial symptoms + follow-up answers), provide a FINAL, MORE ACCURATE diagnosis.
+
+Return ONLY a JSON object with no additional text in this exact format:
+{
+  "finalDiagnosis": "The most likely condition based on all information",
+  "probability": 0.85,
+  "reasoning": "Explanation of why this is the most likely diagnosis based on the combined information",
+  "recommendations": [
+    "Specific action/recommendation 1",
+    "Specific action/recommendation 2",
+    "Specific action/recommendation 3"
+  ],
+  "warnings": ["Any warning signs to watch for"]
+}
+`;
+
+    let finalAnalysisData: any = {
+      finalDiagnosis: topDisease?.name,
+      probability: topDisease?.probability || 0.5,
+      reasoning: 'Based on combined initial and follow-up information',
+      recommendations: ['Consult with a healthcare professional'],
+      warnings: [],
+    };
+
+    try {
+      const aiResponse = await this.aiService.askQuestion(finalAnalysisPrompt);
+      try {
+        finalAnalysisData = JSON.parse(aiResponse);
+      } catch {
+        // Use default if parsing fails
+        console.warn('Failed to parse final analysis response, using defaults');
+      }
+    } catch (error) {
+      console.error('Error generating final analysis:', error);
+      // Continue with default data
+    }
+
+    // Update analysis with final results - replace initial with final
+    const updatedAnalysis = await this.prisma.analysis.update({
+      where: { id: analysisId },
+      data: {
+        // Store answers
+        followUpAnswers: answers,
+        // Replace predicted diseases with final analysis
+        predictedDiseases: [
+          {
+            name: finalAnalysisData.finalDiagnosis,
+            probability: finalAnalysisData.probability,
+            description: finalAnalysisData.reasoning,
+            recommendation: finalAnalysisData.recommendations?.join('. '),
+          },
+        ],
+        recommendations: finalAnalysisData.recommendations?.join('\n') || '',
+        // Mark as completed
+        analysisStatus: 'COMPLETED',
+        updatedAt: new Date(),
+      },
+      include: {
+        patient: true,
+        doctor: true,
+      },
+    });
+
+    // Update conversation history with final analysis
+    const conversationHistory = (analysis.conversationHistory || []) as any[];
+    conversationHistory.push({
+      type: 'FINAL_ANALYSIS',
+      timestamp: new Date(),
+      analysis: {
+        diagnosis: finalAnalysisData.finalDiagnosis,
+        probability: finalAnalysisData.probability,
+        reasoning: finalAnalysisData.reasoning,
+        recommendations: finalAnalysisData.recommendations,
+        warnings: finalAnalysisData.warnings,
+      },
+    });
+
+    await this.prisma.analysis.update({
+      where: { id: analysisId },
+      data: {
+        conversationHistory,
+      },
+    });
+
+    // Format response
+    return {
+      analysis: {
+        id: updatedAnalysis.id,
+        patientId: updatedAnalysis.patientId,
+        finalDiagnosis: finalAnalysisData.finalDiagnosis,
+        probability: finalAnalysisData.probability,
+        reasoning: finalAnalysisData.reasoning,
+        recommendations: finalAnalysisData.recommendations,
+        warnings: finalAnalysisData.warnings,
+        status: updatedAnalysis.status,
+        analysisStatus: updatedAnalysis.analysisStatus,
+        createdAt: updatedAnalysis.createdAt,
+        updatedAt: updatedAnalysis.updatedAt,
+      },
+    };
+  }
+
+  /**
+   * Get conversation history for an analysis
+   * Shows all interactions: initial analysis, follow-up questions, final analysis
+   * @param analysisId - Analysis ID
+   * @param userId - User ID for authorization (patient or doctor)
+   * @returns Conversation history
+   */
+  async getConversationHistory(
+    analysisId: string,
+    userId: string,
+  ): Promise<any> {
+    // Get user info to check role
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+      include: {
+        patientProfile: true,
+        doctorProfile: true,
+      },
+    });
+
+    if (!user) {
+      throw new BadRequestException('User not found');
+    }
+
+    // Get analysis
+    const analysis = await this.prisma.analysis.findUnique({
+      where: { id: analysisId },
+      include: {
+        patient: true,
+        doctor: true,
+      },
+    });
+
+    if (!analysis) {
+      throw new NotFoundException('Analysis not found');
+    }
+
+    // Authorization check
+    const isPatient = user.patientProfile?.id === analysis.patientId;
+    const isDoctor = user.doctorProfile?.id === analysis.doctorId;
+    const isAdmin = user.role === 'ADMIN';
+
+    if (!isPatient && !isDoctor && !isAdmin) {
+      throw new BadRequestException(
+        'You do not have access to this analysis history',
+      );
+    }
+
+    // Build conversation history from stored data and analysis fields
+    const history = analysis.conversationHistory
+      ? (analysis.conversationHistory as any[])
+      : [];
+
+    // If no history exists, create it from current analysis state
+    if (history.length === 0) {
+      history.push({
+        type: 'INITIAL',
+        timestamp: analysis.createdAt,
+        analysis: {
+          symptoms: analysis.symptoms,
+          predictions: analysis.predictedDiseases,
+          recommendations: analysis.recommendations,
+        },
+      });
+
+      if (analysis.followUpQuestions) {
+        history.push({
+          type: 'FOLLOW_UP_QUESTIONS',
+          timestamp: analysis.updatedAt,
+          questions: analysis.followUpQuestions,
+        });
+      }
+
+      if (analysis.analysisStatus === 'COMPLETED') {
+        history.push({
+          type: 'FINAL_ANALYSIS',
+          timestamp: analysis.updatedAt,
+          analysis: {
+            predictions: analysis.predictedDiseases,
+            recommendations: analysis.recommendations,
+          },
+        });
+      }
+    }
+
+    return {
+      analysisId,
+      patientName: analysis.patient.name,
+      doctorName: analysis.doctor?.name || 'Not yet assigned',
+      analysisStatus: analysis.analysisStatus,
+      history,
+    };
+  }
 }
