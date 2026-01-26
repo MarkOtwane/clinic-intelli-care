@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, OnInit } from '@angular/core';
+import { Component, OnDestroy, OnInit } from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
 import { MatCardModule } from '@angular/material/card';
 import { MatGridListModule } from '@angular/material/grid-list';
@@ -8,9 +8,15 @@ import { RouterModule } from '@angular/router';
 
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatSnackBarModule } from '@angular/material/snack-bar';
+import { Subject } from 'rxjs';
+import { takeUntil } from 'rxjs/operators';
+import { Appointment } from '../../../core/models/appointment.model';
 import { Patient } from '../../../core/models/patient.model';
+import { Prescription } from '../../../core/models/prescription.model';
+import { AppointmentsService } from '../../../core/services/appointments.service';
 import { AuthService } from '../../../core/services/auth.service';
 import { PatientService } from '../../../core/services/patient.service';
+import { PrescriptionService } from '../../../core/services/prescription.service';
 
 @Component({
   selector: 'app-patient-dashboard',
@@ -43,14 +49,14 @@ import { PatientService } from '../../../core/services/patient.service';
           <div class="stat-card">
             <mat-icon class="stat-icon icon-success">event_available</mat-icon>
             <div class="stat-content">
-              <div class="stat-number">3</div>
+              <div class="stat-number">{{ appointments.length }}</div>
               <div class="stat-label">Upcoming Appointments</div>
             </div>
           </div>
           <div class="stat-card">
             <mat-icon class="stat-icon icon-medical">medication</mat-icon>
             <div class="stat-content">
-              <div class="stat-number">2</div>
+              <div class="stat-number">{{ prescriptions.length }}</div>
               <div class="stat-label">Active Prescriptions</div>
             </div>
           </div>
@@ -83,13 +89,13 @@ import { PatientService } from '../../../core/services/patient.service';
             <div class="card-stats">
               <div class="stat-item">
                 <mat-icon class="stat-item-icon">check_circle</mat-icon>
-                <span>2 confirmed</span>
+                <span>{{ confirmedAppointments }} confirmed</span>
               </div>
               <div class="stat-item">
                 <mat-icon class="stat-item-icon icon-warning"
                   >schedule</mat-icon
                 >
-                <span>1 pending</span>
+                <span>{{ pendingAppointments }} pending</span>
               </div>
             </div>
           </mat-card-content>
@@ -175,18 +181,32 @@ import { PatientService } from '../../../core/services/patient.service';
               reminders. Keep your treatment plan organized and up-to-date.
             </p>
             <div class="card-medications">
-              <div class="medication-item">
+              <div
+                class="medication-item"
+                *ngFor="
+                  let medication of prescriptions | slice: 0 : 3;
+                  let i = index
+                "
+              >
                 <mat-icon class="medication-icon">pill</mat-icon>
                 <div class="medication-info">
-                  <div class="medication-name">Vitamin D3</div>
-                  <div class="medication-schedule">Daily - 8:00 AM</div>
+                  <div class="medication-name">
+                    {{ medication.medications[0]?.name || 'Medication' }}
+                  </div>
+                  <div class="medication-schedule">
+                    {{
+                      medication.medications[0]?.frequency || 'Not specified'
+                    }}
+                  </div>
                 </div>
               </div>
-              <div class="medication-item">
-                <mat-icon class="medication-icon">pill</mat-icon>
+              <div class="medication-item" *ngIf="prescriptions.length === 0">
+                <mat-icon class="medication-icon">info</mat-icon>
                 <div class="medication-info">
-                  <div class="medication-name">Multivitamin</div>
-                  <div class="medication-schedule">Daily - 12:00 PM</div>
+                  <div class="medication-name">No active prescriptions</div>
+                  <div class="medication-schedule">
+                    You'll see prescriptions here when available
+                  </div>
                 </div>
               </div>
             </div>
@@ -729,34 +749,103 @@ import { PatientService } from '../../../core/services/patient.service';
     `,
   ],
 })
-export class PatientDashboardComponent implements OnInit {
+export class PatientDashboardComponent implements OnInit, OnDestroy {
   patient: Patient | null = null;
+  appointments: Appointment[] = [];
+  prescriptions: Prescription[] = [];
   isLoading = true;
+  private destroy$ = new Subject<void>();
+
+  get confirmedAppointments(): number {
+    return this.appointments.filter((a) => a.status === 'CONFIRMED').length;
+  }
+
+  get pendingAppointments(): number {
+    return this.appointments.filter((a) => a.status === 'SCHEDULED').length;
+  }
 
   constructor(
     private authService: AuthService,
     private patientService: PatientService,
+    private appointmentsService: AppointmentsService,
+    private prescriptionService: PrescriptionService,
   ) {}
 
   ngOnInit(): void {
-    this.authService.currentUser$.subscribe((user) => {
-      if (user && user.role === 'PATIENT') {
-        this.patientService.getMyDashboard().subscribe({
-          next: (patient) => {
-            this.patient = patient;
-            this.isLoading = false;
-          },
-          error: (error) => {
-            // Gracefully handle missing patient profile
-            console.error('Error loading patient dashboard:', error);
-            this.patient = null;
-            this.isLoading = false;
-          },
-        });
-      } else {
-        this.isLoading = false;
-      }
-    });
+    this.authService.currentUser$
+      .pipe(takeUntil(this.destroy$))
+      .subscribe((user) => {
+        if (user && user.role === 'PATIENT') {
+          this.loadPatientData();
+        } else {
+          this.isLoading = false;
+        }
+      });
+  }
+
+  private loadPatientData(): void {
+    // Load patient profile
+    this.patientService
+      .getMyDashboard()
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (patient) => {
+          this.patient = patient;
+        },
+        error: (error) => {
+          console.error('Error loading patient dashboard:', error);
+          this.patient = null;
+          this.isLoading = false;
+        },
+      });
+
+    // Load appointments
+    this.appointmentsService
+      .getMyAppointments()
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (appointments) => {
+          this.appointments = appointments || [];
+          this.checkLoadingComplete();
+        },
+        error: (error) => {
+          console.error('Error loading appointments:', error);
+          this.appointments = [];
+          this.checkLoadingComplete();
+        },
+      });
+
+    // Load prescriptions
+    this.prescriptionService
+      .getMyPrescriptions()
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (prescriptions) => {
+          this.prescriptions = prescriptions || [];
+          this.checkLoadingComplete();
+        },
+        error: (error) => {
+          console.error('Error loading prescriptions:', error);
+          this.prescriptions = [];
+          this.checkLoadingComplete();
+        },
+      });
+  }
+
+  private checkLoadingComplete(): void {
+    // Check if all data has been loaded
+    if (
+      this.patient !== null &&
+      this.appointments.length >= 0 &&
+      this.prescriptions.length >= 0
+    ) {
+      this.isLoading = false;
+    }
+  }
+
+  ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
   }
 
   getTimeOfDay(): string {
