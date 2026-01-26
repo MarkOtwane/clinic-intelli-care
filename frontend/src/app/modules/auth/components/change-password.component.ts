@@ -34,15 +34,26 @@ import { AuthService } from '../../../core/services/auth.service';
     <div class="change-password-container">
       <mat-card class="change-password-card">
         <mat-card-header>
-          <mat-card-title>Change Password</mat-card-title>
+          <mat-card-title>{{
+            isFirstLogin ? 'Set Your Password' : 'Change Password'
+          }}</mat-card-title>
           <mat-card-subtitle>
-            You must change your password before accessing the system
+            {{
+              isFirstLogin
+                ? 'Create a permanent password for your account'
+                : 'You must change your password before accessing the system'
+            }}
           </mat-card-subtitle>
         </mat-card-header>
 
         <mat-card-content>
           <form [formGroup]="passwordForm" (ngSubmit)="onSubmit()">
-            <mat-form-field appearance="outline" class="full-width">
+            <!-- Current password only required if not first login -->
+            <mat-form-field
+              *ngIf="!isFirstLogin"
+              appearance="outline"
+              class="full-width"
+            >
               <mat-label>Current Password</mat-label>
               <input
                 matInput
@@ -60,12 +71,18 @@ import { AuthService } from '../../../core/services/auth.service';
             </mat-form-field>
 
             <mat-form-field appearance="outline" class="full-width">
-              <mat-label>New Password</mat-label>
+              <mat-label>{{
+                isFirstLogin ? 'New Password' : 'New Password'
+              }}</mat-label>
               <input
                 matInput
                 [type]="hidePassword ? 'password' : 'text'"
                 formControlName="newPassword"
-                placeholder="Enter your new password"
+                [placeholder]="
+                  isFirstLogin
+                    ? 'Create a strong password'
+                    : 'Enter your new password'
+                "
               />
               <button
                 mat-icon-button
@@ -80,7 +97,7 @@ import { AuthService } from '../../../core/services/auth.service';
               <mat-error
                 *ngIf="passwordForm.get('newPassword')?.hasError('required')"
               >
-                New password is required
+                Password is required
               </mat-error>
               <mat-error
                 *ngIf="passwordForm.get('newPassword')?.hasError('minlength')"
@@ -90,12 +107,12 @@ import { AuthService } from '../../../core/services/auth.service';
             </mat-form-field>
 
             <mat-form-field appearance="outline" class="full-width">
-              <mat-label>Confirm New Password</mat-label>
+              <mat-label>Confirm Password</mat-label>
               <input
                 matInput
                 [type]="hidePassword ? 'password' : 'text'"
                 formControlName="confirmPassword"
-                placeholder="Confirm your new password"
+                placeholder="Confirm your password"
               />
               <mat-error
                 *ngIf="
@@ -117,7 +134,15 @@ import { AuthService } from '../../../core/services/auth.service';
               class="full-width"
             >
               <mat-spinner *ngIf="isLoading" diameter="20"></mat-spinner>
-              {{ isLoading ? 'Changing Password...' : 'Change Password' }}
+              {{
+                isLoading
+                  ? isFirstLogin
+                    ? 'Setting Password...'
+                    : 'Changing Password...'
+                  : isFirstLogin
+                    ? 'Set Password'
+                    : 'Change Password'
+              }}
             </button>
           </form>
         </mat-card-content>
@@ -156,6 +181,7 @@ export class ChangePasswordComponent implements OnInit {
   passwordForm!: FormGroup;
   hidePassword = true;
   isLoading = false;
+  isFirstLogin = true; // Assume first login unless we determine otherwise
 
   constructor(
     private fb: FormBuilder,
@@ -165,9 +191,14 @@ export class ChangePasswordComponent implements OnInit {
   ) {}
 
   ngOnInit(): void {
+    // For first login (temporary password), don't require current password
+    const currentPasswordValidators = this.isFirstLogin
+      ? []
+      : [Validators.required];
+
     this.passwordForm = this.fb.group(
       {
-        currentPassword: ['', Validators.required],
+        currentPassword: ['', currentPasswordValidators],
         newPassword: ['', [Validators.required, Validators.minLength(6)]],
         confirmPassword: ['', Validators.required],
       },
@@ -195,23 +226,38 @@ export class ChangePasswordComponent implements OnInit {
     this.isLoading = true;
     const { currentPassword, newPassword } = this.passwordForm.value;
 
-    this.authService.changePassword(currentPassword, newPassword).subscribe({
+    // For first login with temporary password, currentPassword is empty
+    // The backend should handle this case
+    const passwordToSend = this.isFirstLogin ? '' : currentPassword;
+
+    this.authService.changePassword(passwordToSend, newPassword).subscribe({
       next: () => {
         this.isLoading = false;
         this.snackBar.open(
-          'Password changed successfully. Please sign in again.',
+          this.isFirstLogin
+            ? 'Password set successfully. Redirecting to dashboard...'
+            : 'Password changed successfully. Please sign in again.',
           'Close',
           {
-            duration: 4000,
+            duration: 3000,
           },
         );
-        this.router.navigate(['/auth/login']);
+
+        // For first login, redirect to dashboard directly
+        // For password change, require re-login
+        if (this.isFirstLogin) {
+          setTimeout(() => {
+            this.router.navigate(['/dashboard']);
+          }, 1500);
+        } else {
+          this.router.navigate(['/auth/login']);
+        }
       },
       error: (error) => {
         this.isLoading = false;
         this.snackBar.open(
           error.error?.message ||
-            'Failed to change password. Please try again.',
+            'Failed to update password. Please try again.',
           'Close',
           { duration: 4000 },
         );

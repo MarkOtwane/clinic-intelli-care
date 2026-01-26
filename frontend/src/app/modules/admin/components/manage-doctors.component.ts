@@ -77,6 +77,42 @@ import { DoctorService } from '../../../core/services/doctor.service';
             </mat-form-field>
 
             <mat-form-field appearance="outline">
+              <mat-label>Email</mat-label>
+              <input
+                matInput
+                type="email"
+                formControlName="email"
+                placeholder="doctor@clinic.com"
+              />
+              <mat-error *ngIf="doctorForm.get('email')?.hasError('required')">
+                Email is required
+              </mat-error>
+              <mat-error *ngIf="doctorForm.get('email')?.hasError('email')">
+                Please enter a valid email
+              </mat-error>
+            </mat-form-field>
+
+            <mat-form-field appearance="outline">
+              <mat-label>Temporary Password</mat-label>
+              <input
+                matInput
+                type="password"
+                formControlName="password"
+                placeholder="Enter temporary password"
+              />
+              <mat-error
+                *ngIf="doctorForm.get('password')?.hasError('required')"
+              >
+                Password is required
+              </mat-error>
+              <mat-error
+                *ngIf="doctorForm.get('password')?.hasError('minlength')"
+              >
+                Password must be at least 6 characters
+              </mat-error>
+            </mat-form-field>
+
+            <mat-form-field appearance="outline">
               <mat-label>Specialization</mat-label>
               <input
                 matInput
@@ -296,6 +332,8 @@ export class ManageDoctorsComponent implements OnInit {
   private createForm() {
     return this.fb.group({
       name: ['', Validators.required],
+      email: ['', [Validators.required, Validators.email]],
+      password: ['', [Validators.required, Validators.minLength(6)]],
       specialization: ['', Validators.required],
       phone: [''],
       experience: [null as number | null],
@@ -329,6 +367,49 @@ export class ManageDoctorsComponent implements OnInit {
   onSubmit(): void {
     if (this.doctorForm.invalid) return;
 
+    const email = this.doctorForm.value.email as string;
+    const password = this.doctorForm.value.password as string;
+    const hasEmailPassword = email && password;
+
+    // If email and password are provided, use createDoctorAccount endpoint
+    if (hasEmailPassword) {
+      const accountPayload = {
+        email,
+        password,
+        name: this.doctorForm.value.name as string,
+        specialization: this.doctorForm.value.specialization as string,
+        phone: this.doctorForm.value.phone || undefined,
+        experience:
+          this.doctorForm.value.experience !== null &&
+          this.doctorForm.value.experience !== undefined
+            ? Number(this.doctorForm.value.experience)
+            : undefined,
+        bio: this.doctorForm.value.bio || undefined,
+      };
+
+      this.doctorService.createDoctorAccount(accountPayload).subscribe({
+        next: () => {
+          this.snackBar.open(
+            'Doctor account created with temporary password',
+            'Close',
+            {
+              duration: 3000,
+            },
+          );
+          this.loadDoctors();
+          this.resetForm();
+        },
+        error: (error) => {
+          console.error('Error creating doctor account:', error);
+          this.snackBar.open('Failed to create doctor account', 'Close', {
+            duration: 3000,
+          });
+        },
+      });
+      return;
+    }
+
+    // Otherwise, use regular createDoctor endpoint
     const payload = {
       name: this.doctorForm.value.name as string,
       specialization: this.doctorForm.value.specialization as string,
