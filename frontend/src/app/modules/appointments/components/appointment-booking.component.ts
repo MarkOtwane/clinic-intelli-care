@@ -379,14 +379,18 @@ interface TimeSlot {
   styles: [
     `
       .appointment-booking {
-        padding: 24px;
-        max-width: 1000px;
+        padding: 16px;
+        max-width: 900px;
         margin: 0 auto;
+        min-height: 100vh;
+        display: flex;
+        flex-direction: column;
       }
 
       .booking-header {
         text-align: center;
-        margin-bottom: 32px;
+        margin-bottom: 20px;
+        flex-shrink: 0;
       }
 
       .booking-header h1 {
@@ -395,42 +399,67 @@ interface TimeSlot {
         justify-content: center;
         gap: 12px;
         color: #2c3e50;
-        margin: 0 0 8px 0;
+        margin: 0 0 4px 0;
+        font-size: 24px;
       }
 
       .subtitle {
         color: #7f8c8d;
         margin: 0;
+        font-size: 14px;
       }
 
       .booking-card {
-        padding: 24px;
+        padding: 16px;
+        flex: 1;
+        overflow-y: auto;
+        max-height: calc(100vh - 180px);
+      }
+
+      ::ng-deep .mat-stepper-header {
+        height: auto !important;
+        min-height: 48px !important;
+      }
+
+      ::ng-deep .mat-step-label {
+        font-size: 14px !important;
+      }
+
+      ::ng-deep .mat-step-body-content {
+        padding: 12px 0 !important;
+      }
+
+      ::ng-deep .mat-stepper-horizontal {
+        width: 100% !important;
       }
 
       .full-width {
         width: 100%;
-        margin-bottom: 16px;
+        margin-bottom: 12px;
       }
 
       .doctor-selection {
-        margin: 24px 0;
+        margin: 16px 0;
       }
 
       .search-section {
-        margin-bottom: 24px;
+        margin-bottom: 16px;
       }
 
       .doctors-grid {
         display: grid;
-        grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-        gap: 16px;
-        margin-bottom: 24px;
+        grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+        gap: 12px;
+        margin-bottom: 16px;
+        max-height: 400px;
+        overflow-y: auto;
       }
 
       .doctor-card {
         cursor: pointer;
         transition: all 0.3s ease;
         border: 2px solid transparent;
+        padding: 12px;
       }
 
       .doctor-card:hover {
@@ -444,49 +473,55 @@ interface TimeSlot {
       }
 
       .doctor-info h4 {
-        margin: 0 0 8px 0;
+        margin: 0 0 4px 0;
         color: #2c3e50;
+        font-size: 14px;
       }
 
       .specialty {
         color: #7f8c8d;
-        margin: 0 0 8px 0;
+        margin: 0 0 4px 0;
+        font-size: 13px;
       }
 
       .experience {
         color: #7f8c8d;
-        font-size: 14px;
-        margin-bottom: 8px;
+        font-size: 12px;
+        margin-bottom: 4px;
       }
 
       .selected-doctor {
-        margin-bottom: 24px;
+        margin-bottom: 16px;
       }
 
       .schedule-selection {
-        margin: 24px 0;
+        margin: 16px 0;
       }
 
       .time-slots {
-        margin-top: 24px;
+        margin-top: 16px;
       }
 
       .time-slots h4 {
-        margin: 0 0 16px 0;
+        margin: 0 0 12px 0;
         color: #2c3e50;
+        font-size: 14px;
       }
 
       .slots-grid {
         display: grid;
-        grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
-        gap: 12px;
+        grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+        gap: 8px;
+        max-height: 200px;
+        overflow-y: auto;
       }
 
       .time-slot {
-        padding: 12px 8px;
+        padding: 8px 6px;
         text-align: center;
-        border-radius: 8px;
+        border-radius: 6px;
         transition: all 0.3s ease;
+        font-size: 13px;
       }
 
       .time-slot:hover:not(:disabled) {
@@ -507,41 +542,43 @@ interface TimeSlot {
 
       .no-slots {
         text-align: center;
-        padding: 48px 24px;
+        padding: 24px 12px;
         color: #7f8c8d;
       }
 
       .no-slots mat-icon {
-        font-size: 64px;
-        margin-bottom: 16px;
+        font-size: 48px;
+        margin-bottom: 8px;
         opacity: 0.5;
       }
 
       .appointment-details {
-        margin: 24px 0;
+        margin: 16px 0;
       }
 
       .emergency-option {
-        margin: 16px 0;
+        margin: 12px 0;
       }
 
       .appointment-summary {
         background: #f8f9fa;
-        padding: 20px;
+        padding: 16px;
         border-radius: 8px;
-        margin: 24px 0;
+        margin: 16px 0;
       }
 
       .appointment-summary h4 {
-        margin: 0 0 16px 0;
+        margin: 0 0 12px 0;
         color: #2c3e50;
+        font-size: 14px;
       }
 
       .summary-item {
         display: flex;
         justify-content: space-between;
-        padding: 8px 0;
+        padding: 6px 0;
         border-bottom: 1px solid #ecf0f1;
+        font-size: 13px;
       }
 
       .summary-item:last-child {
@@ -560,45 +597,55 @@ interface TimeSlot {
       .step-actions {
         display: flex;
         justify-content: space-between;
-        margin-top: 32px;
+        gap: 12px;
+        margin-top: 16px;
+        flex-wrap: wrap;
+      }
+
+      .step-actions button {
+        flex: 1;
+        min-width: 120px;
       }
 
       .confirmation-section {
         text-align: center;
-        padding: 48px 24px;
+        padding: 24px 12px;
       }
 
       .success-icon {
-        font-size: 72px;
+        font-size: 56px;
         color: #4caf50;
-        margin-bottom: 16px;
+        margin-bottom: 12px;
       }
 
       .confirmation-section h2 {
         color: #2c3e50;
-        margin: 0 0 32px 0;
+        margin: 0 0 20px 0;
+        font-size: 20px;
       }
 
       .confirmation-details {
-        margin: 32px 0;
+        margin: 20px 0;
       }
 
       .details-card {
-        max-width: 500px;
+        max-width: 400px;
         margin: 0 auto;
       }
 
       .details-card h3 {
-        margin: 0 0 16px 0;
+        margin: 0 0 12px 0;
         color: #2c3e50;
+        font-size: 14px;
       }
 
       .detail-row {
         display: flex;
         justify-content: space-between;
         align-items: center;
-        padding: 8px 0;
+        padding: 6px 0;
         border-bottom: 1px solid #ecf0f1;
+        font-size: 13px;
       }
 
       .detail-row:last-child {
@@ -611,37 +658,98 @@ interface TimeSlot {
 
       .confirmation-actions {
         display: flex;
-        gap: 16px;
+        gap: 8px;
         justify-content: center;
         flex-wrap: wrap;
-        margin-top: 32px;
+        margin-top: 20px;
+      }
+
+      .confirmation-actions button {
+        font-size: 13px;
+        padding: 8px 16px;
       }
 
       mat-spinner {
-        margin-right: 8px;
+        margin-right: 6px;
       }
 
       @media (max-width: 768px) {
         .appointment-booking {
-          padding: 16px;
+          padding: 12px;
+        }
+
+        .booking-header {
+          margin-bottom: 12px;
+        }
+
+        .booking-header h1 {
+          font-size: 20px;
+          margin-bottom: 2px;
+        }
+
+        .booking-card {
+          padding: 12px;
+          max-height: calc(100vh - 140px);
         }
 
         .doctors-grid {
           grid-template-columns: 1fr;
+          max-height: 300px;
         }
 
         .slots-grid {
-          grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+          grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
+          max-height: 150px;
         }
 
         .step-actions {
           flex-direction: column;
-          gap: 16px;
+          gap: 8px;
+        }
+
+        .step-actions button {
+          width: 100%;
         }
 
         .confirmation-actions {
           flex-direction: column;
-          align-items: center;
+          align-items: stretch;
+          gap: 8px;
+        }
+
+        .confirmation-actions button {
+          width: 100%;
+        }
+      }
+
+      @media (max-width: 480px) {
+        .appointment-booking {
+          padding: 8px;
+        }
+
+        .booking-card {
+          padding: 8px;
+          max-height: calc(100vh - 120px);
+        }
+
+        .booking-header h1 {
+          font-size: 18px;
+        }
+
+        .subtitle {
+          font-size: 12px;
+        }
+
+        .doctors-grid {
+          grid-template-columns: 1fr;
+          gap: 8px;
+          max-height: 250px;
+        }
+
+        .slots-grid {
+          grid-template-columns: repeat(3, 1fr);
+          gap: 6px;
+          max-height: 120px;
         }
       }
     `,
