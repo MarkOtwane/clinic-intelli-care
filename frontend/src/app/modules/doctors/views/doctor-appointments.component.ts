@@ -44,6 +44,23 @@ import { ScheduleFollowupDialogComponent } from '../components/schedule-followup
         </div>
       </header>
 
+      <!-- Error State -->
+      <mat-card class="error-card" *ngIf="hasError">
+        <mat-card-content>
+          <div class="error-message-container">
+            <mat-icon class="error-icon">error_outline</mat-icon>
+            <div>
+              <h3>Unable to Load Appointments</h3>
+              <p>{{ errorMessage }}</p>
+            </div>
+          </div>
+          <button mat-raised-button color="primary" (click)="loadAppointments()">
+            <mat-icon>refresh</mat-icon>
+            Retry
+          </button>
+        </mat-card-content>
+      </mat-card>
+
       <div class="stats-cards" *ngIf="!isLoading">
         <mat-card class="stat-card pending">
           <mat-icon>schedule</mat-icon>
@@ -455,6 +472,40 @@ import { ScheduleFollowupDialogComponent } from '../components/schedule-followup
         height: 64px;
         color: var(--gray-400);
         margin-bottom: var(--space-4);
+      }
+
+      .error-card {
+        background: #ffebee;
+        border-left: 4px solid #f44336;
+        margin-bottom: var(--space-6);
+      }
+
+      .error-message-container {
+        display: flex;
+        align-items: flex-start;
+        gap: var(--space-4);
+        margin-bottom: var(--space-4);
+      }
+
+      .error-icon {
+        color: #f44336;
+        font-size: 32px;
+        width: 32px;
+        height: 32px;
+        flex-shrink: 0;
+        margin-top: 2px;
+      }
+
+      .error-message-container h3 {
+        margin: 0 0 var(--space-1);
+        color: #c62828;
+        font-weight: 600;
+      }
+
+      .error-message-container p {
+        margin: 0;
+        color: #b71c1c;
+        font-size: 14px;
       }
 
       .appointments-grid {
@@ -889,6 +940,8 @@ import { ScheduleFollowupDialogComponent } from '../components/schedule-followup
 })
 export class DoctorAppointmentsComponent implements OnInit {
   isLoading = true;
+  hasError = false;
+  errorMessage = '';
   pendingAppointments: any[] = [];
   upcomingAppointments: any[] = [];
   todayAppointments: any[] = [];
@@ -909,8 +962,11 @@ export class DoctorAppointmentsComponent implements OnInit {
     this.viewMode = mode;
   }
 
-  private loadAppointments(): void {
+  loadAppointments(): void {
     this.isLoading = true;
+    this.hasError = false;
+    this.errorMessage = '';
+
     this.doctorsService.getDoctorDashboard().subscribe({
       next: (data: any) => {
         console.log('Dashboard data received:', data);
@@ -953,8 +1009,10 @@ export class DoctorAppointmentsComponent implements OnInit {
           url: error.url,
         });
         this.isLoading = false;
-
-        // Reset arrays on error
+        this.hasError = true;
+        this.errorMessage =
+          error.error?.message ||
+          'Failed to load appointments. Please try again.';
         this.pendingAppointments = [];
         this.upcomingAppointments = [];
         this.todayAppointments = [];
