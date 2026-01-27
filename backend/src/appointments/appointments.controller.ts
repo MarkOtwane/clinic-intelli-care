@@ -136,6 +136,16 @@ export class AppointmentsController {
   }
 
   /**
+   * Get available doctors (publicly accessible for booking)
+   * IMPORTANT: Must come before @Get(':id') to avoid route conflicts
+   */
+  @Public()
+  @Get('doctors')
+  getAvailableDoctors() {
+    return this.appointmentsService.getAvailableDoctors();
+  }
+
+  /**
    * Get single appointment by ID
    */
   @Get(':id')
@@ -197,15 +207,6 @@ export class AppointmentsController {
       id,
       user.patientProfile.id,
     );
-  }
-
-  /**
-   * Get available doctors (publicly accessible for booking)
-   */
-  @Public()
-  @Get('doctors')
-  getAvailableDoctors() {
-    return this.appointmentsService.getAvailableDoctors();
   }
 
   /**
