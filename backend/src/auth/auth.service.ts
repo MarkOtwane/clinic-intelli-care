@@ -203,8 +203,15 @@ export class AuthService {
     const user = await this.prisma.user.findUnique({ where: { id: userId } });
     if (!user) throw new UnauthorizedException('User not found');
 
-    const valid = await bcrypt.compare(currentPassword, user.password);
-    if (!valid) throw new UnauthorizedException('Invalid current password');
+    // If currentPassword is provided (not empty), verify it
+    // If it's empty and mustChangePassword is true, allow password change
+    if (currentPassword) {
+      const valid = await bcrypt.compare(currentPassword, user.password);
+      if (!valid) throw new UnauthorizedException('Invalid current password');
+    } else if (!user.mustChangePassword) {
+      // If no current password provided and it's not a forced change, reject
+      throw new UnauthorizedException('Current password is required');
+    }
 
     const hashed = await bcrypt.hash(newPassword, this.SALT_ROUNDS);
     await this.prisma.user.update({
