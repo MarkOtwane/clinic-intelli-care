@@ -28,7 +28,6 @@ import {
 import { User, UserRole } from '../../../core/models/user.model';
 import { AppointmentsService } from '../../../core/services/appointments.service';
 import { AuthService } from '../../../core/services/auth.service';
-import { AppointmentBookingComponent } from './appointment-booking.component';
 
 interface CalendarDay {
   date: Date;
@@ -971,19 +970,7 @@ export class AppointmentCalendarComponent implements OnInit, OnDestroy {
   }
 
   openBookingDialog(): void {
-    const dialogRef = this.dialog.open(AppointmentBookingComponent, {
-      width: '90%',
-      maxWidth: '900px',
-      disableClose: false,
-      panelClass: 'appointment-booking-dialog',
-    });
-
-    dialogRef.afterClosed().subscribe((result) => {
-      if (result) {
-        // Refresh appointments if a new one was created
-        this.loadAppointments();
-      }
-    });
+    this.router.navigate(['/appointments/book']);
   }
 
   viewAppointment(appointment: Appointment): void {

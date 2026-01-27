@@ -20,6 +20,7 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatSelectModule } from '@angular/material/select';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { MatStepperModule } from '@angular/material/stepper';
+import { Router } from '@angular/router';
 
 import {
   Appointment,
@@ -361,7 +362,7 @@ interface TimeSlot {
                   <mat-icon>add</mat-icon>
                   Book Another Appointment
                 </button>
-                <button mat-button routerLink="/appointments">
+                <button mat-button (click)="viewMyAppointments()">
                   <mat-icon>calendar_month</mat-icon>
                   View My Appointments
                 </button>
@@ -780,6 +781,7 @@ export class AppointmentBookingComponent implements OnInit {
     private appointmentsService: AppointmentsService,
     private authService: AuthService,
     private snackBar: MatSnackBar,
+    private router: Router,
   ) {
     // Set minimum date to tomorrow
     this.minDate.setDate(this.minDate.getDate() + 1);
@@ -952,14 +954,14 @@ export class AppointmentBookingComponent implements OnInit {
     this.detailsForm.reset();
 
     // Reset stepper (this would require ViewChild reference in real implementation)
-    window.location.reload();
   }
 
   goHome(): void {
-    // Navigate to dashboard (would use Router in real implementation)
-    this.snackBar.open('Redirecting to dashboard...', 'Close', {
-      duration: 2000,
-    });
+    this.router.navigate(['/dashboard']);
+  }
+
+  viewMyAppointments(): void {
+    this.router.navigate(['/appointments']);
   }
 
   getDayName(dayOfWeek: number): string {

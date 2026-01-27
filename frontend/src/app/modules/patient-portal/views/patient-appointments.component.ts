@@ -10,7 +10,6 @@ import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { MatTabsModule } from '@angular/material/tabs';
 import { Router } from '@angular/router';
 import { AppointmentsService } from '../../../core/services/appointments.service';
-import { AppointmentBookingComponent } from '../../../modules/appointments/components/appointment-booking.component';
 import { CancelAppointmentDialogComponent } from '../components/cancel-appointment-dialog.component';
 
 @Component({
@@ -583,17 +582,7 @@ export class PatientAppointmentsComponent implements OnInit {
   }
 
   openBookingDialog(): void {
-    const dialogRef = this.dialog.open(AppointmentBookingComponent, {
-      width: '900px',
-      maxHeight: '90vh',
-      disableClose: false,
-    });
-
-    dialogRef.afterClosed().subscribe((result) => {
-      if (result) {
-        this.loadAppointments();
-      }
-    });
+    this.router.navigate(['/appointments/book']);
   }
 
   cancelAppointment(appointment: any): void {

@@ -2,12 +2,15 @@ import { CommonModule } from '@angular/common';
 import { Component, OnDestroy, OnInit } from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
 import { MatCardModule } from '@angular/material/card';
+import { MatChipsModule } from '@angular/material/chips';
+import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { MatGridListModule } from '@angular/material/grid-list';
 import { MatIconModule } from '@angular/material/icon';
+import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
+import { MatTabsModule } from '@angular/material/tabs';
 import { RouterModule } from '@angular/router';
 
-import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
-import { MatSnackBarModule } from '@angular/material/snack-bar';
 import { Subject } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
 import { Appointment } from '../../../core/models/appointment.model';
@@ -17,6 +20,7 @@ import { AppointmentsService } from '../../../core/services/appointments.service
 import { AuthService } from '../../../core/services/auth.service';
 import { PatientService } from '../../../core/services/patient.service';
 import { PrescriptionService } from '../../../core/services/prescription.service';
+import { CancelAppointmentDialogComponent } from '../../../modules/patient-portal/components/cancel-appointment-dialog.component';
 
 @Component({
   selector: 'app-patient-dashboard',
@@ -30,6 +34,9 @@ import { PrescriptionService } from '../../../core/services/prescription.service
     MatGridListModule,
     MatProgressSpinnerModule,
     MatSnackBarModule,
+    MatDialogModule,
+    MatChipsModule,
+    MatTabsModule,
   ],
   template: `
     <div
@@ -65,7 +72,7 @@ import { PrescriptionService } from '../../../core/services/prescription.service
 
       <div class="dashboard-grid">
         <mat-card
-          class="dashboard-card healthcare-card healthcare-card-primary slide-up"
+          class="dashboard-card healthcare-card healthcare-card-primary slide-up full-width"
           style="animation-delay: 0.1s"
         >
           <mat-card-header>
@@ -81,38 +88,236 @@ import { PrescriptionService } from '../../../core/services/prescription.service
               >
             </div>
           </mat-card-header>
-          <mat-card-content class="card-content">
-            <p class="card-description">
-              View and schedule your upcoming appointments with healthcare
-              providers. Manage your visit history and upcoming consultations.
-            </p>
-            <div class="card-stats">
-              <div class="stat-item">
-                <mat-icon class="stat-item-icon">check_circle</mat-icon>
-                <span>{{ confirmedAppointments }} confirmed</span>
-              </div>
-              <div class="stat-item">
-                <mat-icon class="stat-item-icon icon-warning"
-                  >schedule</mat-icon
+          <mat-card-content class="card-content full-width-content">
+            <div class="appointments-section">
+              <div class="appointments-header">
+                <div class="appointments-intro">
+                  <p>
+                    Book new appointments with doctors, track your upcoming
+                    visits, and manage your medical consultation schedule.
+                  </p>
+                </div>
+                <button
+                  mat-raised-button
+                  color="primary"
+                  routerLink="/patient-portal/appointments"
                 >
-                <span>{{ pendingAppointments }} pending</span>
+                  <mat-icon>add_circle</mat-icon>
+                  Book Appointment
+                </button>
               </div>
+
+              <mat-tab-group class="appointments-tabs">
+                <!-- Upcoming Tab -->
+                <mat-tab>
+                  <ng-template mat-tab-label>
+                    <mat-icon>event_available</mat-icon>
+                    Upcoming ({{ upcomingAppointments.length }})
+                  </ng-template>
+                  <div class="tab-content">
+                    <div
+                      *ngIf="
+                        !appointmentsLoading &&
+                        upcomingAppointments.length === 0
+                      "
+                      class="empty-state"
+                    >
+                      <mat-icon>event_busy</mat-icon>
+                      <h3>No upcoming appointments</h3>
+                      <p>Book an appointment with a doctor to get started</p>
+                    </div>
+                    <div
+                      class="appointments-list"
+                      *ngIf="
+                        !appointmentsLoading && upcomingAppointments.length > 0
+                      "
+                    >
+                      <mat-card
+                        class="appointment-item"
+                        *ngFor="let appointment of upcomingAppointments"
+                      >
+                        <div class="appointment-header">
+                          <div class="appointment-info">
+                            <h4>
+                              Dr. {{ appointment.doctor?.name || 'Unknown' }}
+                            </h4>
+                            <p class="appointment-spec">
+                              {{
+                                appointment.doctor?.specialization ||
+                                  'General Practice'
+                              }}
+                            </p>
+                          </div>
+                          <mat-chip
+                            [class]="
+                              'status-' + appointment.status.toLowerCase()
+                            "
+                          >
+                            {{ appointment.status }}
+                          </mat-chip>
+                        </div>
+                        <div class="appointment-details">
+                          <div class="detail">
+                            <mat-icon>event</mat-icon>
+                            <span>{{
+                              appointment.date | date: 'fullDate'
+                            }}</span>
+                          </div>
+                          <div class="detail">
+                            <mat-icon>schedule</mat-icon>
+                            <span>{{ appointment.time }}</span>
+                          </div>
+                          <div class="detail" *ngIf="appointment.notes">
+                            <mat-icon>notes</mat-icon>
+                            <span>{{ appointment.notes }}</span>
+                          </div>
+                        </div>
+                        <div class="appointment-actions">
+                          <button mat-button>
+                            <mat-icon>info</mat-icon>
+                            View Details
+                          </button>
+                          <button
+                            mat-button
+                            color="warn"
+                            (click)="cancelAppointment(appointment)"
+                          >
+                            <mat-icon>cancel</mat-icon>
+                            Cancel
+                          </button>
+                        </div>
+                      </mat-card>
+                    </div>
+                  </div>
+                </mat-tab>
+
+                <!-- Pending Tab -->
+                <mat-tab>
+                  <ng-template mat-tab-label>
+                    <mat-icon>pending</mat-icon>
+                    Pending ({{ pendingAppointments.length }})
+                  </ng-template>
+                  <div class="tab-content">
+                    <div
+                      *ngIf="
+                        !appointmentsLoading && pendingAppointments.length === 0
+                      "
+                      class="empty-state"
+                    >
+                      <mat-icon>check_circle</mat-icon>
+                      <h3>No pending appointments</h3>
+                      <p>All your appointments have been reviewed</p>
+                    </div>
+                    <div
+                      class="appointments-list"
+                      *ngIf="
+                        !appointmentsLoading && pendingAppointments.length > 0
+                      "
+                    >
+                      <mat-card
+                        class="appointment-item pending-item"
+                        *ngFor="let appointment of pendingAppointments"
+                      >
+                        <div class="appointment-header">
+                          <div class="appointment-info">
+                            <h4>
+                              Dr. {{ appointment.doctor?.name || 'Unknown' }}
+                            </h4>
+                            <p class="appointment-spec">
+                              {{
+                                appointment.doctor?.specialization ||
+                                  'General Practice'
+                              }}
+                            </p>
+                          </div>
+                          <mat-chip class="status-pending">PENDING</mat-chip>
+                        </div>
+                        <div class="appointment-details">
+                          <div class="detail">
+                            <mat-icon>event</mat-icon>
+                            <span>{{
+                              appointment.date | date: 'fullDate'
+                            }}</span>
+                          </div>
+                          <div class="detail">
+                            <mat-icon>schedule</mat-icon>
+                            <span>{{ appointment.time }}</span>
+                          </div>
+                        </div>
+                        <div class="pending-notice">
+                          <mat-icon>info</mat-icon>
+                          <p>Waiting for doctor approval</p>
+                        </div>
+                        <div class="appointment-actions">
+                          <button
+                            mat-button
+                            color="warn"
+                            (click)="cancelAppointment(appointment)"
+                          >
+                            <mat-icon>cancel</mat-icon>
+                            Cancel Request
+                          </button>
+                        </div>
+                      </mat-card>
+                    </div>
+                  </div>
+                </mat-tab>
+
+                <!-- History Tab -->
+                <mat-tab>
+                  <ng-template mat-tab-label>
+                    <mat-icon>history</mat-icon>
+                    History ({{ pastAppointments.length }})
+                  </ng-template>
+                  <div class="tab-content">
+                    <div
+                      *ngIf="
+                        !appointmentsLoading && pastAppointments.length === 0
+                      "
+                      class="empty-state"
+                    >
+                      <mat-icon>history</mat-icon>
+                      <h3>No appointment history</h3>
+                      <p>Your past appointments will appear here</p>
+                    </div>
+                    <div
+                      class="appointments-timeline"
+                      *ngIf="
+                        !appointmentsLoading && pastAppointments.length > 0
+                      "
+                    >
+                      <div
+                        class="timeline-item"
+                        *ngFor="let appointment of pastAppointments"
+                      >
+                        <div class="timeline-marker"></div>
+                        <div class="timeline-content">
+                          <div class="timeline-header">
+                            <strong>Dr. {{ appointment.doctor?.name }}</strong>
+                            <mat-chip
+                              [class]="
+                                'status-' + appointment.status.toLowerCase()
+                              "
+                            >
+                              {{ appointment.status }}
+                            </mat-chip>
+                          </div>
+                          <p class="timeline-date">
+                            {{ appointment.date | date: 'MMM d, y' }} at
+                            {{ appointment.time }}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </mat-tab>
+              </mat-tab-group>
             </div>
           </mat-card-content>
-          <mat-card-actions class="card-actions">
-            <button
-              mat-raised-button
-              routerLink="appointments"
-              class="btn-primary"
-            >
-              <mat-icon>arrow_forward</mat-icon>
-              Manage Appointments
-            </button>
-          </mat-card-actions>
         </mat-card>
 
         <mat-card
-          class="dashboard-card healthcare-card healthcare-card-secondary slide-up"
+          class="dashboard-card healthcare-card healthcare-card-health slide-up"
           style="animation-delay: 0.2s"
         >
           <mat-card-header>
@@ -477,8 +682,257 @@ import { PrescriptionService } from '../../../core/services/prescription.service
 
       .dashboard-grid {
         display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+        grid-template-columns: 1fr;
         gap: var(--space-6);
+      }
+
+      .full-width {
+        grid-column: 1 / -1;
+      }
+
+      .full-width-content {
+        padding: 0;
+      }
+
+      .appointments-section {
+        display: flex;
+        flex-direction: column;
+        gap: var(--space-4);
+      }
+
+      .appointments-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: var(--space-4);
+        padding: var(--space-6);
+        border-bottom: 1px solid var(--gray-200);
+      }
+
+      .appointments-intro {
+        flex: 1;
+      }
+
+      .appointments-intro p {
+        margin: 0;
+        color: var(--gray-600);
+        line-height: 1.6;
+      }
+
+      .appointments-tabs {
+        padding: var(--space-6);
+      }
+
+      .tab-content {
+        padding: var(--space-4) 0;
+        min-height: 300px;
+      }
+
+      .appointments-list {
+        display: flex;
+        flex-direction: column;
+        gap: var(--space-3);
+      }
+
+      .appointment-item {
+        padding: var(--space-4);
+        border: 1px solid var(--gray-200);
+        border-radius: var(--radius-lg);
+        transition: all 0.2s ease;
+      }
+
+      .appointment-item:hover {
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+        border-color: var(--primary-200);
+      }
+
+      .appointment-item.pending-item {
+        border-left: 4px solid #ff9800;
+      }
+
+      .appointment-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        gap: var(--space-3);
+        margin-bottom: var(--space-3);
+      }
+
+      .appointment-info h4 {
+        margin: 0 0 4px 0;
+        font-size: 16px;
+        font-weight: 600;
+        color: var(--gray-800);
+      }
+
+      .appointment-spec {
+        margin: 0;
+        font-size: 13px;
+        color: var(--gray-500);
+      }
+
+      .appointment-details {
+        display: flex;
+        flex-direction: column;
+        gap: var(--space-2);
+        margin: var(--space-3) 0;
+        padding: var(--space-3) 0;
+      }
+
+      .detail {
+        display: flex;
+        align-items: center;
+        gap: var(--space-2);
+        font-size: 14px;
+        color: var(--gray-700);
+      }
+
+      .detail mat-icon {
+        font-size: 18px;
+        width: 18px;
+        height: 18px;
+        color: var(--gray-500);
+      }
+
+      .pending-notice {
+        display: flex;
+        align-items: center;
+        gap: var(--space-2);
+        padding: var(--space-3);
+        background: #fff3e0;
+        border-radius: var(--radius-md);
+        margin: var(--space-3) 0;
+      }
+
+      .pending-notice mat-icon {
+        color: #f57c00;
+        font-size: 18px;
+      }
+
+      .pending-notice p {
+        margin: 0;
+        color: #e65100;
+        font-weight: 500;
+        font-size: 14px;
+      }
+
+      .status-pending {
+        background-color: #fff3e0;
+        color: #e65100;
+      }
+
+      .status-confirmed {
+        background-color: #e8f5e9;
+        color: #2e7d32;
+      }
+
+      .status-scheduled {
+        background-color: #e3f2fd;
+        color: #1565c0;
+      }
+
+      .status-completed {
+        background-color: #f3e5f5;
+        color: #6a1b9a;
+      }
+
+      .status-cancelled {
+        background-color: #ffebee;
+        color: #c62828;
+      }
+
+      .appointment-actions {
+        display: flex;
+        gap: var(--space-2);
+        padding-top: var(--space-3);
+        border-top: 1px solid var(--gray-100);
+      }
+
+      .appointment-actions button {
+        font-size: 13px;
+      }
+
+      .empty-state {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        padding: var(--space-8);
+        text-align: center;
+        gap: var(--space-3);
+      }
+
+      .empty-state mat-icon {
+        font-size: 64px;
+        width: 64px;
+        height: 64px;
+        color: var(--gray-300);
+      }
+
+      .empty-state h3 {
+        margin: 0;
+        font-size: 18px;
+        color: var(--gray-700);
+      }
+
+      .empty-state p {
+        margin: 0;
+        color: var(--gray-500);
+      }
+
+      .appointments-timeline {
+        position: relative;
+        padding: var(--space-4) 0;
+      }
+
+      .timeline-item {
+        display: flex;
+        gap: var(--space-4);
+        padding: var(--space-4);
+        position: relative;
+      }
+
+      .timeline-item:not(:last-child)::after {
+        content: '';
+        position: absolute;
+        left: 11px;
+        top: 50px;
+        width: 2px;
+        height: calc(100% - 30px);
+        background: var(--gray-200);
+      }
+
+      .timeline-marker {
+        width: 24px;
+        height: 24px;
+        background: var(--primary-500);
+        border-radius: 50%;
+        flex-shrink: 0;
+        margin-top: 2px;
+        border: 3px solid white;
+        box-shadow: 0 0 0 2px var(--primary-200);
+      }
+
+      .timeline-content {
+        padding: var(--space-2) 0;
+        flex: 1;
+      }
+
+      .timeline-header {
+        display: flex;
+        align-items: center;
+        gap: var(--space-2);
+        margin-bottom: var(--space-1);
+      }
+
+      .timeline-header strong {
+        color: var(--gray-800);
+      }
+
+      .timeline-date {
+        margin: 0;
+        font-size: 13px;
+        color: var(--gray-500);
       }
 
       .dashboard-card {
@@ -752,14 +1206,14 @@ export class PatientDashboardComponent implements OnInit, OnDestroy {
   appointments: Appointment[] = [];
   prescriptions: Prescription[] = [];
   isLoading = true;
+  appointmentsLoading = true;
+  upcomingAppointments: any[] = [];
+  pendingAppointments: any[] = [];
+  pastAppointments: any[] = [];
   private destroy$ = new Subject<void>();
 
   get confirmedAppointments(): number {
     return this.appointments.filter((a) => a.status === 'CONFIRMED').length;
-  }
-
-  get pendingAppointments(): number {
-    return this.appointments.filter((a) => a.status === 'SCHEDULED').length;
   }
 
   constructor(
@@ -767,6 +1221,8 @@ export class PatientDashboardComponent implements OnInit, OnDestroy {
     private patientService: PatientService,
     private appointmentsService: AppointmentsService,
     private prescriptionService: PrescriptionService,
+    private dialog: MatDialog,
+    private snackBar: MatSnackBar,
   ) {}
 
   ngOnInit(): void {
@@ -804,11 +1260,13 @@ export class PatientDashboardComponent implements OnInit, OnDestroy {
       .subscribe({
         next: (appointments) => {
           this.appointments = appointments || [];
+          this.organizeAppointments();
           this.checkLoadingComplete();
         },
         error: (error) => {
           console.error('Error loading appointments:', error);
           this.appointments = [];
+          this.appointmentsLoading = false;
           this.checkLoadingComplete();
         },
       });
@@ -826,6 +1284,77 @@ export class PatientDashboardComponent implements OnInit, OnDestroy {
           console.error('Error loading prescriptions:', error);
           this.prescriptions = [];
           this.checkLoadingComplete();
+        },
+      });
+  }
+
+  private organizeAppointments(): void {
+    const now = new Date();
+
+    this.pendingAppointments = this.appointments.filter(
+      (apt: any) => apt.status === 'PENDING',
+    );
+
+    this.upcomingAppointments = this.appointments.filter(
+      (apt: any) =>
+        (apt.status === 'CONFIRMED' || apt.status === 'SCHEDULED') &&
+        new Date(apt.date) >= now,
+    );
+
+    this.pastAppointments = this.appointments.filter(
+      (apt: any) =>
+        apt.status === 'COMPLETED' ||
+        apt.status === 'CANCELLED' ||
+        (new Date(apt.date) < now && apt.status !== 'PENDING'),
+    );
+
+    this.appointmentsLoading = false;
+  }
+
+  cancelAppointment(appointment: any): void {
+    const dialogRef = this.dialog.open(CancelAppointmentDialogComponent, {
+      width: '450px',
+      disableClose: false,
+    });
+
+    dialogRef.afterClosed().subscribe((reason: any) => {
+      if (reason !== null && reason !== undefined) {
+        this.appointmentsService
+          .cancelAppointment(appointment.id, reason || undefined)
+          .subscribe({
+            next: () => {
+              this.snackBar.open(
+                '✓ Appointment cancelled successfully',
+                'Close',
+                {
+                  duration: 4000,
+                  panelClass: 'success-snackbar',
+                },
+              );
+              this.loadAppointmentsOnly();
+            },
+            error: () => {
+              this.snackBar.open('✗ Failed to cancel appointment', 'Close', {
+                duration: 4000,
+                panelClass: 'error-snackbar',
+              });
+            },
+          });
+      }
+    });
+  }
+
+  private loadAppointmentsOnly(): void {
+    this.appointmentsService
+      .getMyAppointments()
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (appointments) => {
+          this.appointments = appointments || [];
+          this.organizeAppointments();
+        },
+        error: (error) => {
+          console.error('Error loading appointments:', error);
         },
       });
   }
