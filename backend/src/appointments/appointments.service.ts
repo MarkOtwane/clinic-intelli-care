@@ -477,6 +477,140 @@ export class AppointmentsService {
   }
 
   /**
+   * Approve appointment (DOCTOR only)
+   * Changes status from PENDING to CONFIRMED
+   * @param id - Appointment ID
+   * @param doctorId - Doctor ID (to verify ownership)
+   * @returns Updated appointment
+   */
+  async approveAppointment(id: string, doctorId: string) {
+    const appointment = await this.prisma.appointment.findUnique({
+      where: { id },
+      include: { patient: true, doctor: true },
+    });
+
+    if (!appointment) {
+      throw new NotFoundException('Appointment not found');
+    }
+
+    if (appointment.doctorId !== doctorId) {
+      throw new ForbiddenException(
+        'You can only approve your own appointments',
+      );
+    }
+
+    if (appointment.status !== 'PENDING') {
+      throw new BadRequestException(
+        `Cannot approve appointment with status: ${appointment.status}`,
+      );
+    }
+
+    const approvedAppointment = await this.prisma.appointment.update({
+      where: { id },
+      data: { status: 'CONFIRMED', updatedAt: new Date() },
+      include: {
+        doctor: true,
+        patient: true,
+      },
+    });
+
+    // Notify patient
+    try {
+      const patient = await this.prisma.patient.findUnique({
+        where: { id: appointment.patientId },
+        include: { user: true },
+      });
+
+      if (patient?.user?.id) {
+        await this.prisma.notification.create({
+          data: {
+            title: 'Appointment Confirmed',
+            message: `Your appointment with Dr. ${appointment.doctor.name} on ${appointment.date.toDateString()} at ${appointment.time} has been confirmed.`,
+            userId: patient.user.id,
+            type: 'BOTH',
+            scheduledAt: appointment.date,
+          },
+        });
+      }
+    } catch (error) {
+      console.error('Failed to create notification:', error);
+    }
+
+    return approvedAppointment;
+  }
+
+  /**
+   * Reject appointment (DOCTOR only)
+   * Changes status from PENDING to CANCELLED with rejection reason
+   * @param id - Appointment ID
+   * @param doctorId - Doctor ID (to verify ownership)
+   * @param reason - Optional rejection reason
+   * @returns Updated appointment
+   */
+  async rejectAppointment(id: string, doctorId: string, reason?: string) {
+    const appointment = await this.prisma.appointment.findUnique({
+      where: { id },
+      include: { patient: true, doctor: true },
+    });
+
+    if (!appointment) {
+      throw new NotFoundException('Appointment not found');
+    }
+
+    if (appointment.doctorId !== doctorId) {
+      throw new ForbiddenException('You can only reject your own appointments');
+    }
+
+    if (appointment.status !== 'PENDING') {
+      throw new BadRequestException(
+        `Cannot reject appointment with status: ${appointment.status}`,
+      );
+    }
+
+    const rejectedAppointment = await this.prisma.appointment.update({
+      where: { id },
+      data: {
+        status: 'CANCELLED',
+        notes: reason
+          ? `${appointment.notes || ''}\n\nRejection reason: ${reason}`
+          : appointment.notes,
+        updatedAt: new Date(),
+      },
+      include: {
+        doctor: true,
+        patient: true,
+      },
+    });
+
+    // Notify patient
+    try {
+      const patient = await this.prisma.patient.findUnique({
+        where: { id: appointment.patientId },
+        include: { user: true },
+      });
+
+      if (patient?.user?.id) {
+        const message = reason
+          ? `Your appointment with Dr. ${appointment.doctor.name} on ${appointment.date.toDateString()} at ${appointment.time} has been declined. Reason: ${reason}`
+          : `Your appointment with Dr. ${appointment.doctor.name} on ${appointment.date.toDateString()} at ${appointment.time} has been declined.`;
+
+        await this.prisma.notification.create({
+          data: {
+            title: 'Appointment Declined',
+            message,
+            userId: patient.user.id,
+            type: 'BOTH',
+          },
+        });
+      }
+    } catch (error) {
+      console.error('Failed to create notification:', error);
+    }
+
+    return rejectedAppointment;
+  }
+
+  /**
    * Get available time slots for a doctor on a specific date
    * @param doctorId - Doctor ID
    * @param date - Date to check

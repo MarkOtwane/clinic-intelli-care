@@ -186,6 +186,56 @@ export class AppointmentsController {
   }
 
   /**
+   * Approve appointment (DOCTOR only)
+   */
+  @Patch(':id/approve')
+  @Roles('DOCTOR')
+  async approveAppointment(
+    @Param('id') id: string,
+    @CurrentUser('id') userId: string,
+  ) {
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+      include: { doctorProfile: true },
+    });
+
+    if (!user || !user.doctorProfile) {
+      throw new BadRequestException('Doctor profile not found');
+    }
+
+    return this.appointmentsService.approveAppointment(
+      id,
+      user.doctorProfile.id,
+    );
+  }
+
+  /**
+   * Reject appointment (DOCTOR only)
+   */
+  @Patch(':id/reject')
+  @Roles('DOCTOR')
+  async rejectAppointment(
+    @Param('id') id: string,
+    @CurrentUser('id') userId: string,
+    @Body() body: { reason?: string },
+  ) {
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+      include: { doctorProfile: true },
+    });
+
+    if (!user || !user.doctorProfile) {
+      throw new BadRequestException('Doctor profile not found');
+    }
+
+    return this.appointmentsService.rejectAppointment(
+      id,
+      user.doctorProfile.id,
+      body.reason,
+    );
+  }
+
+  /**
    * Cancel appointment (PATIENT only, own appointments)
    */
   @Delete(':id')

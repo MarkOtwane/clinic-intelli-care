@@ -42,6 +42,13 @@ export class DoctorsController {
     return this.doctorsService.getAllDoctors();
   }
 
+  @Get('dashboard')
+  @Roles('DOCTOR')
+  getDashboard(@CurrentUser('id') userId: string) {
+    // Find the doctor associated with this user
+    return this.doctorsService.getDoctorDashboardByUserId(userId);
+  }
+
   @Get(':id')
   @Roles('ADMIN', 'DOCTOR', 'PATIENT')
   getDoctorById(@Param('id') id: string) {
@@ -73,12 +80,5 @@ export class DoctorsController {
   @Roles('ADMIN')
   deleteDoctor(@Param('id') id: string) {
     return this.doctorsService.deleteDoctor(id);
-  }
-
-  @Get('dashboard')
-  @Roles('DOCTOR')
-  getDashboard(@CurrentUser('id') userId: string) {
-    // Find the doctor associated with this user
-    return this.doctorsService.getDoctorDashboardByUserId(userId);
   }
 }
