@@ -74,4 +74,11 @@ export class DoctorsController {
   deleteDoctor(@Param('id') id: string) {
     return this.doctorsService.deleteDoctor(id);
   }
+
+  @Get('dashboard')
+  @Roles('DOCTOR')
+  getDashboard(@CurrentUser('id') userId: string) {
+    // Find the doctor associated with this user
+    return this.doctorsService.getDoctorDashboardByUserId(userId);
+  }
 }

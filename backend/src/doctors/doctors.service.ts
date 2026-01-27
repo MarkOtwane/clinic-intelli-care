@@ -152,4 +152,120 @@ export class DoctorsService {
     await this.prisma.doctor.delete({ where: { id } });
     return { message: 'Doctor deleted successfully' };
   }
+
+  async getDoctorDashboard(doctorId: string) {
+    const doctor = await this.prisma.doctor.findUnique({
+      where: { id: doctorId },
+      include: { user: true },
+    });
+
+    if (!doctor) throw new NotFoundException('Doctor not found');
+
+    // Get upcoming appointments
+    const upcomingAppointments = await this.prisma.appointment.findMany({
+      where: {
+        doctorId,
+        date: { gte: new Date() },
+        status: { in: ['SCHEDULED', 'CONFIRMED', 'PENDING'] },
+      },
+      include: {
+        patient: {
+          select: {
+            id: true,
+            name: true,
+            age: true,
+            gender: true,
+            phone: true,
+            address: true,
+          },
+        },
+      },
+      orderBy: { date: 'asc' },
+      take: 10,
+    });
+
+    // Get recent appointments (completed/in past)
+    const recentAppointments = await this.prisma.appointment.findMany({
+      where: {
+        doctorId,
+        date: { lt: new Date() },
+      },
+      include: {
+        patient: {
+          select: {
+            id: true,
+            name: true,
+            age: true,
+            gender: true,
+            phone: true,
+          },
+        },
+      },
+      orderBy: { date: 'desc' },
+      take: 5,
+    });
+
+    // Get total appointments count
+    const totalAppointments = await this.prisma.appointment.count({
+      where: { doctorId },
+    });
+
+    // Get total prescriptions issued
+    const totalPrescriptions = await this.prisma.prescription.count({
+      where: { doctorId },
+    });
+
+    // Get total patients seen
+    const totalPatients = await this.prisma.appointment.findMany({
+      where: { doctorId },
+      distinct: ['patientId'],
+      select: { patientId: true },
+    });
+
+    // Get pending appointments count
+    const pendingAppointments = await this.prisma.appointment.count({
+      where: {
+        doctorId,
+        status: 'PENDING',
+      },
+    });
+
+    return {
+      doctor: {
+        id: doctor.id,
+        name: doctor.name,
+        specialization: doctor.specialization,
+        phone: doctor.phone,
+        bio: doctor.bio,
+        experience: doctor.experience,
+        available: doctor.available,
+      },
+      stats: {
+        totalAppointments,
+        totalPrescriptions,
+        totalPatients: totalPatients.length,
+        pendingAppointments,
+        upcomingAppointmentsCount: upcomingAppointments.length,
+      },
+      upcomingAppointments,
+      recentAppointments,
+    };
+  }
+
+  async getDoctorDashboardByUserId(userId: string) {
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+      include: { doctorProfile: true },
+    });
+
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+
+    if (!user.doctorProfile) {
+      throw new NotFoundException('Doctor profile not found');
+    }
+
+    return this.getDoctorDashboard(user.doctorProfile.id);
+  }
 }
