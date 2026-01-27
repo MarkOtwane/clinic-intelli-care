@@ -1,10 +1,14 @@
-import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Observable, BehaviorSubject } from 'rxjs';
-import { Notification, NotificationType, CreateNotificationRequest, NotificationPreferences } from '../models/notification.model';
+import { Injectable } from '@angular/core';
+import { BehaviorSubject, Observable } from 'rxjs';
+import {
+  CreateNotificationRequest,
+  Notification,
+  NotificationPreferences,
+} from '../models/notification.model';
 
 @Injectable({
-  providedIn: 'root'
+  providedIn: 'root',
 })
 export class NotificationService {
   private readonly apiUrl = '/api/notifications';
@@ -14,15 +18,26 @@ export class NotificationService {
   constructor(private http: HttpClient) {}
 
   /**
+   * Get all notifications for the current user
+   */
+  findByUser(userId: string): Observable<any[]> {
+    return this.http.get<any[]>(`${this.apiUrl}/user`);
+  }
+
+  /**
    * Get all notifications for a user
    */
-  getNotifications(userId: string, page = 1, limit = 20): Observable<{
+  getNotifications(
+    userId: string,
+    page = 1,
+    limit = 20,
+  ): Observable<{
     notifications: Notification[];
     total: number;
     unreadCount: number;
   }> {
     return this.http.get<any>(`${this.apiUrl}/user/${userId}`, {
-      params: { page: page.toString(), limit: limit.toString() }
+      params: { page: page.toString(), limit: limit.toString() },
     });
   }
 
@@ -37,7 +52,10 @@ export class NotificationService {
    * Mark notification as read
    */
   markAsRead(notificationId: string): Observable<Notification> {
-    return this.http.patch<Notification>(`${this.apiUrl}/${notificationId}/read`, {});
+    return this.http.patch<Notification>(
+      `${this.apiUrl}/${notificationId}/read`,
+      {},
+    );
   }
 
   /**
@@ -50,7 +68,9 @@ export class NotificationService {
   /**
    * Create notification (admin only)
    */
-  createNotification(notification: CreateNotificationRequest): Observable<Notification> {
+  createNotification(
+    notification: CreateNotificationRequest,
+  ): Observable<Notification> {
     return this.http.post<Notification>(this.apiUrl, notification);
   }
 
@@ -65,23 +85,34 @@ export class NotificationService {
    * Get notification preferences
    */
   getPreferences(userId: string): Observable<NotificationPreferences> {
-    return this.http.get<NotificationPreferences>(`${this.apiUrl}/user/${userId}/preferences`);
+    return this.http.get<NotificationPreferences>(
+      `${this.apiUrl}/user/${userId}/preferences`,
+    );
   }
 
   /**
    * Update notification preferences
    */
-  updatePreferences(userId: string, preferences: Partial<NotificationPreferences>): Observable<NotificationPreferences> {
-    return this.http.patch<NotificationPreferences>(`${this.apiUrl}/user/${userId}/preferences`, preferences);
+  updatePreferences(
+    userId: string,
+    preferences: Partial<NotificationPreferences>,
+  ): Observable<NotificationPreferences> {
+    return this.http.patch<NotificationPreferences>(
+      `${this.apiUrl}/user/${userId}/preferences`,
+      preferences,
+    );
   }
 
   /**
    * Send notification to multiple users
    */
-  sendBulkNotification(userIds: string[], notification: Omit<CreateNotificationRequest, 'userId'>): Observable<Notification[]> {
+  sendBulkNotification(
+    userIds: string[],
+    notification: Omit<CreateNotificationRequest, 'userId'>,
+  ): Observable<Notification[]> {
     return this.http.post<Notification[]>(`${this.apiUrl}/bulk`, {
       userIds,
-      ...notification
+      ...notification,
     });
   }
 

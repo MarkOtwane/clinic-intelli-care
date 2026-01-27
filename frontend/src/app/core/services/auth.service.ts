@@ -130,16 +130,11 @@ export class AuthService {
     currentPassword: string,
     newPassword: string,
   ): Observable<{ message: string }> {
-    return this.http
-      .post<{
-        message: string;
-      }>(`${this.apiUrl}/change-password`, { currentPassword, newPassword }, { withCredentials: true })
-      .pipe(
-        tap(() => {
-          // Password changed successfully, will need to login again
-          this.logout();
-        }),
-      );
+    return this.http.post<{ message: string }>(
+      `${this.apiUrl}/change-password`,
+      { currentPassword, newPassword },
+      { withCredentials: true },
+    );
   }
 
   isAuthenticated(): boolean {
