@@ -12,6 +12,8 @@ import { MatTabsModule } from '@angular/material/tabs';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { AppointmentsService } from '../../../core/services/appointments.service';
 import { DoctorsService } from '../../../core/services/doctors.service';
+import { PatientDetailsDialogComponent } from '../components/patient-details-dialog.component';
+import { ScheduleFollowupDialogComponent } from '../components/schedule-followup-dialog.component';
 
 @Component({
   selector: 'app-doctor-appointments',
