@@ -911,8 +911,6 @@ export class AppointmentBookingComponent implements OnInit {
         .split('T')[0],
       time: this.scheduleForm.get('selectedTime')?.value,
       notes: this.detailsForm.get('notes')?.value,
-      type: this.detailsForm.get('appointmentType')?.value,
-      isEmergency: this.detailsForm.get('isEmergency')?.value,
     };
 
     this.appointmentsService.createAppointment(appointmentRequest).subscribe({

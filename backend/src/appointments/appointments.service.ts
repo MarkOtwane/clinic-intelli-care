@@ -487,7 +487,7 @@ export class AppointmentsService {
     const dayOfWeek = appointmentDate.getDay(); // 0 = Sunday, 1 = Monday, etc.
 
     // Check if doctor has availability set for this day
-    const doctorAvailabilities = await this.prisma.doctorAvailability.findMany({
+    let doctorAvailabilities = await this.prisma.doctorAvailability.findMany({
       where: {
         doctorId,
         dayOfWeek,
@@ -496,8 +496,25 @@ export class AppointmentsService {
       orderBy: { startTime: 'asc' },
     });
 
+    // If no specific availability is set, use default business hours (9 AM - 5 PM, Mon-Fri)
     if (doctorAvailabilities.length === 0) {
-      return []; // Doctor not available on this day
+      // Skip weekends (0 = Sunday, 6 = Saturday)
+      if (dayOfWeek === 0 || dayOfWeek === 6) {
+        return []; // Doctor not available on weekends
+      }
+      // Create default availability: 9 AM to 5 PM
+      doctorAvailabilities = [
+        {
+          id: 'default',
+          doctorId,
+          dayOfWeek,
+          startTime: '09:00',
+          endTime: '17:00',
+          isAvailable: true,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        },
+      ] as any;
     }
 
     // Get all appointments for the doctor on this date

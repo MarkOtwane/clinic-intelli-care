@@ -21,14 +21,14 @@ export enum AppointmentStatus {
   IN_PROGRESS = 'IN_PROGRESS',
   COMPLETED = 'COMPLETED',
   CANCELLED = 'CANCELLED',
-  NO_SHOW = 'NO_SHOW'
+  NO_SHOW = 'NO_SHOW',
 }
 
 export enum AppointmentType {
   CONSULTATION = 'CONSULTATION',
   FOLLOW_UP = 'FOLLOW_UP',
   EMERGENCY = 'EMERGENCY',
-  TELEMEDICINE = 'TELEMEDICINE'
+  TELEMEDICINE = 'TELEMEDICINE',
 }
 
 export interface AppointmentRequest {
@@ -45,8 +45,6 @@ export interface CreateAppointmentRequest {
   date: string;
   time: string;
   notes?: string;
-  type?: AppointmentType;
-  isEmergency?: boolean;
 }
 
 export interface DoctorSchedule {
