@@ -913,6 +913,18 @@ export class DoctorAppointmentsComponent implements OnInit {
     this.isLoading = true;
     this.doctorsService.getDoctorDashboard().subscribe({
       next: (data: any) => {
+        console.log('Dashboard data received:', data);
+
+        // Ensure we have appointments data
+        if (!data || !data.upcomingAppointments) {
+          console.warn('No appointments data received');
+          this.pendingAppointments = [];
+          this.upcomingAppointments = [];
+          this.todayAppointments = [];
+          this.isLoading = false;
+          return;
+        }
+
         // Filter pending appointments
         this.pendingAppointments = data.upcomingAppointments.filter(
           (apt: any) => apt.status === 'PENDING',
@@ -934,7 +946,19 @@ export class DoctorAppointmentsComponent implements OnInit {
       },
       error: (error: any) => {
         console.error('Failed to load appointments:', error);
+        console.error('Error details:', {
+          status: error.status,
+          statusText: error.statusText,
+          message: error.message,
+          url: error.url,
+        });
         this.isLoading = false;
+
+        // Reset arrays on error
+        this.pendingAppointments = [];
+        this.upcomingAppointments = [];
+        this.todayAppointments = [];
+
         this.snackBar.open('Failed to load appointments', 'Close', {
           duration: 3000,
         });

@@ -164,7 +164,8 @@ model Appointment {
   id        String   @id @default(uuid())
   date      DateTime
   time      String
-  status    String   @default("PENDING") // PENDING, CONFIRMED, COMPLETED, CANCELLED
+  type      String   @default("General Checkup") // Follow-up, Review, Check-in, Physical, General Checkup, etc.
+  status    String   @default("PENDING") // PENDING, CONFIRMED, COMPLETED, CANCELLED, SCHEDULED
   notes     String?
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
