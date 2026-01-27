@@ -37,10 +37,16 @@ import { BlogService } from '../../../core/services/blog.service';
             </mat-card-subtitle>
           </mat-card-header>
           <mat-card-content>
-            <p>{{ blog.content || '' | slice : 0 : 150 }}...</p>
+            <p>{{ blog.content || '' | slice: 0 : 150 }}...</p>
           </mat-card-content>
           <mat-card-actions>
-            <button mat-button color="primary">Read More</button>
+            <button
+              mat-button
+              color="primary"
+              [routerLink]="['/blogs', blog.id]"
+            >
+              Read More
+            </button>
           </mat-card-actions>
         </mat-card>
       </div>
@@ -71,7 +77,9 @@ import { BlogService } from '../../../core/services/blog.service';
       }
 
       .blog-card {
-        transition: transform 0.2s, box-shadow 0.2s;
+        transition:
+          transform 0.2s,
+          box-shadow 0.2s;
       }
 
       .blog-card:hover {

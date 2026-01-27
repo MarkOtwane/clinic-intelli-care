@@ -56,7 +56,7 @@ import { CancelAppointmentDialogComponent } from '../../../modules/patient-porta
           <div class="stat-card">
             <mat-icon class="stat-icon icon-success">event_available</mat-icon>
             <div class="stat-content">
-              <div class="stat-number">{{ appointments.length }}</div>
+              <div class="stat-number">{{ upcomingAppointments.length }}</div>
               <div class="stat-label">Upcoming Appointments</div>
             </div>
           </div>
@@ -67,8 +67,48 @@ import { CancelAppointmentDialogComponent } from '../../../modules/patient-porta
               <div class="stat-label">Active Prescriptions</div>
             </div>
           </div>
+          <div class="stat-card">
+            <mat-icon class="stat-icon icon-warning">pending_actions</mat-icon>
+            <div class="stat-content">
+              <div class="stat-number">{{ pendingAppointments.length }}</div>
+              <div class="stat-label">Pending Approvals</div>
+            </div>
+          </div>
         </div>
       </div>
+
+      <!-- Activity Overview -->
+      <mat-card class="activity-overview slide-up">
+        <mat-card-header>
+          <mat-card-title>
+            <mat-icon>timeline</mat-icon>
+            Recent Activity
+          </mat-card-title>
+        </mat-card-header>
+        <mat-card-content>
+          <div class="activity-list">
+            <div
+              class="activity-item"
+              *ngFor="let activity of recentActivities"
+            >
+              <div class="activity-icon" [class]="'activity-' + activity.type">
+                <mat-icon>{{ activity.icon }}</mat-icon>
+              </div>
+              <div class="activity-content">
+                <div class="activity-title">{{ activity.title }}</div>
+                <div class="activity-description">
+                  {{ activity.description }}
+                </div>
+                <div class="activity-time">{{ activity.time }}</div>
+              </div>
+            </div>
+            <div *ngIf="recentActivities.length === 0" class="no-activity">
+              <mat-icon>info</mat-icon>
+              <p>No recent activity to display</p>
+            </div>
+          </div>
+        </mat-card-content>
+      </mat-card>
 
       <div class="dashboard-grid">
         <mat-card
@@ -1198,6 +1238,151 @@ import { CancelAppointmentDialogComponent } from '../../../modules/patient-porta
         color: var(--gray-500) !important;
         font-style: italic;
       }
+
+      .activity-overview {
+        grid-column: 1 / -1;
+        margin-bottom: var(--space-6);
+      }
+
+      .activity-overview mat-card-header {
+        padding: var(--space-6);
+        border-bottom: 1px solid var(--gray-200);
+      }
+
+      .activity-overview mat-card-title {
+        display: flex;
+        align-items: center;
+        gap: var(--space-2);
+        margin: 0;
+        font-size: var(--font-size-xl);
+        font-weight: 600;
+        color: var(--gray-800);
+      }
+
+      .activity-overview mat-icon {
+        color: var(--primary-500);
+      }
+
+      .activity-list {
+        padding: var(--space-6);
+        display: flex;
+        flex-direction: column;
+        gap: var(--space-4);
+      }
+
+      .activity-item {
+        display: flex;
+        gap: var(--space-4);
+        padding: var(--space-4);
+        border-radius: var(--radius-lg);
+        background: var(--gray-50);
+        transition: all 0.2s ease;
+      }
+
+      .activity-item:hover {
+        background: var(--gray-100);
+      }
+
+      .activity-icon {
+        width: 48px;
+        height: 48px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+        color: white;
+        font-size: 24px;
+      }
+
+      .activity-icon mat-icon {
+        font-size: 24px;
+        width: 24px;
+        height: 24px;
+      }
+
+      .activity-icon.activity-success {
+        background: var(--success-500);
+      }
+
+      .activity-icon.activity-warning {
+        background: var(--warning-500);
+      }
+
+      .activity-icon.activity-error {
+        background: var(--error-500);
+      }
+
+      .activity-icon.activity-info {
+        background: var(--secondary-500);
+      }
+
+      .activity-icon.activity-medical {
+        background: var(--primary-500);
+      }
+
+      .activity-content {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        gap: var(--space-1);
+      }
+
+      .activity-title {
+        font-weight: 600;
+        color: var(--gray-800);
+        font-size: var(--font-size-sm);
+      }
+
+      .activity-description {
+        color: var(--gray-600);
+        font-size: var(--font-size-sm);
+        line-height: 1.5;
+      }
+
+      .activity-time {
+        color: var(--gray-500);
+        font-size: var(--font-size-xs);
+        font-style: italic;
+      }
+
+      .no-activity {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        padding: var(--space-8);
+        gap: var(--space-3);
+        text-align: center;
+      }
+
+      .no-activity mat-icon {
+        font-size: 48px;
+        width: 48px;
+        height: 48px;
+        color: var(--gray-300);
+      }
+
+      .no-activity p {
+        margin: 0;
+        color: var(--gray-500);
+        font-size: var(--font-size-sm);
+      }
+
+      .slide-up {
+        animation: slideUp 0.3s ease-out;
+      }
+
+      @keyframes slideUp {
+        from {
+          opacity: 0;
+          transform: translateY(20px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
     `,
   ],
 })
@@ -1210,6 +1395,14 @@ export class PatientDashboardComponent implements OnInit, OnDestroy {
   upcomingAppointments: any[] = [];
   pendingAppointments: any[] = [];
   pastAppointments: any[] = [];
+  recentActivities: Array<{
+    type: string;
+    icon: string;
+    title: string;
+    description: string;
+    time: string;
+    date: Date;
+  }> = [];
   private destroy$ = new Subject<void>();
 
   get confirmedAppointments(): number {
@@ -1309,6 +1502,100 @@ export class PatientDashboardComponent implements OnInit, OnDestroy {
     );
 
     this.appointmentsLoading = false;
+    this.generateRecentActivities();
+  }
+
+  private generateRecentActivities(): void {
+    const activities: Array<{
+      type: string;
+      icon: string;
+      title: string;
+      description: string;
+      time: string;
+      date: Date;
+    }> = [];
+
+    // Add appointments to activities
+    this.appointments.slice(0, 5).forEach((apt: any) => {
+      const aptDate = new Date(apt.date);
+      let title = '';
+      let icon = '';
+      let type = '';
+
+      switch (apt.status) {
+        case 'CONFIRMED':
+          title = 'Appointment Confirmed';
+          icon = 'event_available';
+          type = 'success';
+          break;
+        case 'PENDING':
+          title = 'Appointment Pending';
+          icon = 'pending_actions';
+          type = 'warning';
+          break;
+        case 'COMPLETED':
+          title = 'Appointment Completed';
+          icon = 'check_circle';
+          type = 'success';
+          break;
+        case 'CANCELLED':
+          title = 'Appointment Cancelled';
+          icon = 'cancel';
+          type = 'error';
+          break;
+        default:
+          title = 'Appointment Scheduled';
+          icon = 'event';
+          type = 'info';
+      }
+
+      activities.push({
+        type,
+        icon,
+        title,
+        description: `${apt.type || 'Appointment'} with Dr. ${apt.doctor?.user?.name || 'Unknown'} on ${aptDate.toLocaleDateString()}`,
+        time: this.getRelativeTime(aptDate),
+        date: aptDate,
+      });
+    });
+
+    // Add prescriptions to activities
+    this.prescriptions.slice(0, 3).forEach((prescription: any) => {
+      const presDate = new Date(prescription.createdAt);
+      activities.push({
+        type: 'medical',
+        icon: 'medication',
+        title: 'New Prescription',
+        description: `${prescription.medication} prescribed by Dr. ${prescription.doctor?.user?.name || 'Unknown'}`,
+        time: this.getRelativeTime(presDate),
+        date: presDate,
+      });
+    });
+
+    // Sort activities by date (newest first) and take top 10
+    this.recentActivities = activities
+      .sort((a, b) => b.date.getTime() - a.date.getTime())
+      .slice(0, 10);
+  }
+
+  private getRelativeTime(date: Date): string {
+    const now = new Date();
+    const diffInMs = now.getTime() - date.getTime();
+    const diffInMinutes = Math.floor(diffInMs / (1000 * 60));
+    const diffInHours = Math.floor(diffInMs / (1000 * 60 * 60));
+    const diffInDays = Math.floor(diffInMs / (1000 * 60 * 60 * 24));
+
+    if (diffInMinutes < 1) {
+      return 'Just now';
+    } else if (diffInMinutes < 60) {
+      return `${diffInMinutes} minute${diffInMinutes > 1 ? 's' : ''} ago`;
+    } else if (diffInHours < 24) {
+      return `${diffInHours} hour${diffInHours > 1 ? 's' : ''} ago`;
+    } else if (diffInDays < 7) {
+      return `${diffInDays} day${diffInDays > 1 ? 's' : ''} ago`;
+    } else {
+      return date.toLocaleDateString();
+    }
   }
 
   cancelAppointment(appointment: any): void {
