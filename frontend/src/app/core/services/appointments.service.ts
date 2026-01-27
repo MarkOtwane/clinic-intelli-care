@@ -1,7 +1,13 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
-import { Appointment, AppointmentStatus, AppointmentType, AppointmentRequest, CreateAppointmentRequest } from '../models/appointment.model';
+import {
+  Appointment,
+  AppointmentRequest,
+  AppointmentStatus,
+  AppointmentType,
+  CreateAppointmentRequest,
+} from '../models/appointment.model';
 
 @Injectable({
   providedIn: 'root',
@@ -27,18 +33,25 @@ export class AppointmentsService {
    * DOCTOR-only endpoint (backend): GET /api/appointments/my-doctor-appointments
    */
   getMyDoctorAppointments(): Observable<Appointment[]> {
-    return this.http.get<Appointment[]>(`${this.apiUrl}/my-doctor-appointments`);
+    return this.http.get<Appointment[]>(
+      `${this.apiUrl}/my-doctor-appointments`,
+    );
   }
 
   getAppointmentById(id: string): Observable<Appointment> {
     return this.http.get<Appointment>(`${this.apiUrl}/${id}`);
   }
 
-  createAppointment(appointment: CreateAppointmentRequest): Observable<Appointment> {
+  createAppointment(
+    appointment: CreateAppointmentRequest,
+  ): Observable<Appointment> {
     return this.http.post<Appointment>(this.apiUrl, appointment);
   }
 
-  updateAppointment(id: string, appointment: Partial<Appointment>): Observable<Appointment> {
+  updateAppointment(
+    id: string,
+    appointment: Partial<Appointment>,
+  ): Observable<Appointment> {
     return this.http.patch<Appointment>(`${this.apiUrl}/${id}`, appointment);
   }
 
@@ -55,7 +68,9 @@ export class AppointmentsService {
     return this.http.get<Appointment[]>(`${this.apiUrl}/doctor/${doctorId}`);
   }
 
-  getAppointmentsByStatus(status: AppointmentStatus): Observable<Appointment[]> {
+  getAppointmentsByStatus(
+    status: AppointmentStatus,
+  ): Observable<Appointment[]> {
     return this.http.get<Appointment[]>(`${this.apiUrl}/status/${status}`);
   }
 
@@ -65,35 +80,57 @@ export class AppointmentsService {
   }
 
   cancelAppointment(id: string, reason?: string): Observable<Appointment> {
-    return this.http.patch<Appointment>(`${this.apiUrl}/${id}/cancel`, { reason });
+    // Backend uses DELETE method for cancel
+    return this.http.delete<Appointment>(`${this.apiUrl}/${id}`);
   }
 
-  rescheduleAppointment(id: string, newDate: Date, newTime: string): Observable<Appointment> {
+  approveAppointment(id: string): Observable<Appointment> {
+    return this.http.patch<Appointment>(`${this.apiUrl}/${id}/approve`, {});
+  }
+
+  rejectAppointment(id: string, reason?: string): Observable<Appointment> {
+    return this.http.patch<Appointment>(`${this.apiUrl}/${id}/reject`, {
+      reason,
+    });
+  }
+
+  rescheduleAppointment(
+    id: string,
+    newDate: Date,
+    newTime: string,
+  ): Observable<Appointment> {
     return this.http.patch<Appointment>(`${this.apiUrl}/${id}/reschedule`, {
       date: newDate,
-      time: newTime
+      time: newTime,
     });
   }
 
   // Availability and scheduling
   getAvailableSlots(doctorId: string, date: Date): Observable<string[]> {
     return this.http.get<string[]>(
-      `${this.apiUrl}/available-slots/${doctorId}?date=${date.toISOString().split('T')[0]}`
+      `${this.apiUrl}/available-slots/${doctorId}?date=${date.toISOString().split('T')[0]}`,
     );
   }
 
-  checkAvailability(doctorId: string, date: Date, time: string): Observable<boolean> {
+  checkAvailability(
+    doctorId: string,
+    date: Date,
+    time: string,
+  ): Observable<boolean> {
     return this.http.get<boolean>(`${this.apiUrl}/check-availability`, {
       params: {
         doctorId,
         date: date.toISOString().split('T')[0],
-        time
-      }
+        time,
+      },
     });
   }
 
   // Statistics
-  getAppointmentStats(doctorId?: string, patientId?: string): Observable<{
+  getAppointmentStats(
+    doctorId?: string,
+    patientId?: string,
+  ): Observable<{
     total: number;
     confirmed: number;
     pending: number;
@@ -103,7 +140,7 @@ export class AppointmentsService {
     const params: any = {};
     if (doctorId) params.doctorId = doctorId;
     if (patientId) params.patientId = patientId;
-    
+
     return this.http.get<any>(`${this.apiUrl}/stats`, { params });
   }
 
@@ -127,7 +164,9 @@ export class AppointmentsService {
   }
 
   // Emergency appointments
-  createEmergencyAppointment(request: AppointmentRequest): Observable<Appointment> {
+  createEmergencyAppointment(
+    request: AppointmentRequest,
+  ): Observable<Appointment> {
     return this.http.post<Appointment>(`${this.apiUrl}/emergency`, request);
   }
 

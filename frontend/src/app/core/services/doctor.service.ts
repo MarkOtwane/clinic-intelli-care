@@ -58,4 +58,31 @@ export class DoctorService {
       pendingPrescriptions: number;
     }>(`${this.apiUrl}/${id}/stats`);
   }
+
+  /**
+   * Get doctor dashboard data (appointments, stats, etc.)
+   * Uses current logged-in doctor's JWT token
+   */
+  getDoctorDashboard(): Observable<{
+    doctor: {
+      id: string;
+      name: string;
+      specialization: string;
+      phone?: string;
+      bio?: string;
+      experience?: number;
+      available: boolean;
+    };
+    stats: {
+      totalAppointments: number;
+      totalPrescriptions: number;
+      totalPatients: number;
+      pendingAppointments: number;
+      upcomingAppointmentsCount: number;
+    };
+    upcomingAppointments: any[];
+    recentAppointments: any[];
+  }> {
+    return this.http.get<any>(`${this.apiUrl}/dashboard`);
+  }
 }

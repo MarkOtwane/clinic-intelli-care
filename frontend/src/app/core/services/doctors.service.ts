@@ -1,10 +1,10 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
-import { DoctorProfile, DoctorAvailability } from '../models/user.model';
 import { Appointment } from '../models/appointment.model';
 import { Blog } from '../models/blog.model';
 import { Prescription } from '../models/prescription.model';
+import { DoctorAvailability, DoctorProfile } from '../models/user.model';
 
 export interface Doctor extends DoctorProfile {
   user?: {
@@ -63,12 +63,16 @@ export class DoctorsService {
   }
 
   // Search and filtering
-  searchDoctors(filters: DoctorSearchFilters, page = 1, limit = 10): Observable<DoctorSearchResponse> {
-    const params: any = { 
-      page: page.toString(), 
-      limit: limit.toString() 
+  searchDoctors(
+    filters: DoctorSearchFilters,
+    page = 1,
+    limit = 10,
+  ): Observable<DoctorSearchResponse> {
+    const params: any = {
+      page: page.toString(),
+      limit: limit.toString(),
     };
-    
+
     if (filters.specialty) params.specialty = filters.specialty;
     if (filters.availability) params.availability = filters.availability;
     if (filters.location) params.location = filters.location;
@@ -77,9 +81,12 @@ export class DoctorsService {
       params.maxFee = filters.consultationFee.max.toString();
     }
     if (filters.rating) params.rating = filters.rating.toString();
-    if (filters.isVerified !== undefined) params.isVerified = filters.isVerified.toString();
-    
-    return this.http.get<DoctorSearchResponse>(`${this.apiUrl}/search`, { params });
+    if (filters.isVerified !== undefined)
+      params.isVerified = filters.isVerified.toString();
+
+    return this.http.get<DoctorSearchResponse>(`${this.apiUrl}/search`, {
+      params,
+    });
   }
 
   getDoctorsBySpecialty(specialty: string): Observable<Doctor[]> {
@@ -88,30 +95,57 @@ export class DoctorsService {
 
   // Availability management
   getDoctorAvailability(doctorId: string): Observable<DoctorAvailability[]> {
-    return this.http.get<DoctorAvailability[]>(`${this.apiUrl}/${doctorId}/availability`);
+    return this.http.get<DoctorAvailability[]>(
+      `${this.apiUrl}/${doctorId}/availability`,
+    );
   }
 
-  updateDoctorAvailability(doctorId: string, availability: DoctorAvailability[]): Observable<DoctorAvailability[]> {
-    return this.http.put<DoctorAvailability[]>(`${this.apiUrl}/${doctorId}/availability`, { availability });
+  updateDoctorAvailability(
+    doctorId: string,
+    availability: DoctorAvailability[],
+  ): Observable<DoctorAvailability[]> {
+    return this.http.put<DoctorAvailability[]>(
+      `${this.apiUrl}/${doctorId}/availability`,
+      { availability },
+    );
   }
 
-  getAvailableTimeSlots(doctorId: string, date: string): Observable<{startTime: string, endTime: string}[]> {
-    return this.http.get<{startTime: string, endTime: string}[]>(`${this.apiUrl}/${doctorId}/availability/${date}`);
+  getAvailableTimeSlots(
+    doctorId: string,
+    date: string,
+  ): Observable<{ startTime: string; endTime: string }[]> {
+    return this.http.get<{ startTime: string; endTime: string }[]>(
+      `${this.apiUrl}/${doctorId}/availability/${date}`,
+    );
   }
 
   // Doctor dashboard data
-  getDoctorAppointments(doctorId: string, status?: string): Observable<Appointment[]> {
+  getDoctorAppointments(
+    doctorId: string,
+    status?: string,
+  ): Observable<Appointment[]> {
     if (status) {
-      return this.http.get<Appointment[]>(`${this.apiUrl}/${doctorId}/appointments?status=${status}`);
+      return this.http.get<Appointment[]>(
+        `${this.apiUrl}/${doctorId}/appointments?status=${status}`,
+      );
     }
-    return this.http.get<Appointment[]>(`${this.apiUrl}/${doctorId}/appointments`);
+    return this.http.get<Appointment[]>(
+      `${this.apiUrl}/${doctorId}/appointments`,
+    );
   }
 
-  getDoctorPrescriptions(doctorId: string, patientId?: string): Observable<Prescription[]> {
+  getDoctorPrescriptions(
+    doctorId: string,
+    patientId?: string,
+  ): Observable<Prescription[]> {
     if (patientId) {
-      return this.http.get<Prescription[]>(`${this.apiUrl}/${doctorId}/prescriptions?patientId=${patientId}`);
+      return this.http.get<Prescription[]>(
+        `${this.apiUrl}/${doctorId}/prescriptions?patientId=${patientId}`,
+      );
     }
-    return this.http.get<Prescription[]>(`${this.apiUrl}/${doctorId}/prescriptions`);
+    return this.http.get<Prescription[]>(
+      `${this.apiUrl}/${doctorId}/prescriptions`,
+    );
   }
 
   getDoctorBlogs(doctorId: string): Observable<Blog[]> {
@@ -123,7 +157,10 @@ export class DoctorsService {
     return this.http.get<Doctor>(`${this.apiUrl}/profile/${userId}`);
   }
 
-  updateDoctorProfile(userId: string, profile: Partial<Doctor>): Observable<Doctor> {
+  updateDoctorProfile(
+    userId: string,
+    profile: Partial<Doctor>,
+  ): Observable<Doctor> {
     return this.http.patch<Doctor>(`${this.apiUrl}/profile/${userId}`, profile);
   }
 
@@ -135,6 +172,33 @@ export class DoctorsService {
     averageRating: number;
   }> {
     return this.http.get<any>(`${this.apiUrl}/${doctorId}/stats`);
+  }
+
+  /**
+   * Get doctor dashboard data (appointments, stats, etc.)
+   * Uses current logged-in doctor's JWT token
+   */
+  getDoctorDashboard(): Observable<{
+    doctor: {
+      id: string;
+      name: string;
+      specialization: string;
+      phone?: string;
+      bio?: string;
+      experience?: number;
+      available: boolean;
+    };
+    stats: {
+      totalAppointments: number;
+      totalPrescriptions: number;
+      totalPatients: number;
+      pendingAppointments: number;
+      upcomingAppointmentsCount: number;
+    };
+    upcomingAppointments: any[];
+    recentAppointments: any[];
+  }> {
+    return this.http.get<any>(`${this.apiUrl}/dashboard`);
   }
 
   // Verification

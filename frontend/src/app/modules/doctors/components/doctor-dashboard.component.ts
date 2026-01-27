@@ -1,34 +1,40 @@
-import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
-import { MatCardModule } from '@angular/material/card';
-import { MatButtonModule } from '@angular/material/button';
-import { MatIconModule } from '@angular/material/icon';
-import { MatTabsModule } from '@angular/material/tabs';
-import { MatTableModule } from '@angular/material/table';
-import { MatChipsModule } from '@angular/material/chips';
+import { Component, OnDestroy, OnInit } from '@angular/core';
+import { ReactiveFormsModule } from '@angular/forms';
 import { MatBadgeModule } from '@angular/material/badge';
-import { MatMenuModule } from '@angular/material/menu';
-import { MatDialogModule, MatDialog } from '@angular/material/dialog';
-import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
-import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
-import { MatFormFieldModule } from '@angular/material/form-field';
-import { MatInputModule } from '@angular/material/input';
-import { MatSelectModule } from '@angular/material/select';
-import { MatDatepickerModule } from '@angular/material/datepicker';
+import { MatButtonModule } from '@angular/material/button';
+import { MatCardModule } from '@angular/material/card';
+import { MatChipsModule } from '@angular/material/chips';
 import { MatNativeDateModule } from '@angular/material/core';
+import { MatDatepickerModule } from '@angular/material/datepicker';
+import { MatDialog, MatDialogModule } from '@angular/material/dialog';
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatIconModule } from '@angular/material/icon';
+import { MatInputModule } from '@angular/material/input';
+import { MatMenuModule } from '@angular/material/menu';
+import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { MatSelectModule } from '@angular/material/select';
+import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
+import { MatTableModule } from '@angular/material/table';
+import { MatTabsModule } from '@angular/material/tabs';
 import { Subject, takeUntil } from 'rxjs';
 
 // Services
-import { AuthService } from '../../../core/services/auth.service';
 import { AiAnalysisService } from '../../../core/services/ai-analysis.service';
-import { DoctorsService, Doctor } from '../../../core/services/doctors.service';
 import { AppointmentsService } from '../../../core/services/appointments.service';
+import { AuthService } from '../../../core/services/auth.service';
+import { DoctorsService } from '../../../core/services/doctors.service';
 import { AvailabilityDialogComponent } from './availability-dialog.component';
 
 // Models
-import { AIAnalysis, AnalysisStatus } from '../../../core/models/ai-analysis.model';
-import { Appointment, AppointmentStatus } from '../../../core/models/appointment.model';
+import {
+  AIAnalysis,
+  AnalysisStatus,
+} from '../../../core/models/ai-analysis.model';
+import {
+  Appointment,
+  AppointmentStatus,
+} from '../../../core/models/appointment.model';
 import { User } from '../../../core/models/user.model';
 
 interface DoctorDashboard {
@@ -56,7 +62,7 @@ interface DoctorDashboard {
   imports: [
     CommonModule,
     ReactiveFormsModule,
-    
+
     // Material modules
     MatCardModule,
     MatButtonModule,
@@ -84,7 +90,11 @@ interface DoctorDashboard {
           <p class="subtitle">Here's your practice overview for today</p>
         </div>
         <div class="quick-actions">
-          <button mat-raised-button color="primary" (click)="openAvailabilityDialog()">
+          <button
+            mat-raised-button
+            color="primary"
+            (click)="openAvailabilityDialog()"
+          >
             <mat-icon>schedule</mat-icon>
             Manage Availability
           </button>
@@ -132,7 +142,9 @@ interface DoctorDashboard {
                 <mat-icon color="accent">people</mat-icon>
               </div>
               <div class="stat-info">
-                <h3>{{ dashboardData?.weeklyStats?.completedConsultations || 0 }}</h3>
+                <h3>
+                  {{ dashboardData?.weeklyStats?.completedConsultations || 0 }}
+                </h3>
                 <p>This Week's Consultations</p>
               </div>
             </div>
@@ -146,7 +158,9 @@ interface DoctorDashboard {
                 <mat-icon color="warn">review</mat-icon>
               </div>
               <div class="stat-info">
-                <h3>{{ dashboardData?.weeklyStats?.aiAnalysesReviewed || 0 }}</h3>
+                <h3>
+                  {{ dashboardData?.weeklyStats?.aiAnalysesReviewed || 0 }}
+                </h3>
                 <p>AI Reviews This Week</p>
               </div>
             </div>
@@ -162,22 +176,36 @@ interface DoctorDashboard {
             <mat-card class="section-card">
               <mat-card-header>
                 <mat-card-title>Patient AI Analyses</mat-card-title>
-                <mat-card-subtitle>View AI analysis reports for patients who have booked appointments with you</mat-card-subtitle>
+                <mat-card-subtitle
+                  >View AI analysis reports for patients who have booked
+                  appointments with you</mat-card-subtitle
+                >
               </mat-card-header>
 
               <mat-card-content>
-                <div class="analyses-list" *ngIf="patientAnalyses?.length; else noAnalyses">
-                  <mat-card class="analysis-card" *ngFor="let analysis of patientAnalyses">
+                <div
+                  class="analyses-list"
+                  *ngIf="patientAnalyses?.length; else noAnalyses"
+                >
+                  <mat-card
+                    class="analysis-card"
+                    *ngFor="let analysis of patientAnalyses"
+                  >
                     <mat-card-header>
                       <div class="analysis-header">
-                        <mat-card-title>Analysis #{{ analysis.id.slice(-8) }}</mat-card-title>
-                        <mat-chip [color]="getConfidenceColor(analysis.confidence)" selected>
+                        <mat-card-title
+                          >Analysis #{{ analysis.id.slice(-8) }}</mat-card-title
+                        >
+                        <mat-chip
+                          [color]="getConfidenceColor(analysis.confidence)"
+                          selected
+                        >
                           {{ analysis.confidence }}% confidence
                         </mat-chip>
                       </div>
                       <mat-card-subtitle>
                         Patient: {{ analysis.patient?.name || 'Unknown' }} |
-                        Created: {{ analysis.createdAt | date:'short' }}
+                        Created: {{ analysis.createdAt | date: 'short' }}
                       </mat-card-subtitle>
                     </mat-card-header>
 
@@ -186,7 +214,11 @@ interface DoctorDashboard {
                         <div class="symptoms-section">
                           <h4>Symptoms:</h4>
                           <mat-chip-set>
-                            <mat-chip *ngFor="let symptom of analysis.symptoms?.symptoms || []">
+                            <mat-chip
+                              *ngFor="
+                                let symptom of analysis.symptoms?.symptoms || []
+                              "
+                            >
                               {{ symptom }}
                             </mat-chip>
                           </mat-chip-set>
@@ -194,10 +226,21 @@ interface DoctorDashboard {
 
                         <div class="predictions-section">
                           <h4>AI Predictions:</h4>
-                          <div class="prediction-item" *ngFor="let prediction of analysis.predictedDiseases || []">
+                          <div
+                            class="prediction-item"
+                            *ngFor="
+                              let prediction of analysis.predictedDiseases || []
+                            "
+                          >
                             <div class="prediction-header">
-                              <span class="disease-name">{{ prediction.name }}</span>
-                              <mat-chip [color]="getProbabilityColor(prediction.probability)">
+                              <span class="disease-name">{{
+                                prediction.name
+                              }}</span>
+                              <mat-chip
+                                [color]="
+                                  getProbabilityColor(prediction.probability)
+                                "
+                              >
                                 {{ prediction.probability }}%
                               </mat-chip>
                             </div>
@@ -206,17 +249,30 @@ interface DoctorDashboard {
 
                         <div class="recommendations-section">
                           <h4>AI Recommendations:</h4>
-                          <p>{{ analysis.recommendations || 'No specific recommendations' }}</p>
+                          <p>
+                            {{
+                              analysis.recommendations ||
+                                'No specific recommendations'
+                            }}
+                          </p>
                         </div>
                       </div>
                     </mat-card-content>
 
                     <mat-card-actions>
-                      <button mat-button color="primary" (click)="viewFullAnalysis(analysis)">
+                      <button
+                        mat-button
+                        color="primary"
+                        (click)="viewFullAnalysis(analysis)"
+                      >
                         <mat-icon>visibility</mat-icon>
                         View Full Report
                       </button>
-                      <button mat-button color="accent" (click)="scheduleFollowUp(analysis)">
+                      <button
+                        mat-button
+                        color="accent"
+                        (click)="scheduleFollowUp(analysis)"
+                      >
                         <mat-icon>event</mat-icon>
                         Schedule Follow-up
                       </button>
@@ -228,7 +284,9 @@ interface DoctorDashboard {
                   <div class="empty-state">
                     <mat-icon>analytics</mat-icon>
                     <h3>No patient analyses yet</h3>
-                    <p>AI analysis reports for your patients will appear here</p>
+                    <p>
+                      AI analysis reports for your patients will appear here
+                    </p>
                   </div>
                 </ng-template>
               </mat-card-content>
@@ -242,41 +300,68 @@ interface DoctorDashboard {
             <mat-card class="section-card">
               <mat-card-header>
                 <mat-card-title>Pending AI Cases</mat-card-title>
-                <mat-card-subtitle>Review and respond to AI-suggested patient cases</mat-card-subtitle>
+                <mat-card-subtitle
+                  >Review and respond to AI-suggested patient
+                  cases</mat-card-subtitle
+                >
               </mat-card-header>
-              
+
               <mat-card-content>
-                <div class="cases-grid" *ngIf="dashboardData?.pendingCases?.length; else noCases">
-                  <mat-card class="case-card" *ngFor="let case of dashboardData?.pendingCases">
+                <div
+                  class="cases-grid"
+                  *ngIf="dashboardData?.pendingCases?.length; else noCases"
+                >
+                  <mat-card
+                    class="case-card"
+                    *ngFor="let case of dashboardData?.pendingCases"
+                  >
                     <mat-card-header>
                       <div class="case-header">
-                        <mat-card-title>Patient Analysis #{{ case.id.slice(-8) }}</mat-card-title>
-                        <mat-chip [color]="getConfidenceColor(case.confidence)" selected>
+                        <mat-card-title
+                          >Patient Analysis #{{
+                            case.id.slice(-8)
+                          }}</mat-card-title
+                        >
+                        <mat-chip
+                          [color]="getConfidenceColor(case.confidence)"
+                          selected
+                        >
                           {{ case.confidence }}% confidence
                         </mat-chip>
                       </div>
                       <mat-card-subtitle>
-                        Received: {{ case.createdAt | date:'short' }}
+                        Received: {{ case.createdAt | date: 'short' }}
                       </mat-card-subtitle>
                     </mat-card-header>
-                    
+
                     <mat-card-content>
                       <div class="case-details">
                         <div class="symptoms-section">
                           <h4>Symptoms Reported:</h4>
                           <mat-chip-set>
-                            <mat-chip *ngFor="let symptom of case.symptoms.symptoms">
+                            <mat-chip
+                              *ngFor="let symptom of case.symptoms.symptoms"
+                            >
                               {{ symptom }}
                             </mat-chip>
                           </mat-chip-set>
                         </div>
-                        
+
                         <div class="predictions-section">
                           <h4>AI Predictions:</h4>
-                          <div class="prediction-item" *ngFor="let prediction of case.predictions">
+                          <div
+                            class="prediction-item"
+                            *ngFor="let prediction of case.predictions"
+                          >
                             <div class="prediction-header">
-                              <span class="disease-name">{{ prediction.disease }}</span>
-                              <mat-chip [color]="getProbabilityColor(prediction.probability)">
+                              <span class="disease-name">{{
+                                prediction.disease
+                              }}</span>
+                              <mat-chip
+                                [color]="
+                                  getProbabilityColor(prediction.probability)
+                                "
+                              >
                                 {{ prediction.probability }}%
                               </mat-chip>
                             </div>
@@ -284,18 +369,31 @@ interface DoctorDashboard {
                         </div>
 
                         <div class="severity-info">
-                          <mat-chip>{{ case.symptoms.severity }} severity</mat-chip>
-                          <mat-chip>Duration: {{ case.symptoms.duration }} days</mat-chip>
+                          <mat-chip
+                            >{{ case.symptoms.severity }} severity</mat-chip
+                          >
+                          <mat-chip
+                            >Duration:
+                            {{ case.symptoms.duration }} days</mat-chip
+                          >
                         </div>
                       </div>
                     </mat-card-content>
-                    
+
                     <mat-card-actions>
-                      <button mat-button color="primary" (click)="reviewCase(case)">
+                      <button
+                        mat-button
+                        color="primary"
+                        (click)="reviewCase(case)"
+                      >
                         <mat-icon>visibility</mat-icon>
                         Review Case
                       </button>
-                      <button mat-button color="accent" (click)="scheduleAppointment(case)">
+                      <button
+                        mat-button
+                        color="accent"
+                        (click)="scheduleAppointment(case)"
+                      >
                         <mat-icon>event</mat-icon>
                         Schedule Appointment
                       </button>
@@ -306,7 +404,7 @@ interface DoctorDashboard {
                     </mat-card-actions>
                   </mat-card>
                 </div>
-                
+
                 <ng-template #noCases>
                   <div class="empty-state">
                     <mat-icon>check_circle</mat-icon>
@@ -325,39 +423,65 @@ interface DoctorDashboard {
             <mat-card class="section-card">
               <mat-card-header>
                 <mat-card-title>Today's Schedule</mat-card-title>
-                <mat-card-subtitle>{{ currentDate | date:'fullDate' }}</mat-card-subtitle>
+                <mat-card-subtitle>{{
+                  currentDate | date: 'fullDate'
+                }}</mat-card-subtitle>
               </mat-card-header>
-              
+
               <mat-card-content>
-                <div class="appointments-list" *ngIf="dashboardData?.todayAppointments?.length; else noAppointments">
-                  <div class="appointment-item" *ngFor="let appointment of dashboardData?.todayAppointments">
+                <div
+                  class="appointments-list"
+                  *ngIf="
+                    dashboardData?.todayAppointments?.length;
+                    else noAppointments
+                  "
+                >
+                  <div
+                    class="appointment-item"
+                    *ngFor="let appointment of dashboardData?.todayAppointments"
+                  >
                     <div class="appointment-time">
                       <strong>{{ appointment.startTime }}</strong>
                       <span class="duration">{{ appointment.endTime }}</span>
                     </div>
-                    
+
                     <div class="appointment-info">
                       <h4>Patient Appointment</h4>
                       <p>{{ appointment.reason }}</p>
-                      <mat-chip [color]="getStatusColor(appointment.status)" selected>
+                      <mat-chip
+                        [color]="getStatusColor(appointment.status)"
+                        selected
+                      >
                         {{ appointment.status }}
                       </mat-chip>
                     </div>
-                    
+
                     <div class="appointment-actions">
-                      <button mat-icon-button [matMenuTriggerFor]="appointmentMenu">
+                      <button
+                        mat-icon-button
+                        [matMenuTriggerFor]="appointmentMenu"
+                      >
                         <mat-icon>more_vert</mat-icon>
                       </button>
                       <mat-menu #appointmentMenu="matMenu">
-                        <button mat-menu-item (click)="viewAppointment(appointment)">
+                        <button
+                          mat-menu-item
+                          (click)="viewAppointment(appointment)"
+                        >
                           <mat-icon>visibility</mat-icon>
                           <span>View Details</span>
                         </button>
-                        <button mat-menu-item (click)="updateStatus(appointment)">
+                        <button
+                          mat-menu-item
+                          (click)="updateStatus(appointment)"
+                        >
                           <mat-icon>edit</mat-icon>
                           <span>Update Status</span>
                         </button>
-                        <button mat-menu-item (click)="createPrescription(appointment)">
+                        <button
+                          mat-menu-item
+                          (click)="createPrescription(appointment)"
+                        >
                           <mat-icon>medication</mat-icon>
                           <span>Create Prescription</span>
                         </button>
@@ -365,7 +489,7 @@ interface DoctorDashboard {
                     </div>
                   </div>
                 </div>
-                
+
                 <ng-template #noAppointments>
                   <div class="empty-state">
                     <mat-icon>event_available</mat-icon>
@@ -389,19 +513,27 @@ interface DoctorDashboard {
                 <mat-card-content>
                   <div class="metric-item">
                     <span class="metric-label">Total Appointments</span>
-                    <span class="metric-value">{{ dashboardData?.weeklyStats?.totalAppointments || 0 }}</span>
+                    <span class="metric-value">{{
+                      dashboardData?.weeklyStats?.totalAppointments || 0
+                    }}</span>
                   </div>
                   <div class="metric-item">
                     <span class="metric-label">Completed Consultations</span>
-                    <span class="metric-value">{{ dashboardData?.weeklyStats?.completedConsultations || 0 }}</span>
+                    <span class="metric-value">{{
+                      dashboardData?.weeklyStats?.completedConsultations || 0
+                    }}</span>
                   </div>
                   <div class="metric-item">
                     <span class="metric-label">New Patients</span>
-                    <span class="metric-value">{{ dashboardData?.weeklyStats?.newPatients || 0 }}</span>
+                    <span class="metric-value">{{
+                      dashboardData?.weeklyStats?.newPatients || 0
+                    }}</span>
                   </div>
                   <div class="metric-item">
                     <span class="metric-label">AI Cases Reviewed</span>
-                    <span class="metric-value">{{ dashboardData?.weeklyStats?.aiAnalysesReviewed || 0 }}</span>
+                    <span class="metric-value">{{
+                      dashboardData?.weeklyStats?.aiAnalysesReviewed || 0
+                    }}</span>
                   </div>
                 </mat-card-content>
               </mat-card>
@@ -412,14 +544,17 @@ interface DoctorDashboard {
                 </mat-card-header>
                 <mat-card-content>
                   <div class="activity-list">
-                    <div class="activity-item" *ngFor="let activity of dashboardData?.recentActivity">
+                    <div
+                      class="activity-item"
+                      *ngFor="let activity of dashboardData?.recentActivity"
+                    >
                       <mat-icon [color]="getActivityColor(activity.type)">
                         {{ getActivityIcon(activity.type) }}
                       </mat-icon>
                       <div class="activity-content">
                         <h4>{{ activity.title }}</h4>
                         <p>{{ activity.description }}</p>
-                        <small>{{ activity.timestamp | date:'short' }}</small>
+                        <small>{{ activity.timestamp | date: 'short' }}</small>
                       </div>
                     </div>
                   </div>
@@ -431,279 +566,293 @@ interface DoctorDashboard {
       </mat-tab-group>
     </div>
   `,
-  styles: [`
-    .doctor-dashboard {
-      padding: 24px;
-      max-width: 1400px;
-      margin: 0 auto;
-    }
+  styles: [
+    `
+      .doctor-dashboard {
+        padding: 24px;
+        max-width: 1400px;
+        margin: 0 auto;
+      }
 
-    .dashboard-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 32px;
-    }
+      .dashboard-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 32px;
+      }
 
-    .welcome-section h1 {
-      color: #2c3e50;
-      margin: 0 0 8px 0;
-    }
+      .welcome-section h1 {
+        color: #2c3e50;
+        margin: 0 0 8px 0;
+      }
 
-    .subtitle {
-      color: #7f8c8d;
-      margin: 0;
-    }
+      .subtitle {
+        color: #7f8c8d;
+        margin: 0;
+      }
 
-    .quick-actions {
-      display: flex;
-      gap: 16px;
-    }
+      .quick-actions {
+        display: flex;
+        gap: 16px;
+      }
 
-    .stats-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-      gap: 24px;
-      margin-bottom: 32px;
-    }
+      .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 24px;
+        margin-bottom: 32px;
+      }
 
-    .stat-card {
-      cursor: pointer;
-      transition: transform 0.2s, box-shadow 0.2s;
-    }
+      .stat-card {
+        cursor: pointer;
+        transition:
+          transform 0.2s,
+          box-shadow 0.2s;
+      }
 
-    .stat-card:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-    }
+      .stat-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+      }
 
-    .stat-content {
-      display: flex;
-      align-items: center;
-      gap: 16px;
-    }
+      .stat-content {
+        display: flex;
+        align-items: center;
+        gap: 16px;
+      }
 
-    .stat-icon {
-      padding: 12px;
-      border-radius: 50%;
-      background: #f8f9fa;
-    }
+      .stat-icon {
+        padding: 12px;
+        border-radius: 50%;
+        background: #f8f9fa;
+      }
 
-    .stat-info h3 {
-      margin: 0;
-      font-size: 2rem;
-      font-weight: 600;
-      color: #2c3e50;
-    }
+      .stat-info h3 {
+        margin: 0;
+        font-size: 2rem;
+        font-weight: 600;
+        color: #2c3e50;
+      }
 
-    .stat-info p {
-      margin: 4px 0 0 0;
-      color: #7f8c8d;
-      font-size: 14px;
-    }
+      .stat-info p {
+        margin: 4px 0 0 0;
+        color: #7f8c8d;
+        font-size: 14px;
+      }
 
-    .dashboard-tabs {
-      background: white;
-      border-radius: 8px;
-      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-    }
+      .dashboard-tabs {
+        background: white;
+        border-radius: 8px;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+      }
 
-    .tab-content {
-      padding: 24px;
-    }
+      .tab-content {
+        padding: 24px;
+      }
 
-    .section-card {
-      margin-bottom: 24px;
-    }
+      .section-card {
+        margin-bottom: 24px;
+      }
 
-    .cases-grid {
-      display: grid;
-      gap: 24px;
-    }
+      .cases-grid {
+        display: grid;
+        gap: 24px;
+      }
 
-    .case-card {
-      border-left: 4px solid #3498db;
-    }
+      .case-card {
+        border-left: 4px solid #3498db;
+      }
 
-    .case-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      width: 100%;
-    }
+      .case-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        width: 100%;
+      }
 
-    .case-details {
-      margin-top: 16px;
-    }
+      .case-details {
+        margin-top: 16px;
+      }
 
-    .symptoms-section, .predictions-section {
-      margin-bottom: 16px;
-    }
+      .symptoms-section,
+      .predictions-section {
+        margin-bottom: 16px;
+      }
 
-    .symptoms-section h4, .predictions-section h4 {
-      margin: 0 0 8px 0;
-      color: #2c3e50;
-    }
+      .symptoms-section h4,
+      .predictions-section h4 {
+        margin: 0 0 8px 0;
+        color: #2c3e50;
+      }
 
-    .prediction-item {
-      margin-bottom: 8px;
-    }
+      .prediction-item {
+        margin-bottom: 8px;
+      }
 
-    .prediction-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-    }
+      .prediction-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      }
 
-    .disease-name {
-      font-weight: 500;
-    }
+      .disease-name {
+        font-weight: 500;
+      }
 
-    .severity-info {
-      display: flex;
-      gap: 8px;
-      margin-top: 16px;
-    }
+      .severity-info {
+        display: flex;
+        gap: 8px;
+        margin-top: 16px;
+      }
 
-    .appointments-list {
-      display: flex;
-      flex-direction: column;
-      gap: 16px;
-    }
+      .appointments-list {
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
+      }
 
-    .appointment-item {
-      display: flex;
-      align-items: center;
-      padding: 16px;
-      border: 1px solid #e0e0e0;
-      border-radius: 8px;
-      background: #fafafa;
-    }
+      .appointment-item {
+        display: flex;
+        align-items: center;
+        padding: 16px;
+        border: 1px solid #e0e0e0;
+        border-radius: 8px;
+        background: #fafafa;
+      }
 
-    .appointment-time {
-      min-width: 100px;
-      text-align: center;
-    }
+      .appointment-time {
+        min-width: 100px;
+        text-align: center;
+      }
 
-    .appointment-time strong {
-      display: block;
-      font-size: 18px;
-      color: #2c3e50;
-    }
+      .appointment-time strong {
+        display: block;
+        font-size: 18px;
+        color: #2c3e50;
+      }
 
-    .duration {
-      color: #7f8c8d;
-      font-size: 14px;
-    }
+      .duration {
+        color: #7f8c8d;
+        font-size: 14px;
+      }
 
-    .appointment-info {
-      flex: 1;
-      margin: 0 16px;
-    }
+      .appointment-info {
+        flex: 1;
+        margin: 0 16px;
+      }
 
-    .appointment-info h4 {
-      margin: 0 0 4px 0;
-      color: #2c3e50;
-    }
+      .appointment-info h4 {
+        margin: 0 0 4px 0;
+        color: #2c3e50;
+      }
 
-    .appointment-info p {
-      margin: 0 0 8px 0;
-      color: #7f8c8d;
-    }
+      .appointment-info p {
+        margin: 0 0 8px 0;
+        color: #7f8c8d;
+      }
 
-    .appointment-actions {
-      min-width: 60px;
-      text-align: right;
-    }
+      .appointment-actions {
+        min-width: 60px;
+        text-align: right;
+      }
 
-    .analytics-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
-      gap: 24px;
-    }
+      .analytics-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+        gap: 24px;
+      }
 
-    .analytics-card {
-      height: fit-content;
-    }
+      .analytics-card {
+        height: fit-content;
+      }
 
-    .metric-item {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding: 12px 0;
-      border-bottom: 1px solid #ecf0f1;
-    }
+      .metric-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 12px 0;
+        border-bottom: 1px solid #ecf0f1;
+      }
 
-    .metric-item:last-child {
-      border-bottom: none;
-    }
+      .metric-item:last-child {
+        border-bottom: none;
+      }
 
-    .metric-label {
-      color: #7f8c8d;
-    }
+      .metric-label {
+        color: #7f8c8d;
+      }
 
-    .metric-value {
-      font-size: 24px;
-      font-weight: 600;
-      color: #2c3e50;
-    }
+      .metric-value {
+        font-size: 24px;
+        font-weight: 600;
+        color: #2c3e50;
+      }
 
-    .activity-list {
-      display: flex;
-      flex-direction: column;
-      gap: 16px;
-    }
+      .activity-list {
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
+      }
 
-    .activity-item {
-      display: flex;
-      align-items: flex-start;
-      gap: 12px;
-    }
+      .activity-item {
+        display: flex;
+        align-items: flex-start;
+        gap: 12px;
+      }
 
-    .activity-content {
-      flex: 1;
-    }
+      .activity-content {
+        flex: 1;
+      }
 
-    .activity-content h4 {
-      margin: 0 0 4px 0;
-      color: #2c3e50;
-    }
+      .activity-content h4 {
+        margin: 0 0 4px 0;
+        color: #2c3e50;
+      }
 
-    .activity-content p {
-      margin: 0 0 4px 0;
-      color: #7f8c8d;
-    }
+      .activity-content p {
+        margin: 0 0 4px 0;
+        color: #7f8c8d;
+      }
 
-    .activity-content small {
-      color: #bdc3c7;
-    }
+      .activity-content small {
+        color: #bdc3c7;
+      }
 
-    .empty-state {
-      text-align: center;
-      padding: 48px 24px;
-      color: #7f8c8d;
-    }
+      .empty-state {
+        text-align: center;
+        padding: 48px 24px;
+        color: #7f8c8d;
+      }
 
-    .empty-state mat-icon {
-      font-size: 64px;
-      margin-bottom: 16px;
-      opacity: 0.5;
-    }
+      .empty-state mat-icon {
+        font-size: 64px;
+        margin-bottom: 16px;
+        opacity: 0.5;
+      }
 
-    .empty-state h3 {
-      margin: 0 0 8px 0;
-    }
+      .empty-state h3 {
+        margin: 0 0 8px 0;
+      }
 
-    .empty-state p {
-      margin: 0;
-    }
+      .empty-state p {
+        margin: 0;
+      }
 
-    /* Color themes for different card types */
-    .pending-cases { border-left: 4px solid #e74c3c; }
-    .today-appointments { border-left: 4px solid #3498db; }
-    .weekly-consultations { border-left: 4px solid #f39c12; }
-    .reviews { border-left: 4px solid #9b59b6; }
-  `]
+      /* Color themes for different card types */
+      .pending-cases {
+        border-left: 4px solid #e74c3c;
+      }
+      .today-appointments {
+        border-left: 4px solid #3498db;
+      }
+      .weekly-consultations {
+        border-left: 4px solid #f39c12;
+      }
+      .reviews {
+        border-left: 4px solid #9b59b6;
+      }
+    `,
+  ],
 })
 export class DoctorDashboardComponent implements OnInit, OnDestroy {
   currentUser: User | null = null;
@@ -711,7 +860,7 @@ export class DoctorDashboardComponent implements OnInit, OnDestroy {
   patientAnalyses: any[] = [];
   isLoading = false;
   currentDate = new Date();
-  
+
   private destroy$ = new Subject<void>();
 
   constructor(
@@ -720,16 +869,16 @@ export class DoctorDashboardComponent implements OnInit, OnDestroy {
     private doctorsService: DoctorsService,
     private appointmentsService: AppointmentsService,
     private dialog: MatDialog,
-    private snackBar: MatSnackBar
+    private snackBar: MatSnackBar,
   ) {}
 
   ngOnInit(): void {
     this.loadDashboardData();
-    
+
     // Subscribe to user changes
     this.authService.currentUser$
       .pipe(takeUntil(this.destroy$))
-      .subscribe(user => {
+      .subscribe((user) => {
         this.currentUser = user;
         if (user) {
           this.loadDashboardData();
@@ -747,154 +896,194 @@ export class DoctorDashboardComponent implements OnInit, OnDestroy {
 
     this.isLoading = true;
 
+    // Load doctor dashboard data from the new endpoint
+    this.doctorsService
+      .getDoctorDashboard()
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (dashboardData: any) => {
+          // Map the backend response to our dashboard structure
+          const todayAppointments = dashboardData.upcomingAppointments.filter(
+            (a: any) =>
+              new Date(a.date).toDateString() === new Date().toDateString(),
+          );
+
+          // Calculate weekly stats from the available data
+          const weeklyStats = {
+            totalAppointments: dashboardData.stats.totalAppointments,
+            completedConsultations: dashboardData.recentAppointments.length,
+            newPatients: dashboardData.stats.totalPatients,
+            aiAnalysesReviewed: 0,
+          };
+
+          // Mock recent activity
+          const recentActivity = [
+            {
+              type: 'appointment' as const,
+              title: 'New Appointment',
+              description:
+                dashboardData.upcomingAppointments.length > 0
+                  ? `Appointment with ${dashboardData.upcomingAppointments[0].patient?.name || 'patient'}`
+                  : 'No upcoming appointments',
+              timestamp: new Date(),
+            },
+          ];
+
+          this.dashboardData = {
+            pendingCases: [], // AI cases will be loaded separately
+            patientAnalyses: [],
+            todayAppointments,
+            weeklyStats,
+            recentActivity,
+          };
+
+          this.isLoading = false;
+        },
+        error: (error: any) => {
+          console.error('Failed to load dashboard data:', error);
+          this.isLoading = false;
+          this.snackBar.open('Failed to load dashboard data', 'Close', {
+            duration: 3000,
+          });
+        },
+      });
+
     // Load patient analyses for this doctor
-    this.appointmentsService.getPatientAnalysesForDoctor()
+    this.appointmentsService
+      .getPatientAnalysesForDoctor()
       .pipe(takeUntil(this.destroy$))
       .subscribe({
         next: (analyses) => {
           this.patientAnalyses = analyses;
+          if (this.dashboardData) {
+            this.dashboardData.patientAnalyses = analyses;
+            this.dashboardData.weeklyStats.aiAnalysesReviewed = analyses.length;
+          }
         },
         error: () => {
           this.patientAnalyses = [];
-        }
+        },
       });
 
-    // Load pending AI cases (this might be different from patient analyses)
-    this.aiAnalysisService.getPatientAnalyses(this.currentUser.id)
+    // Load pending AI cases
+    this.aiAnalysisService
+      .getPatientAnalyses(this.currentUser.id)
       .pipe(takeUntil(this.destroy$))
       .subscribe({
         next: (analyses) => {
-          const pendingCases = analyses.filter(a => a.status === 'COMPLETED');
-
-          // Load today's appointments
-          this.appointmentsService.getDoctorAppointments(this.currentUser!.id)
-            .pipe(takeUntil(this.destroy$))
-            .subscribe({
-              next: (appointments) => {
-                const todayAppointments = appointments.filter(a =>
-                  new Date(a.date).toDateString() === new Date().toDateString()
-                );
-
-                // Calculate weekly stats
-                const weeklyStats = {
-                  totalAppointments: appointments.length,
-                  completedConsultations: appointments.filter(a => a.status === 'COMPLETED').length,
-                  newPatients: 0, // This would come from a more specific API
-                  aiAnalysesReviewed: this.patientAnalyses.length
-                };
-
-                // Mock recent activity
-                const recentActivity = [
-                  {
-                    type: 'analysis' as const,
-                    title: 'AI Case Reviewed',
-                    description: 'Reviewed case for respiratory symptoms',
-                    timestamp: new Date(Date.now() - 2 * 60 * 60 * 1000)
-                  },
-                  {
-                    type: 'appointment' as const,
-                    title: 'Appointment Completed',
-                    description: 'Consultation with patient #12345',
-                    timestamp: new Date(Date.now() - 4 * 60 * 60 * 1000)
-                  }
-                ];
-
-                this.dashboardData = {
-                  pendingCases,
-                  patientAnalyses: this.patientAnalyses,
-                  todayAppointments,
-                  weeklyStats,
-                  recentActivity
-                };
-
-                this.isLoading = false;
-              },
-              error: () => {
-                this.isLoading = false;
-                this.snackBar.open('Failed to load appointments', 'Close', { duration: 3000 });
-              }
-            });
+          const pendingCases = analyses.filter((a) => a.status === 'COMPLETED');
+          if (this.dashboardData) {
+            this.dashboardData.pendingCases = pendingCases;
+          }
         },
         error: () => {
-          this.isLoading = false;
-          this.snackBar.open('Failed to load dashboard data', 'Close', { duration: 3000 });
-        }
+          // Silent fail for AI cases
+        },
       });
   }
 
   reviewCase(analysis: AIAnalysis): void {
-    this.snackBar.open(`Reviewing case ${analysis.id}`, 'Close', { duration: 2000 });
+    this.snackBar.open(`Reviewing case ${analysis.id}`, 'Close', {
+      duration: 2000,
+    });
     // Navigate to detailed case review
   }
 
   scheduleAppointment(analysis: AIAnalysis): void {
-    this.snackBar.open('Opening appointment scheduling...', 'Close', { duration: 2000 });
+    this.snackBar.open('Opening appointment scheduling...', 'Close', {
+      duration: 2000,
+    });
     // Open appointment scheduling dialog with pre-filled patient info
   }
 
   dismissCase(analysis: AIAnalysis): void {
-    this.aiAnalysisService.updateAnalysisStatus(analysis.id, AnalysisStatus.COMPLETED)
+    this.aiAnalysisService
+      .updateAnalysisStatus(analysis.id, AnalysisStatus.COMPLETED)
       .pipe(takeUntil(this.destroy$))
       .subscribe({
         next: () => {
-          this.snackBar.open('Case dismissed successfully', 'Close', { duration: 3000 });
+          this.snackBar.open('Case dismissed successfully', 'Close', {
+            duration: 3000,
+          });
           this.loadDashboardData();
         },
         error: () => {
-          this.snackBar.open('Failed to dismiss case', 'Close', { duration: 3000 });
-        }
+          this.snackBar.open('Failed to dismiss case', 'Close', {
+            duration: 3000,
+          });
+        },
       });
   }
 
   viewAppointment(appointment: Appointment): void {
-    this.snackBar.open(`Viewing appointment ${appointment.id}`, 'Close', { duration: 2000 });
+    this.snackBar.open(`Viewing appointment ${appointment.id}`, 'Close', {
+      duration: 2000,
+    });
     // Navigate to appointment details
   }
 
   updateStatus(appointment: Appointment): void {
-    const newStatus = appointment.status === AppointmentStatus.SCHEDULED 
-      ? AppointmentStatus.CONFIRMED 
-      : AppointmentStatus.COMPLETED;
-      
-    this.appointmentsService.updateAppointment(appointment.id, { status: newStatus })
+    const newStatus =
+      appointment.status === AppointmentStatus.SCHEDULED
+        ? AppointmentStatus.CONFIRMED
+        : AppointmentStatus.COMPLETED;
+
+    this.appointmentsService
+      .updateAppointment(appointment.id, { status: newStatus })
       .pipe(takeUntil(this.destroy$))
       .subscribe({
         next: () => {
-          this.snackBar.open('Appointment status updated', 'Close', { duration: 3000 });
+          this.snackBar.open('Appointment status updated', 'Close', {
+            duration: 3000,
+          });
           this.loadDashboardData();
         },
         error: () => {
-          this.snackBar.open('Failed to update appointment status', 'Close', { duration: 3000 });
-        }
+          this.snackBar.open('Failed to update appointment status', 'Close', {
+            duration: 3000,
+          });
+        },
       });
   }
 
   createPrescription(appointment: Appointment): void {
-    this.snackBar.open('Opening prescription form...', 'Close', { duration: 2000 });
+    this.snackBar.open('Opening prescription form...', 'Close', {
+      duration: 2000,
+    });
     // Open prescription creation dialog
   }
 
   openAvailabilityDialog(): void {
     const dialogRef = this.dialog.open(AvailabilityDialogComponent, {
       width: '600px',
-      data: { doctorId: this.currentUser?.id }
+      data: { doctorId: this.currentUser?.id },
     });
 
-    dialogRef.afterClosed().subscribe(result => {
+    dialogRef.afterClosed().subscribe((result) => {
       if (result) {
-        this.snackBar.open('Availability updated successfully', 'Close', { duration: 3000 });
+        this.snackBar.open('Availability updated successfully', 'Close', {
+          duration: 3000,
+        });
         // Reload dashboard data if needed
       }
     });
   }
 
   viewFullAnalysis(analysis: any): void {
-    this.snackBar.open(`Viewing full analysis for ${analysis.patient?.name || 'patient'}`, 'Close', { duration: 2000 });
+    this.snackBar.open(
+      `Viewing full analysis for ${analysis.patient?.name || 'patient'}`,
+      'Close',
+      { duration: 2000 },
+    );
     // Navigate to detailed analysis view
   }
 
   scheduleFollowUp(analysis: any): void {
-    this.snackBar.open(`Scheduling follow-up for ${analysis.patient?.name || 'patient'}`, 'Close', { duration: 2000 });
+    this.snackBar.open(
+      `Scheduling follow-up for ${analysis.patient?.name || 'patient'}`,
+      'Close',
+      { duration: 2000 },
+    );
     // Open appointment scheduling dialog with patient info pre-filled
   }
 
@@ -912,30 +1101,44 @@ export class DoctorDashboardComponent implements OnInit, OnDestroy {
 
   getStatusColor(status: AppointmentStatus): string {
     switch (status) {
-      case AppointmentStatus.COMPLETED: return 'primary';
-      case AppointmentStatus.CONFIRMED: return 'accent';
-      case AppointmentStatus.SCHEDULED: return 'warn';
-      default: return '';
+      case AppointmentStatus.COMPLETED:
+        return 'primary';
+      case AppointmentStatus.CONFIRMED:
+        return 'accent';
+      case AppointmentStatus.SCHEDULED:
+        return 'warn';
+      default:
+        return '';
     }
   }
 
   getActivityColor(type: string): string {
     switch (type) {
-      case 'appointment': return 'primary';
-      case 'analysis': return 'accent';
-      case 'prescription': return 'warn';
-      case 'blog': return 'primary';
-      default: return '';
+      case 'appointment':
+        return 'primary';
+      case 'analysis':
+        return 'accent';
+      case 'prescription':
+        return 'warn';
+      case 'blog':
+        return 'primary';
+      default:
+        return '';
     }
   }
 
   getActivityIcon(type: string): string {
     switch (type) {
-      case 'appointment': return 'event';
-      case 'analysis': return 'analytics';
-      case 'prescription': return 'medication';
-      case 'blog': return 'article';
-      default: return 'info';
+      case 'appointment':
+        return 'event';
+      case 'analysis':
+        return 'analytics';
+      case 'prescription':
+        return 'medication';
+      case 'blog':
+        return 'article';
+      default:
+        return 'info';
     }
   }
 }
