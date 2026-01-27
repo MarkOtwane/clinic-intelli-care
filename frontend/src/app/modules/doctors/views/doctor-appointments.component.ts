@@ -336,7 +336,10 @@ import { DoctorsService } from '../../../core/services/doctors.service';
                   </mat-chip-set>
                 </mat-card-content>
                 <mat-card-actions>
-                  <button mat-button>
+                  <button
+                    mat-button
+                    (click)="viewPatientDetails(appointment.patient)"
+                  >
                     <mat-icon>visibility</mat-icon>
                     View Details
                   </button>
@@ -973,9 +976,68 @@ export class DoctorAppointmentsComponent implements OnInit {
   }
 
   scheduleFollowUp(appointment: any): void {
-    this.snackBar.open('Follow-up scheduling feature coming soon', 'Close', {
-      duration: 3000,
+    const dialogRef = this.dialog.open(ScheduleFollowupDialogComponent, {
+      width: '500px',
+      data: {
+        patientName: appointment.patient?.name || 'Patient',
+      },
     });
-    // TODO: Open dialog to schedule follow-up appointment with this patient
+
+    dialogRef.afterClosed().subscribe((result) => {
+      if (result) {
+        // Create follow-up appointment
+        const followupData = {
+          patientId: appointment.patientId,
+          doctorId: appointment.doctorId,
+          date: result.date,
+          time: result.time,
+          type: result.type,
+          notes: result.notes,
+          status: 'PENDING', // Follow-ups start as pending for patient confirmation
+        };
+
+        this.appointmentsService.createAppointment(followupData).subscribe({
+          next: () => {
+            this.snackBar.open(
+              '✓ Follow-up appointment scheduled successfully',
+              'Close',
+              {
+                duration: 4000,
+                panelClass: 'success-snackbar',
+              },
+            );
+            this.loadAppointments();
+          },
+          error: (error: any) => {
+            console.error('Failed to schedule follow-up:', error);
+            this.snackBar.open(
+              '✗ Failed to schedule follow-up appointment',
+              'Close',
+              {
+                duration: 4000,
+                panelClass: 'error-snackbar',
+              },
+            );
+          },
+        });
+      }
+    });
+  }
+
+  viewPatientDetails(patient: any): void {
+    if (!patient) {
+      this.snackBar.open('Patient information not available', 'Close', {
+        duration: 3000,
+      });
+      return;
+    }
+
+    this.dialog.open(PatientDetailsDialogComponent, {
+      width: '700px',
+      maxHeight: '90vh',
+      data: {
+        patient: patient,
+      },
+    });
   }
 }
