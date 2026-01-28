@@ -58,6 +58,10 @@
         },
         "serve": {
           "builder": "@angular-devkit/build-angular:dev-server",
+          "options": {
+            "allowedHosts": ["hypertropical-repletely-lynell.ngrok-free.dev"],
+            "host": "0.0.0.0"
+          },
           "configurations": {
             "production": {
               "buildTarget": "frontend:build:production"
