@@ -54,7 +54,11 @@ import { ScheduleFollowupDialogComponent } from '../components/schedule-followup
               <p>{{ errorMessage }}</p>
             </div>
           </div>
-          <button mat-raised-button color="primary" (click)="loadAppointments()">
+          <button
+            mat-raised-button
+            color="primary"
+            (click)="loadAppointments()"
+          >
             <mat-icon>refresh</mat-icon>
             Retry
           </button>
