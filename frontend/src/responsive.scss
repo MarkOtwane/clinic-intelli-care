@@ -1,0 +1,402 @@
+// ========================================
+// Responsive Design System
+// Clinic IntelliCare - Mobile Responsive Utilities
+// ========================================
+
+// Breakpoint Variables (aligned with Angular Material CDK)
+$breakpoint-xs: 0;
+$breakpoint-sm: 600px;
+$breakpoint-md: 960px;
+$breakpoint-lg: 1280px;
+$breakpoint-xl: 1920px;
+
+// Custom breakpoints
+$mobile: 480px;
+$tablet: 768px;
+$desktop: 1024px;
+$large-desktop: 1440px;
+
+// ========================================
+// Responsive Mixins
+// ========================================
+
+// Mobile First Approach
+@mixin mobile {
+  @media (max-width: #{$breakpoint-sm - 1px}) {
+    @content;
+  }
+}
+
+@mixin tablet {
+  @media (min-width: #{$breakpoint-sm}) and (max-width: #{$breakpoint-md - 1px}) {
+    @content;
+  }
+}
+
+@mixin mobile-tablet {
+  @media (max-width: #{$breakpoint-md - 1px}) {
+    @content;
+  }
+}
+
+@mixin desktop {
+  @media (min-width: #{$breakpoint-md}) {
+    @content;
+  }
+}
+
+@mixin large-desktop {
+  @media (min-width: #{$breakpoint-lg}) {
+    @content;
+  }
+}
+
+@mixin xl-desktop {
+  @media (min-width: #{$breakpoint-xl}) {
+    @content;
+  }
+}
+
+// Custom breakpoint mixin
+@mixin respond-to($breakpoint) {
+  @media (min-width: $breakpoint) {
+    @content;
+  }
+}
+
+@mixin respond-below($breakpoint) {
+  @media (max-width: $breakpoint - 1px) {
+    @content;
+  }
+}
+
+// ========================================
+// Responsive Grid System
+// ========================================
+
+// Responsive Grid Mixin
+@mixin responsive-grid(
+  $cols-mobile: 1,
+  $cols-tablet: 2,
+  $cols-desktop: 3,
+  $gap: 1rem
+) {
+  display: grid;
+  gap: $gap;
+
+  @include mobile {
+    grid-template-columns: repeat($cols-mobile, 1fr);
+  }
+
+  @include tablet {
+    grid-template-columns: repeat($cols-tablet, 1fr);
+  }
+
+  @include desktop {
+    grid-template-columns: repeat($cols-desktop, 1fr);
+  }
+}
+
+// Auto-fit grid (better for dynamic content)
+@mixin responsive-grid-autofit($min-width: 280px, $gap: 1rem) {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax($min-width, 1fr));
+  gap: $gap;
+
+  @include mobile {
+    grid-template-columns: 1fr;
+  }
+}
+
+// ========================================
+// Responsive Container Classes
+// ========================================
+
+.container-responsive {
+  width: 100%;
+  margin: 0 auto;
+  padding: 0 1rem;
+
+  @include mobile {
+    padding: 0 0.75rem;
+    max-width: 100%;
+  }
+
+  @include tablet {
+    padding: 0 1.5rem;
+    max-width: 720px;
+  }
+
+  @include desktop {
+    padding: 0 2rem;
+    max-width: 1140px;
+  }
+
+  @include large-desktop {
+    max-width: 1320px;
+  }
+}
+
+// ========================================
+// Responsive Spacing Utilities
+// ========================================
+
+@mixin responsive-padding($mobile: 1rem, $tablet: 1.5rem, $desktop: 2rem) {
+  padding: $mobile;
+
+  @include tablet {
+    padding: $tablet;
+  }
+
+  @include desktop {
+    padding: $desktop;
+  }
+}
+
+@mixin responsive-margin($mobile: 1rem, $tablet: 1.5rem, $desktop: 2rem) {
+  margin: $mobile;
+
+  @include tablet {
+    margin: $tablet;
+  }
+
+  @include desktop {
+    margin: $desktop;
+  }
+}
+
+// ========================================
+// Responsive Typography
+// ========================================
+
+@mixin responsive-font-size($mobile, $tablet: null, $desktop: null) {
+  font-size: $mobile;
+
+  @if $tablet {
+    @include tablet {
+      font-size: $tablet;
+    }
+  }
+
+  @if $desktop {
+    @include desktop {
+      font-size: $desktop;
+    }
+  }
+}
+
+// ========================================
+// Flexbox Responsive Utilities
+// ========================================
+
+@mixin flex-column-mobile {
+  display: flex;
+
+  @include mobile-tablet {
+    flex-direction: column;
+  }
+}
+
+@mixin flex-wrap-mobile {
+  display: flex;
+  flex-wrap: wrap;
+
+  @include mobile {
+    flex-direction: column;
+  }
+}
+
+// ========================================
+// Hide/Show Utilities
+// ========================================
+
+.hide-mobile {
+  @include mobile {
+    display: none !important;
+  }
+}
+
+.hide-tablet {
+  @include tablet {
+    display: none !important;
+  }
+}
+
+.hide-desktop {
+  @include desktop {
+    display: none !important;
+  }
+}
+
+.show-mobile-only {
+  display: none !important;
+
+  @include mobile {
+    display: block !important;
+  }
+}
+
+.show-tablet-only {
+  display: none !important;
+
+  @include tablet {
+    display: block !important;
+  }
+}
+
+.show-desktop-only {
+  display: none !important;
+
+  @include desktop {
+    display: block !important;
+  }
+}
+
+// ========================================
+// Responsive Card Layouts
+// ========================================
+
+.responsive-card {
+  @include mobile {
+    margin: 0.5rem;
+    padding: 1rem;
+    border-radius: 8px;
+  }
+
+  @include tablet {
+    margin: 1rem;
+    padding: 1.5rem;
+  }
+
+  @include desktop {
+    margin: 1.5rem;
+    padding: 2rem;
+  }
+}
+
+// ========================================
+// Responsive Grid Classes (Utility)
+// ========================================
+
+.grid-responsive {
+  &-1 {
+    @include responsive-grid(1, 1, 1);
+  }
+
+  &-2 {
+    @include responsive-grid(1, 2, 2);
+  }
+
+  &-3 {
+    @include responsive-grid(1, 2, 3);
+  }
+
+  &-4 {
+    @include responsive-grid(1, 2, 4);
+  }
+
+  &-auto {
+    @include responsive-grid-autofit(280px, 1rem);
+  }
+}
+
+// ========================================
+// Responsive Table Utilities
+// ========================================
+
+@mixin responsive-table {
+  @include mobile-tablet {
+    display: block;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+
+    table {
+      min-width: 600px;
+    }
+  }
+}
+
+.table-responsive {
+  @include responsive-table;
+}
+
+// ========================================
+// Common Dashboard Responsive Patterns
+// ========================================
+
+.dashboard-container-responsive {
+  @include responsive-padding(1rem, 1.5rem, 2rem);
+
+  @include mobile {
+    padding-top: 0.75rem;
+  }
+}
+
+.stats-grid-responsive {
+  @include responsive-grid(1, 2, 4, 1rem);
+
+  @include mobile {
+    gap: 0.75rem;
+  }
+}
+
+.cards-grid-responsive {
+  @include responsive-grid(1, 1, 2, 1.5rem);
+
+  @include mobile {
+    gap: 1rem;
+  }
+}
+
+.form-grid-responsive {
+  @include responsive-grid(1, 1, 2, 1rem);
+}
+
+// ========================================
+// Touch-Friendly Utilities
+// ========================================
+
+.touch-target {
+  min-height: 44px;
+  min-width: 44px;
+
+  @include mobile {
+    min-height: 48px;
+    min-width: 48px;
+  }
+}
+
+.mobile-friendly-button {
+  @include mobile {
+    padding: 12px 24px;
+    font-size: 16px;
+    min-height: 48px;
+  }
+}
+
+// ========================================
+// Responsive Image Utilities
+// ========================================
+
+.img-responsive {
+  max-width: 100%;
+  height: auto;
+  display: block;
+}
+
+// ========================================
+// Safe Area Utilities (for notched devices)
+// ========================================
+
+.safe-area-padding {
+  padding-left: env(safe-area-inset-left);
+  padding-right: env(safe-area-inset-right);
+}
+
+.safe-area-top {
+  padding-top: env(safe-area-inset-top);
+}
+
+.safe-area-bottom {
+  padding-bottom: env(safe-area-inset-bottom);
+}

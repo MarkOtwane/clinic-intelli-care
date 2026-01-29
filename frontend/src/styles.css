@@ -1,8 +1,14 @@
 /* Import Inter font for better typography */
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap");
 
 /* Import Angular Material Theme */
-@import './theme.scss';
+@import "./theme.scss";
+
+/* Import Responsive Design System */
+@import "./responsive.scss";
+
+/* Import Healthcare Component Responsive Styles */
+@import "./healthcare-responsive.scss";
 
 /* Healthcare-focused color scheme and global styles for Clinic IntelliCare */
 
@@ -48,11 +54,11 @@
   --success-50: #f0fdf4;
   --success-500: #22c55e;
   --success-700: #15803d;
-  
+
   --warning-50: #fffbeb;
   --warning-500: #f59e0b;
   --warning-700: #a16207;
-  
+
   --error-50: #fef2f2;
   --error-500: #ef4444;
   --error-700: #b91c1c;
@@ -66,8 +72,10 @@
   /* Shadows for depth */
   --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
   --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
-  --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
-  --shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
+  --shadow-lg:
+    0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+  --shadow-xl:
+    0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
 
   /* Border Radius */
   --radius-sm: 0.375rem;
@@ -76,7 +84,8 @@
   --radius-xl: 1rem;
 
   /* Typography */
-  --font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --font-family:
+    "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
   --font-size-xs: 0.75rem;
   --font-size-sm: 0.875rem;
   --font-size-base: 1rem;
@@ -118,61 +127,161 @@ body {
 }
 
 /* Typography Utilities */
-.text-primary { color: var(--primary-600); }
-.text-secondary { color: var(--secondary-600); }
-.text-success { color: var(--success-700); }
-.text-warning { color: var(--warning-700); }
-.text-error { color: var(--error-700); }
-.text-muted { color: var(--gray-500); }
+.text-primary {
+  color: var(--primary-600);
+}
+.text-secondary {
+  color: var(--secondary-600);
+}
+.text-success {
+  color: var(--success-700);
+}
+.text-warning {
+  color: var(--warning-700);
+}
+.text-error {
+  color: var(--error-700);
+}
+.text-muted {
+  color: var(--gray-500);
+}
 
-.text-xs { font-size: var(--font-size-xs); }
-.text-sm { font-size: var(--font-size-sm); }
-.text-base { font-size: var(--font-size-base); }
-.text-lg { font-size: var(--font-size-lg); }
-.text-xl { font-size: var(--font-size-xl); }
-.text-2xl { font-size: var(--font-size-2xl); }
-.text-3xl { font-size: var(--font-size-3xl); }
-.text-4xl { font-size: var(--font-size-4xl); }
+.text-xs {
+  font-size: var(--font-size-xs);
+}
+.text-sm {
+  font-size: var(--font-size-sm);
+}
+.text-base {
+  font-size: var(--font-size-base);
+}
+.text-lg {
+  font-size: var(--font-size-lg);
+}
+.text-xl {
+  font-size: var(--font-size-xl);
+}
+.text-2xl {
+  font-size: var(--font-size-2xl);
+}
+.text-3xl {
+  font-size: var(--font-size-3xl);
+}
+.text-4xl {
+  font-size: var(--font-size-4xl);
+}
 
-.font-light { font-weight: 300; }
-.font-normal { font-weight: 400; }
-.font-medium { font-weight: 500; }
-.font-semibold { font-weight: 600; }
-.font-bold { font-weight: 700; }
+.font-light {
+  font-weight: 300;
+}
+.font-normal {
+  font-weight: 400;
+}
+.font-medium {
+  font-weight: 500;
+}
+.font-semibold {
+  font-weight: 600;
+}
+.font-bold {
+  font-weight: 700;
+}
 
 /* Background Color Utilities */
-.bg-primary { background-color: var(--primary-50); }
-.bg-primary-light { background-color: var(--primary-100); }
-.bg-secondary { background-color: var(--secondary-50); }
-.bg-secondary-light { background-color: var(--secondary-100); }
-.bg-white { background-color: white; }
-.bg-gray-50 { background-color: var(--gray-50); }
-.bg-gray-100 { background-color: var(--gray-100); }
+.bg-primary {
+  background-color: var(--primary-50);
+}
+.bg-primary-light {
+  background-color: var(--primary-100);
+}
+.bg-secondary {
+  background-color: var(--secondary-50);
+}
+.bg-secondary-light {
+  background-color: var(--secondary-100);
+}
+.bg-white {
+  background-color: white;
+}
+.bg-gray-50 {
+  background-color: var(--gray-50);
+}
+.bg-gray-100 {
+  background-color: var(--gray-100);
+}
 
 /* Spacing Utilities */
-.p-1 { padding: var(--space-1); }
-.p-2 { padding: var(--space-2); }
-.p-3 { padding: var(--space-3); }
-.p-4 { padding: var(--space-4); }
-.p-6 { padding: var(--space-6); }
-.p-8 { padding: var(--space-8); }
+.p-1 {
+  padding: var(--space-1);
+}
+.p-2 {
+  padding: var(--space-2);
+}
+.p-3 {
+  padding: var(--space-3);
+}
+.p-4 {
+  padding: var(--space-4);
+}
+.p-6 {
+  padding: var(--space-6);
+}
+.p-8 {
+  padding: var(--space-8);
+}
 
-.m-1 { margin: var(--space-1); }
-.m-2 { margin: var(--space-2); }
-.m-3 { margin: var(--space-3); }
-.m-4 { margin: var(--space-4); }
-.m-6 { margin: var(--space-6); }
-.m-8 { margin: var(--space-8); }
+.m-1 {
+  margin: var(--space-1);
+}
+.m-2 {
+  margin: var(--space-2);
+}
+.m-3 {
+  margin: var(--space-3);
+}
+.m-4 {
+  margin: var(--space-4);
+}
+.m-6 {
+  margin: var(--space-6);
+}
+.m-8 {
+  margin: var(--space-8);
+}
 
-.px-4 { padding-left: var(--space-4); padding-right: var(--space-4); }
-.py-2 { padding-top: var(--space-2); padding-bottom: var(--space-2); }
-.py-4 { padding-top: var(--space-4); padding-bottom: var(--space-4); }
-.py-6 { padding-top: var(--space-6); padding-bottom: var(--space-6); }
+.px-4 {
+  padding-left: var(--space-4);
+  padding-right: var(--space-4);
+}
+.py-2 {
+  padding-top: var(--space-2);
+  padding-bottom: var(--space-2);
+}
+.py-4 {
+  padding-top: var(--space-4);
+  padding-bottom: var(--space-4);
+}
+.py-6 {
+  padding-top: var(--space-6);
+  padding-bottom: var(--space-6);
+}
 
-.mx-4 { margin-left: var(--space-4); margin-right: var(--space-4); }
-.my-2 { margin-top: var(--space-2); margin-bottom: var(--space-2); }
-.my-4 { margin-top: var(--space-4); margin-bottom: var(--space-4); }
-.my-6 { margin-top: var(--space-6); margin-bottom: var(--space-6); }
+.mx-4 {
+  margin-left: var(--space-4);
+  margin-right: var(--space-4);
+}
+.my-2 {
+  margin-top: var(--space-2);
+  margin-bottom: var(--space-2);
+}
+.my-4 {
+  margin-top: var(--space-4);
+  margin-bottom: var(--space-4);
+}
+.my-6 {
+  margin-top: var(--space-6);
+  margin-bottom: var(--space-6);
+}
 
 /* Layout Utilities */
 .container {
@@ -181,14 +290,30 @@ body {
   padding: 0 var(--space-4);
 }
 
-.flex { display: flex; }
-.flex-col { flex-direction: column; }
-.items-center { align-items: center; }
-.justify-center { justify-content: center; }
-.justify-between { justify-content: space-between; }
-.gap-2 { gap: var(--space-2); }
-.gap-4 { gap: var(--space-4); }
-.gap-6 { gap: var(--space-6); }
+.flex {
+  display: flex;
+}
+.flex-col {
+  flex-direction: column;
+}
+.items-center {
+  align-items: center;
+}
+.justify-center {
+  justify-content: center;
+}
+.justify-between {
+  justify-content: space-between;
+}
+.gap-2 {
+  gap: var(--space-2);
+}
+.gap-4 {
+  gap: var(--space-4);
+}
+.gap-6 {
+  gap: var(--space-6);
+}
 
 /* Healthcare Card Styles */
 .healthcare-card {
@@ -335,22 +460,32 @@ body {
 }
 
 /* Healthcare-specific icon colors */
-.icon-medical { color: var(--medical-blue); }
-.icon-health { color: var(--medical-teal); }
-.icon-success { color: var(--success-600); }
-.icon-warning { color: var(--warning-600); }
-.icon-error { color: var(--error-600); }
+.icon-medical {
+  color: var(--medical-blue);
+}
+.icon-health {
+  color: var(--medical-teal);
+}
+.icon-success {
+  color: var(--success-600);
+}
+.icon-warning {
+  color: var(--warning-600);
+}
+.icon-error {
+  color: var(--error-600);
+}
 
 /* Responsive utilities */
 @media (max-width: 640px) {
   .container {
     padding: 0 var(--space-3);
   }
-  
+
   .text-4xl {
     font-size: var(--font-size-3xl);
   }
-  
+
   .text-3xl {
     font-size: var(--font-size-2xl);
   }
@@ -601,7 +736,7 @@ body {
 }
 
 .timeline::before {
-  content: '';
+  content: "";
   position: absolute;
   left: 8px;
   top: 0;
@@ -616,7 +751,7 @@ body {
 }
 
 .timeline-item::before {
-  content: '';
+  content: "";
   position: absolute;
   left: -24px;
   top: 4px;
@@ -708,7 +843,12 @@ body {
 
 /* Loading States */
 .skeleton {
-  background: linear-gradient(90deg, var(--gray-200) 25%, var(--gray-100) 50%, var(--gray-200) 75%);
+  background: linear-gradient(
+    90deg,
+    var(--gray-200) 25%,
+    var(--gray-100) 50%,
+    var(--gray-200) 75%
+  );
   background-size: 200% 100%;
   animation: shimmer 1.5s infinite;
   border-radius: var(--radius-md);
@@ -891,11 +1031,11 @@ a:focus-visible {
   .no-print {
     display: none !important;
   }
-  
+
   body {
     background: white;
   }
-  
+
   .healthcare-card {
     box-shadow: none;
     border: 1px solid var(--gray-300);
@@ -909,4 +1049,316 @@ a:focus-visible {
     --gray-100: var(--gray-800);
     --gray-200: var(--gray-700);
   }
+}
+
+/* ========================================
+   RESPONSIVE STYLES FOR ALL SCREEN SIZES
+   ======================================== */
+
+/* Mobile Styles (< 600px) */
+@media (max-width: 599px) {
+  /* Global Container Adjustments */
+  .container {
+    max-width: 100%;
+    padding: 0 0.75rem;
+  }
+
+  /* Typography Scaling */
+  body {
+    font-size: 14px;
+  }
+
+  .text-4xl {
+    font-size: 1.875rem;
+  }
+  .text-3xl {
+    font-size: 1.5rem;
+  }
+  .text-2xl {
+    font-size: 1.25rem;
+  }
+  .text-xl {
+    font-size: 1.125rem;
+  }
+
+  /* Button Adjustments */
+  .btn {
+    padding: 0.625rem 1rem;
+    font-size: 14px;
+    width: 100%;
+    justify-content: center;
+  }
+
+  .btn-sm {
+    padding: 0.5rem 0.875rem;
+  }
+
+  /* Card Adjustments */
+  .healthcare-card {
+    margin: 0.5rem 0;
+    padding: 1rem;
+    border-radius: 8px;
+  }
+
+  /* Spacing Adjustments */
+  .p-8 {
+    padding: 1rem;
+  }
+  .p-6 {
+    padding: 0.875rem;
+  }
+  .py-6 {
+    padding-top: 0.875rem;
+    padding-bottom: 0.875rem;
+  }
+  .px-4 {
+    padding-left: 0.75rem;
+    padding-right: 0.75rem;
+  }
+
+  /* Grid Layouts */
+  .stats-grid {
+    grid-template-columns: 1fr !important;
+    gap: 0.75rem !important;
+  }
+
+  .cards-grid {
+    grid-template-columns: 1fr !important;
+    gap: 1rem !important;
+  }
+
+  /* Form Inputs */
+  .form-input {
+    padding: 0.75rem 1rem;
+    font-size: 16px; /* Prevent zoom on iOS */
+  }
+
+  /* Avatar Sizes */
+  .avatar-xl {
+    width: 60px;
+    height: 60px;
+    font-size: 1.25rem;
+  }
+  .avatar-lg {
+    width: 48px;
+    height: 48px;
+    font-size: 1rem;
+  }
+
+  /* Badge Adjustments */
+  .badge {
+    padding: 0.25rem 0.5rem;
+    font-size: 0.7rem;
+  }
+
+  /* Chip Adjustments */
+  .chip {
+    padding: 0.375rem 0.625rem;
+    font-size: 0.75rem;
+  }
+
+  /* Make tables scrollable */
+  table {
+    display: block;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  /* Stack flex items */
+  .flex-row-mobile {
+    flex-direction: column !important;
+  }
+
+  /* Full width elements on mobile */
+  .full-width-mobile {
+    width: 100% !important;
+  }
+}
+
+/* Tablet Styles (600px - 959px) */
+@media (min-width: 600px) and (max-width: 959px) {
+  .container {
+    max-width: 720px;
+    padding: 0 1.25rem;
+  }
+
+  /* Grid Layouts */
+  .stats-grid {
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 1rem !important;
+  }
+
+  .cards-grid {
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 1.25rem !important;
+  }
+
+  /* Buttons */
+  .btn {
+    padding: 0.75rem 1.25rem;
+  }
+
+  /* Cards */
+  .healthcare-card {
+    padding: 1.5rem;
+  }
+}
+
+/* Desktop Styles (960px - 1279px) */
+@media (min-width: 960px) and (max-width: 1279px) {
+  .container {
+    max-width: 960px;
+  }
+
+  .stats-grid {
+    grid-template-columns: repeat(4, 1fr) !important;
+  }
+
+  .cards-grid {
+    grid-template-columns: repeat(2, 1fr) !important;
+  }
+}
+
+/* Large Desktop Styles (>= 1280px) */
+@media (min-width: 1280px) {
+  .container {
+    max-width: 1200px;
+  }
+
+  .stats-grid {
+    grid-template-columns: repeat(4, 1fr) !important;
+  }
+
+  .cards-grid {
+    grid-template-columns: repeat(3, 1fr) !important;
+  }
+}
+
+/* Touch Device Optimizations */
+@media (hover: none) and (pointer: coarse) {
+  /* Increase touch targets */
+  button,
+  a,
+  .clickable {
+    min-height: 44px;
+    min-width: 44px;
+  }
+
+  /* Remove hover effects on touch devices */
+  .healthcare-card:hover {
+    transform: none;
+  }
+
+  .btn:hover {
+    transform: none;
+  }
+}
+
+/* Landscape Mobile Optimization */
+@media (max-width: 959px) and (orientation: landscape) {
+  /* Reduce vertical padding in landscape */
+  .py-6 {
+    padding-top: 0.5rem;
+    padding-bottom: 0.5rem;
+  }
+  .py-4 {
+    padding-top: 0.375rem;
+    padding-bottom: 0.375rem;
+  }
+
+  /* Adjust heights */
+  .min-h-screen {
+    min-height: auto;
+  }
+}
+
+/* High Resolution Displays */
+@media (-webkit-min-device-pixel-ratio: 2), (min-resolution: 192dpi) {
+  /* Sharper borders and shadows */
+  .healthcare-card {
+    border-width: 0.5px;
+  }
+}
+
+/* Safe Area Support (for notched devices like iPhone X+) */
+@supports (padding: env(safe-area-inset-top)) {
+  body {
+    padding-top: env(safe-area-inset-top);
+    padding-bottom: env(safe-area-inset-bottom);
+    padding-left: env(safe-area-inset-left);
+    padding-right: env(safe-area-inset-right);
+  }
+}
+
+/* Utility Classes for Responsive Design */
+.hide-on-mobile {
+  @media (max-width: 599px) {
+    display: none !important;
+  }
+}
+
+.hide-on-tablet {
+  @media (min-width: 600px) and (max-width: 959px) {
+    display: none !important;
+  }
+}
+
+.hide-on-desktop {
+  @media (min-width: 960px) {
+    display: none !important;
+  }
+}
+
+.show-on-mobile-only {
+  display: none !important;
+  @media (max-width: 599px) {
+    display: block !important;
+  }
+}
+
+.show-on-tablet-only {
+  display: none !important;
+  @media (min-width: 600px) and (max-width: 959px) {
+    display: block !important;
+  }
+}
+
+.show-on-desktop-only {
+  display: none !important;
+  @media (min-width: 960px) {
+    display: block !important;
+  }
+}
+
+/* Responsive Text Alignment */
+.text-center-mobile {
+  @media (max-width: 599px) {
+    text-align: center !important;
+  }
+}
+
+.text-left-mobile {
+  @media (max-width: 599px) {
+    text-align: left !important;
+  }
+}
+
+/* Responsive Flex Direction */
+.flex-column-mobile {
+  @media (max-width: 599px) {
+    flex-direction: column !important;
+  }
+}
+
+.flex-column-tablet {
+  @media (max-width: 959px) {
+    flex-direction: column !important;
+  }
+}
+
+/* Image Responsive */
+img.responsive {
+  max-width: 100%;
+  height: auto;
+  display: block;
 }

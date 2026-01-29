@@ -12,12 +12,15 @@
 // Custom component overrides for healthcare aesthetics
 .mat-mdc-card {
   border-radius: 12px !important;
-  box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1) !important;
+  box-shadow:
+    0 4px 6px -1px rgb(0 0 0 / 0.1),
+    0 2px 4px -2px rgb(0 0 0 / 0.1) !important;
   border: 1px solid #e5e7eb;
   transition: all 0.2s ease;
 
   &:hover {
-    box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1),
+    box-shadow:
+      0 10px 15px -3px rgb(0 0 0 / 0.1),
       0 4px 6px -4px rgb(0 0 0 / 0.1) !important;
     transform: translateY(-2px);
   }
@@ -45,7 +48,9 @@
 
 .mat-mdc-fab,
 .mat-mdc-mini-fab {
-  box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1) !important;
+  box-shadow:
+    0 10px 15px -3px rgb(0 0 0 / 0.1),
+    0 4px 6px -4px rgb(0 0 0 / 0.1) !important;
 }
 
 // Toolbar customization
@@ -53,13 +58,17 @@
   background: white !important;
   color: #1f2937 !important;
   border-bottom: 1px solid #e5e7eb;
-  box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
+  box-shadow:
+    0 1px 3px 0 rgb(0 0 0 / 0.1),
+    0 1px 2px -1px rgb(0 0 0 / 0.1);
 }
 
 // Menu customization
 .mat-mdc-menu-panel {
   border-radius: 12px !important;
-  box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1) !important;
+  box-shadow:
+    0 10px 15px -3px rgb(0 0 0 / 0.1),
+    0 4px 6px -4px rgb(0 0 0 / 0.1) !important;
 }
 
 // Snackbar customization
@@ -124,7 +133,9 @@
 // Expansion panel customization
 .mat-expansion-panel {
   border-radius: 12px !important;
-  box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1) !important;
+  box-shadow:
+    0 1px 3px 0 rgb(0 0 0 / 0.1),
+    0 1px 2px -1px rgb(0 0 0 / 0.1) !important;
   border: 1px solid #e5e7eb;
   margin-bottom: 16px;
 
@@ -173,4 +184,338 @@
   border-radius: 6px;
   font-size: 0.75rem;
   padding: 6px 12px;
+}
+
+// ========================================
+// RESPONSIVE MATERIAL COMPONENT STYLES
+// ========================================
+
+// Mobile Responsive Styles (< 600px)
+@media (max-width: 599px) {
+  // Card adjustments
+  .mat-mdc-card {
+    margin: 0.5rem 0 !important;
+    padding: 1rem !important;
+    border-radius: 8px !important;
+
+    &:hover {
+      transform: none; // Disable transform on mobile
+    }
+
+    .mat-mdc-card-header {
+      padding: 0 0 1rem 0 !important;
+    }
+
+    .mat-mdc-card-content {
+      padding: 0 !important;
+    }
+
+    .mat-mdc-card-actions {
+      padding: 1rem 0 0 0 !important;
+      flex-direction: column;
+      gap: 0.5rem;
+
+      button {
+        width: 100%;
+      }
+    }
+  }
+
+  // Button adjustments
+  .mat-mdc-button,
+  .mat-mdc-raised-button,
+  .mat-mdc-outlined-button,
+  .mat-mdc-unelevated-button {
+    min-height: 44px !important;
+    padding: 0.625rem 1rem !important;
+    font-size: 14px !important;
+
+    &:hover {
+      transform: none;
+    }
+  }
+
+  .mat-mdc-icon-button {
+    width: 44px !important;
+    height: 44px !important;
+    padding: 10px !important;
+  }
+
+  // Form field adjustments
+  .mat-mdc-form-field {
+    width: 100% !important;
+    font-size: 16px !important; // Prevent iOS zoom
+
+    .mat-mdc-text-field-wrapper {
+      .mat-mdc-form-field-flex {
+        .mat-mdc-form-field-infix {
+          min-height: 48px !important;
+          padding-top: 16px !important;
+          padding-bottom: 8px !important;
+        }
+      }
+    }
+
+    input,
+    textarea {
+      font-size: 16px !important; // Prevent iOS zoom
+    }
+  }
+
+  // Dialog adjustments
+  .mat-mdc-dialog-container {
+    max-width: calc(100vw - 2rem) !important;
+    max-height: calc(100vh - 2rem) !important;
+    margin: 1rem !important;
+
+    .mat-mdc-dialog-title {
+      font-size: 1.25rem !important;
+      padding: 1rem !important;
+    }
+
+    .mat-mdc-dialog-content {
+      padding: 0 1rem !important;
+      max-height: calc(100vh - 12rem) !important;
+    }
+
+    .mat-mdc-dialog-actions {
+      padding: 1rem !important;
+      flex-direction: column-reverse;
+      gap: 0.5rem;
+
+      button {
+        width: 100%;
+        margin: 0 !important;
+      }
+    }
+  }
+
+  // Table adjustments - horizontal scroll
+  .mat-mdc-table {
+    display: block;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    border-radius: 8px;
+
+    table {
+      min-width: 600px;
+    }
+
+    .mat-mdc-header-cell,
+    .mat-mdc-cell {
+      padding: 8px !important;
+      font-size: 0.875rem !important;
+    }
+  }
+
+  // Sidenav adjustments
+  .mat-drawer-container {
+    .mat-drawer {
+      width: 85vw !important;
+      max-width: 320px !important;
+    }
+
+    .mat-drawer-content {
+      margin-left: 0 !important;
+    }
+  }
+
+  // Toolbar adjustments
+  .mat-toolbar {
+    padding: 0 0.75rem !important;
+    height: 56px !important;
+    min-height: 56px !important;
+
+    .mat-toolbar-row {
+      height: 56px !important;
+      padding: 0 !important;
+    }
+
+    h1,
+    h2,
+    h3 {
+      font-size: 1.125rem !important;
+    }
+  }
+
+  // Menu adjustments
+  .mat-mdc-menu-panel {
+    max-width: calc(100vw - 2rem) !important;
+    max-height: calc(100vh - 4rem) !important;
+  }
+
+  // Tabs adjustments
+  .mat-mdc-tab-group {
+    .mat-mdc-tab-labels {
+      .mat-mdc-tab {
+        min-width: 80px !important;
+        padding: 0 12px !important;
+        font-size: 0.875rem !important;
+
+        .mat-mdc-tab-label-content {
+          display: flex;
+          flex-direction: column;
+          gap: 4px;
+        }
+      }
+    }
+  }
+
+  // Stepper adjustments
+  .mat-stepper-horizontal {
+    .mat-horizontal-stepper-header-container {
+      .mat-horizontal-stepper-header {
+        padding: 0 8px !important;
+
+        .mat-step-label {
+          font-size: 0.75rem !important;
+          min-width: auto !important;
+        }
+
+        .mat-step-icon {
+          width: 32px !important;
+          height: 32px !important;
+        }
+      }
+    }
+  }
+
+  // Expansion panel adjustments
+  .mat-expansion-panel {
+    margin-bottom: 0.75rem !important;
+
+    .mat-expansion-panel-header {
+      padding: 0.75rem 1rem !important;
+      font-size: 0.9375rem !important;
+    }
+
+    .mat-expansion-panel-body {
+      padding: 0 1rem 1rem 1rem !important;
+    }
+  }
+
+  // Snackbar adjustments
+  .mat-mdc-snack-bar-container {
+    margin: 8px !important;
+    max-width: calc(100vw - 16px) !important;
+
+    .mat-mdc-snack-bar-label {
+      font-size: 0.875rem !important;
+      padding: 12px !important;
+    }
+  }
+
+  // Chip adjustments
+  .mat-mdc-chip {
+    font-size: 0.75rem !important;
+    min-height: 28px !important;
+    padding: 4px 10px !important;
+  }
+
+  // Select adjustments
+  .mat-mdc-select-panel {
+    max-height: 60vh !important;
+  }
+
+  // Datepicker adjustments
+  .mat-datepicker-content {
+    .mat-calendar {
+      width: 280px !important;
+      height: 354px !important;
+    }
+  }
+
+  // Progress bar
+  .mat-mdc-progress-bar {
+    height: 6px !important;
+  }
+
+  // FAB button positioning
+  .mat-mdc-fab,
+  .mat-mdc-mini-fab {
+    &.fixed-fab {
+      position: fixed;
+      bottom: 16px;
+      right: 16px;
+      z-index: 1000;
+    }
+  }
+}
+
+// Tablet Responsive Styles (600px - 959px)
+@media (min-width: 600px) and (max-width: 959px) {
+  .mat-mdc-card {
+    padding: 1.5rem !important;
+  }
+
+  .mat-drawer-container {
+    .mat-drawer {
+      width: 280px !important;
+    }
+  }
+
+  .mat-toolbar {
+    padding: 0 1.25rem !important;
+  }
+
+  .mat-mdc-dialog-container {
+    max-width: 90vw !important;
+  }
+}
+
+// Touch Device Optimizations
+@media (hover: none) and (pointer: coarse) {
+  // Remove hover effects on touch devices
+  .mat-mdc-card:hover {
+    transform: none !important;
+    box-shadow:
+      0 4px 6px -1px rgb(0 0 0 / 0.1),
+      0 2px 4px -2px rgb(0 0 0 / 0.1) !important;
+  }
+
+  .mat-mdc-button:hover,
+  .mat-mdc-raised-button:hover,
+  .mat-mdc-outlined-button:hover {
+    transform: none !important;
+  }
+
+  .mat-mdc-row:hover {
+    background-color: transparent !important;
+  }
+
+  // Increase touch targets
+  .mat-mdc-icon-button,
+  .mat-mdc-button,
+  .mat-mdc-raised-button {
+    min-height: 44px !important;
+    min-width: 44px !important;
+  }
+
+  // Remove focus outline on touch (will use :focus-visible instead)
+  *:focus {
+    outline: none;
+  }
+
+  *:focus-visible {
+    outline: 2px solid #4a7aff;
+    outline-offset: 2px;
+  }
+}
+
+// Landscape Mobile Optimization
+@media (max-width: 959px) and (orientation: landscape) {
+  .mat-mdc-dialog-container {
+    max-height: calc(100vh - 1rem) !important;
+
+    .mat-mdc-dialog-content {
+      max-height: calc(100vh - 8rem) !important;
+    }
+  }
+
+  .mat-drawer-container {
+    .mat-drawer {
+      width: 60vw !important;
+      max-width: 360px !important;
+    }
+  }
 }
