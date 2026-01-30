@@ -215,23 +215,21 @@ interface DoctorDashboard {
                   </mat-chip>
                 </div>
                 <div class="case-body">
-                  <p class="patient-name">
-                    {{ case.patient?.name || 'Patient' }}
-                  </p>
+                  <p class="patient-name">Patient Case</p>
                   <div class="symptoms-tags">
                     <span
                       class="tag"
                       *ngFor="
-                        let symptom of case.symptoms?.symptoms | slice: 0 : 2
+                        let symptom of case.symptoms.symptoms | slice: 0 : 2
                       "
                     >
                       {{ symptom }}
                     </span>
                     <span
                       class="tag more"
-                      *ngIf="case.symptoms?.symptoms?.length > 2"
+                      *ngIf="case.symptoms.symptoms.length > 2"
                     >
-                      +{{ case.symptoms?.symptoms?.length - 2 }}
+                      +{{ case.symptoms.symptoms.length - 2 }}
                     </span>
                   </div>
                 </div>
@@ -270,11 +268,13 @@ interface DoctorDashboard {
                 "
               >
                 <div class="time-slot">
-                  <div class="time">{{ apt.time }}</div>
+                  <div class="time">{{ apt.startTime }}</div>
                 </div>
                 <div class="apt-details">
-                  <div class="apt-patient">Patient Name</div>
-                  <div class="apt-type">{{ apt.type || 'Consultation' }}</div>
+                  <div class="apt-patient">
+                    {{ apt.reason || 'Appointment' }}
+                  </div>
+                  <div class="apt-type">{{ apt.status || 'Scheduled' }}</div>
                   <mat-chip
                     [color]="getStatusColor(apt.status)"
                     selected
