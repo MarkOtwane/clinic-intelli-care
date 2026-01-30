@@ -87,15 +87,6 @@ export class AppointmentsController {
   }
 
   /**
-   * Get all appointments (ADMIN only)
-   */
-  @Get()
-  @Roles('ADMIN')
-  getAllAppointments() {
-    return this.appointmentsService.getAllAppointments();
-  }
-
-  /**
    * Get appointments for current patient (PATIENT only)
    */
   @Get('my-appointments')
@@ -143,6 +134,115 @@ export class AppointmentsController {
   @Get('doctors')
   getAvailableDoctors() {
     return this.appointmentsService.getAvailableDoctors();
+  }
+
+  /**
+   * Get doctor availability (DOCTOR only, own availability)
+   */
+  @Get('availability')
+  @Roles('DOCTOR')
+  async getDoctorAvailability(@CurrentUser('id') userId: string) {
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+      include: { doctorProfile: true },
+    });
+
+    if (!user || !user.doctorProfile) {
+      throw new BadRequestException('Doctor profile not found');
+    }
+
+    return this.appointmentsService.getDoctorAvailability(
+      user.doctorProfile.id,
+    );
+  }
+
+  /**
+   * Get patient AI analyses for doctor (DOCTOR only, patients who booked appointments)
+   */
+  @Get('patient-analyses')
+  @Roles('DOCTOR')
+  async getPatientAnalysesForDoctor(@CurrentUser('id') userId: string) {
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+      include: { doctorProfile: true },
+    });
+
+    if (!user || !user.doctorProfile) {
+      throw new BadRequestException('Doctor profile not found');
+    }
+
+    return this.appointmentsService.getPatientAnalysesForDoctor(
+      user.doctorProfile.id,
+    );
+  }
+
+  /**
+   * Get all appointments (ADMIN only)
+   */
+  @Get()
+  @Roles('ADMIN')
+  getAllAppointments() {
+    return this.appointmentsService.getAllAppointments();
+  }
+
+  /**
+   * Get single appointment by ID
+   */
+  @Get(':id')
+  @Roles('ADMIN', 'DOCTOR', 'PATIENT')
+  getAppointmentById(@Param('id') id: string) {
+    return this.appointmentsService.getAppointmentById(id);
+  }
+
+  /**
+   * Get appointments for a specific patient (by patient ID)
+   */
+  @Get('patient/:patientId')
+  @Roles('ADMIN', 'DOCTOR')
+  getAppointmentsByPatient(@Param('patientId') patientId: string) {
+    return this.appointmentsService.getAppointmentsByPatient(patientId);
+  }
+
+  /**
+   * Get appointments for a specific doctor (by doctor ID)
+   */
+  @Get('doctor/:doctorId')
+  @Roles('ADMIN')
+  getAppointmentsByDoctor(@Param('doctorId') doctorId: string) {
+    return this.appointmentsService.getAppointmentsByDoctor(doctorId);
+  }
+
+  /**
+   * Set doctor availability (DOCTOR only, own availability)
+   */
+  @Post('availability')
+  @Roles('DOCTOR')
+  async setDoctorAvailability(
+    @Body()
+    body: {
+      dayOfWeek: number;
+      startTime: string;
+      endTime: string;
+      isAvailable: boolean;
+    },
+    @CurrentUser('id') userId: string,
+  ) {
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+      include: { doctorProfile: true },
+    });
+
+    if (!user || !user.doctorProfile) {
+      throw new BadRequestException('Doctor profile not found');
+    }
+
+    return this.appointmentsService.setDoctorAvailability(
+      user.doctorProfile.id,
+      body.dayOfWeek,
+      body.startTime,
+      body.endTime,
+      body.isAvailable,
+    );
   }
 
   /**
@@ -256,79 +356,6 @@ export class AppointmentsController {
     return this.appointmentsService.cancelAppointment(
       id,
       user.patientProfile.id,
-    );
-  }
-
-  /**
-   * Set doctor availability (DOCTOR only, own availability)
-   */
-  @Post('availability')
-  @Roles('DOCTOR')
-  async setDoctorAvailability(
-    @Body()
-    body: {
-      dayOfWeek: number;
-      startTime: string;
-      endTime: string;
-      isAvailable: boolean;
-    },
-    @CurrentUser('id') userId: string,
-  ) {
-    const user = await this.prisma.user.findUnique({
-      where: { id: userId },
-      include: { doctorProfile: true },
-    });
-
-    if (!user || !user.doctorProfile) {
-      throw new BadRequestException('Doctor profile not found');
-    }
-
-    return this.appointmentsService.setDoctorAvailability(
-      user.doctorProfile.id,
-      body.dayOfWeek,
-      body.startTime,
-      body.endTime,
-      body.isAvailable,
-    );
-  }
-
-  /**
-   * Get doctor availability (DOCTOR only, own availability)
-   */
-  @Get('availability')
-  @Roles('DOCTOR')
-  async getDoctorAvailability(@CurrentUser('id') userId: string) {
-    const user = await this.prisma.user.findUnique({
-      where: { id: userId },
-      include: { doctorProfile: true },
-    });
-
-    if (!user || !user.doctorProfile) {
-      throw new BadRequestException('Doctor profile not found');
-    }
-
-    return this.appointmentsService.getDoctorAvailability(
-      user.doctorProfile.id,
-    );
-  }
-
-  /**
-   * Get patient AI analyses for doctor (DOCTOR only, patients who booked appointments)
-   */
-  @Get('patient-analyses')
-  @Roles('DOCTOR')
-  async getPatientAnalysesForDoctor(@CurrentUser('id') userId: string) {
-    const user = await this.prisma.user.findUnique({
-      where: { id: userId },
-      include: { doctorProfile: true },
-    });
-
-    if (!user || !user.doctorProfile) {
-      throw new BadRequestException('Doctor profile not found');
-    }
-
-    return this.appointmentsService.getPatientAnalysesForDoctor(
-      user.doctorProfile.id,
     );
   }
 }

@@ -10,10 +10,10 @@ import {
   Post,
   UseGuards,
 } from '@nestjs/common';
-import { Roles } from '../auth/roles.decorator';
 import { CurrentUser } from '../auth/decorators/user.decorator';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
+import { Roles } from '../auth/roles.decorator';
 import { PrismaService } from '../prisma/prisma.service';
 import { BlogsService } from './blogs.service';
 import { CreateBlogDto } from './dtos/create-blog.dto';
@@ -54,6 +54,25 @@ export class BlogsController {
   @Roles('PATIENT', 'DOCTOR', 'ADMIN')
   findAll() {
     return this.blogsService.findAll();
+  }
+
+  /**
+   * Get blogs by current doctor (DOCTOR only)
+   */
+  @Get('my-blogs')
+  @Roles('DOCTOR')
+  async findMyBlogs(@CurrentUser('id') userId: string) {
+    const doctor = await this.getDoctorProfile(userId);
+    return this.blogsService.findByDoctor(doctor.id);
+  }
+
+  /**
+   * Get blogs by specific doctor ID
+   */
+  @Get('doctor/:id')
+  @Roles('DOCTOR', 'ADMIN')
+  findByDoctor(@Param('id') id: string) {
+    return this.blogsService.findByDoctor(id);
   }
 
   @Get(':id')
