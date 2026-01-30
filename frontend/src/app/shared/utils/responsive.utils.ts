@@ -305,12 +305,25 @@ export function isRetinaDisplay(): boolean {
 /**
  * Lock screen orientation (if supported)
  */
+type OrientationLock =
+  | 'any'
+  | 'natural'
+  | 'landscape'
+  | 'portrait'
+  | 'landscape-primary'
+  | 'landscape-secondary'
+  | 'portrait-primary'
+  | 'portrait-secondary';
+
 export async function lockOrientation(
-  orientation: OrientationLockType,
+  orientation: OrientationLock,
 ): Promise<void> {
-  if ('orientation' in screen && 'lock' in screen.orientation) {
+  if (
+    'orientation' in screen &&
+    typeof (screen.orientation as any).lock === 'function'
+  ) {
     try {
-      await (screen.orientation as ScreenOrientation).lock(orientation);
+      await (screen.orientation as any).lock(orientation);
     } catch (error) {
       console.warn('Orientation lock not supported:', error);
     }
@@ -321,8 +334,11 @@ export async function lockOrientation(
  * Unlock screen orientation
  */
 export function unlockOrientation(): void {
-  if ('orientation' in screen && 'unlock' in screen.orientation) {
-    screen.orientation.unlock();
+  if (
+    'orientation' in screen &&
+    typeof (screen.orientation as any).unlock === 'function'
+  ) {
+    (screen.orientation as any).unlock();
   }
 }
 
