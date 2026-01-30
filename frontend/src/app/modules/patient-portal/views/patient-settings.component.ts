@@ -373,7 +373,8 @@ export class PatientSettingsComponent implements OnInit {
   private loadPatientData(): void {
     this.isLoading = true;
     this.patientService.getMyDashboard().subscribe({
-      next: (patient) => {
+      next: (dashboard) => {
+        const patient = dashboard.patient;
         this.patientId = patient.id;
         this.profileForm.patchValue({
           firstName: patient.firstName,

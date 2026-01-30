@@ -9,6 +9,18 @@ import {
   UpdatePatientDto,
 } from '../models/patient.model';
 
+export interface PatientDashboardResponse {
+  patient: Patient & { status?: string };
+  stats: {
+    upcomingAppointments: number;
+    activePrescriptions: number;
+    unreadNotifications: number;
+  };
+  upcomingAppointments: any[];
+  activePrescriptions: any[];
+  recentAnalyses: any[];
+}
+
 @Injectable({
   providedIn: 'root',
 })
@@ -114,10 +126,12 @@ export class PatientService {
   /**
    * Get the authenticated patient's dashboard data (resolves patient by userId server-side)
    */
-  getMyDashboard(): Observable<Patient> {
+  getMyDashboard(): Observable<PatientDashboardResponse> {
     return this.http
-      .get<Patient>(`${this.apiUrl}/dashboard`)
-      .pipe(tap((patient) => this.selectedPatientSubject.next(patient)));
+      .get<PatientDashboardResponse>(`${this.apiUrl}/dashboard`)
+      .pipe(
+        tap((response) => this.selectedPatientSubject.next(response.patient)),
+      );
   }
 
   /**

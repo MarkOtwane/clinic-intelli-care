@@ -16,9 +16,13 @@ import { takeUntil } from 'rxjs/operators';
 import { Appointment } from '../../../core/models/appointment.model';
 import { Patient } from '../../../core/models/patient.model';
 import { Prescription } from '../../../core/models/prescription.model';
+import { AiAnalysisService } from '../../../core/services/ai-analysis.service';
 import { AppointmentsService } from '../../../core/services/appointments.service';
 import { AuthService } from '../../../core/services/auth.service';
-import { PatientService } from '../../../core/services/patient.service';
+import {
+    PatientDashboardResponse,
+    PatientService,
+} from '../../../core/services/patient.service';
 import { PrescriptionService } from '../../../core/services/prescription.service';
 import { CancelAppointmentDialogComponent } from '../../../modules/patient-portal/components/cancel-appointment-dialog.component';
 
@@ -39,39 +43,42 @@ import { CancelAppointmentDialogComponent } from '../../../modules/patient-porta
     MatTabsModule,
   ],
   template: `
-    <div
-      class="dashboard-container"
-      *ngIf="!isLoading && patient; else loadingOrErrorTemplate"
-    >
+    <div class="dashboard-container" *ngIf="!isLoading; else loadingTemplate">
       <div class="dashboard-header">
         <div class="welcome-section">
           <h1 class="dashboard-title">
-            Welcome back, {{ patient.firstName }}!
+            Welcome back, {{ patient?.firstName || currentUser?.firstName || 'Patient' }}!
           </h1>
           <p class="dashboard-subtitle">
             Manage your healthcare journey from one centralized location
           </p>
         </div>
         <div class="quick-stats">
-          <div class="stat-card">
-            <mat-icon class="stat-icon icon-success">event_available</mat-icon>
+          <div class="stat-card primary">
+            <div class="stat-icon-wrapper">
+              <mat-icon class="stat-icon">psychology</mat-icon>
+            </div>
             <div class="stat-content">
-              <div class="stat-number">{{ upcomingAppointments.length }}</div>
-              <div class="stat-label">Upcoming Appointments</div>
+              <div class="stat-number">{{ analysisCount }}</div>
+              <div class="stat-label">Analyses Completed</div>
             </div>
           </div>
-          <div class="stat-card">
-            <mat-icon class="stat-icon icon-medical">medication</mat-icon>
+          <div class="stat-card success">
+            <div class="stat-icon-wrapper">
+              <mat-icon class="stat-icon">event_available</mat-icon>
+            </div>
+            <div class="stat-content">
+              <div class="stat-number">{{ appointments.length }}</div>
+              <div class="stat-label">Total Appointments</div>
+            </div>
+          </div>
+          <div class="stat-card info">
+            <div class="stat-icon-wrapper">
+              <mat-icon class="stat-icon">medication</mat-icon>
+            </div>
             <div class="stat-content">
               <div class="stat-number">{{ prescriptions.length }}</div>
-              <div class="stat-label">Active Prescriptions</div>
-            </div>
-          </div>
-          <div class="stat-card">
-            <mat-icon class="stat-icon icon-warning">pending_actions</mat-icon>
-            <div class="stat-content">
-              <div class="stat-number">{{ pendingAppointments.length }}</div>
-              <div class="stat-label">Pending Approvals</div>
+              <div class="stat-label">Prescriptions</div>
             </div>
           </div>
         </div>
@@ -515,22 +522,10 @@ import { CancelAppointmentDialogComponent } from '../../../modules/patient-porta
       </div>
     </div>
 
-    <ng-template #loadingOrErrorTemplate>
-      <div class="loading" *ngIf="isLoading">
+    <ng-template #loadingTemplate>
+      <div class="loading">
         <mat-spinner></mat-spinner>
         <p>Loading patient profile...</p>
-      </div>
-      <div class="error-state" *ngIf="!isLoading && !patient">
-        <mat-icon class="error-icon">info</mat-icon>
-        <h2>Welcome to Your Health Dashboard</h2>
-        <p>
-          Your patient profile is being set up. Please contact your healthcare
-          provider to complete your registration.
-        </p>
-        <p class="error-details">
-          If you believe this is an error, please try refreshing the page or
-          contact support.
-        </p>
       </div>
     </ng-template>
   `,
@@ -1388,10 +1383,20 @@ import { CancelAppointmentDialogComponent } from '../../../modules/patient-porta
 })
 export class PatientDashboardComponent implements OnInit, OnDestroy {
   patient: Patient | null = null;
+  currentUser: any | null = null;
   appointments: Appointment[] = [];
   prescriptions: Prescription[] = [];
+  recentAnalyses: any[] = [];
+  analysisCount = 0;
+  dashboardStats: PatientDashboardResponse['stats'] = {
+    upcomingAppointments: 0,
+    activePrescriptions: 0,
+    unreadNotifications: 0,
+  };
   isLoading = true;
   appointmentsLoading = true;
+  prescriptionsLoaded = false;
+  patientLoaded = false;
   upcomingAppointments: any[] = [];
   pendingAppointments: any[] = [];
   pastAppointments: any[] = [];
@@ -1414,6 +1419,7 @@ export class PatientDashboardComponent implements OnInit, OnDestroy {
     private patientService: PatientService,
     private appointmentsService: AppointmentsService,
     private prescriptionService: PrescriptionService,
+    private aiAnalysisService: AiAnalysisService,
     private dialog: MatDialog,
     private snackBar: MatSnackBar,
   ) {}
@@ -1422,6 +1428,7 @@ export class PatientDashboardComponent implements OnInit, OnDestroy {
     this.authService.currentUser$
       .pipe(takeUntil(this.destroy$))
       .subscribe((user) => {
+        this.currentUser = user || null;
         if (user && user.role === 'PATIENT') {
           this.loadPatientData();
         } else {
@@ -1436,13 +1443,20 @@ export class PatientDashboardComponent implements OnInit, OnDestroy {
       .getMyDashboard()
       .pipe(takeUntil(this.destroy$))
       .subscribe({
-        next: (patient) => {
-          this.patient = patient;
+        next: (dashboard) => {
+          this.patient = dashboard.patient;
+          this.dashboardStats = dashboard.stats || this.dashboardStats;
+          this.recentAnalyses = dashboard.recentAnalyses || [];
+          this.analysisCount = this.recentAnalyses.length;
+          this.patientLoaded = true;
+          this.loadAnalysisCount();
+          this.checkLoadingComplete();
         },
         error: (error) => {
           console.error('Error loading patient dashboard:', error);
           this.patient = null;
-          this.isLoading = false;
+          this.patientLoaded = true;
+          this.checkLoadingComplete();
         },
       });
 
@@ -1471,12 +1485,30 @@ export class PatientDashboardComponent implements OnInit, OnDestroy {
       .subscribe({
         next: (prescriptions) => {
           this.prescriptions = prescriptions || [];
+          this.prescriptionsLoaded = true;
           this.checkLoadingComplete();
         },
         error: (error) => {
           console.error('Error loading prescriptions:', error);
           this.prescriptions = [];
+          this.prescriptionsLoaded = true;
           this.checkLoadingComplete();
+        },
+      });
+  }
+
+  private loadAnalysisCount(): void {
+    if (!this.patient?.id) return;
+
+    this.aiAnalysisService
+      .getPatientAnalyses(this.patient.id)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (analyses) => {
+          this.analysisCount = analyses?.length || 0;
+        },
+        error: (error) => {
+          console.error('Error loading analysis history:', error);
         },
       });
   }
@@ -1649,9 +1681,9 @@ export class PatientDashboardComponent implements OnInit, OnDestroy {
   private checkLoadingComplete(): void {
     // Check if all data has been loaded
     if (
-      this.patient !== null &&
-      this.appointments.length >= 0 &&
-      this.prescriptions.length >= 0
+      this.patientLoaded &&
+      !this.appointmentsLoading &&
+      this.prescriptionsLoaded
     ) {
       this.isLoading = false;
     }
