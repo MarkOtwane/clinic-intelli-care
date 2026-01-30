@@ -18,7 +18,6 @@ import { Subscription } from 'rxjs';
 
 import { Blog, CreateBlogDto } from '../../../core/models/blog.model';
 import { MediaType } from '../../../core/models/media.model';
-import { AuthService } from '../../../core/services/auth.service';
 import { BlogService } from '../../../core/services/blog.service';
 import {
   UploadProgress,
@@ -202,7 +201,6 @@ export class DoctorBlogEditorComponent implements OnInit, OnDestroy {
     private fb: FormBuilder,
     private blogService: BlogService,
     private uploadService: UploadService,
-    private authService: AuthService,
     private snackBar: MatSnackBar,
     private router: Router,
     private route: ActivatedRoute,
@@ -215,29 +213,6 @@ export class DoctorBlogEditorComponent implements OnInit, OnDestroy {
   }
 
   ngOnInit(): void {
-    // Verify doctor profile exists before allowing blog creation
-    this.authService.currentUser$.subscribe((user) => {
-      if (user && user.role === 'DOCTOR') {
-        // Check if user has completed doctor profile
-        if (!user.doctorProfile) {
-          this.snackBar
-            .open(
-              'Please complete your doctor profile to write blog posts',
-              'Go to Profile',
-              { duration: 5000 },
-            )
-            .onAction()
-            .subscribe(() => {
-              this.router.navigate(['/doctor/profile']);
-            });
-          // Still allow loading of existing blogs for editing
-          if (!this.route.snapshot.paramMap.get('id')) {
-            this.router.navigate(['/doctor/blogs']);
-          }
-        }
-      }
-    });
-
     this.route.paramMap.subscribe((params) => {
       const id = params.get('id');
       if (id) {
