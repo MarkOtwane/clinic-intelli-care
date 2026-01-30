@@ -112,11 +112,18 @@ export class AppointmentsController {
   @Get('my-doctor-appointments')
   @Roles('DOCTOR')
   async getMyDoctorAppointments(@CurrentUser('id') userId: string) {
-    console.log(`Getting doctor appointments for user: ${userId}`);
+    console.log(`\n=== Getting doctor appointments for user: ${userId} ===`);
     
     const user = await this.prisma.user.findUnique({
       where: { id: userId },
       include: { doctorProfile: true },
+    });
+
+    console.log(`User found:`, { 
+      userId: user?.id, 
+      role: user?.role, 
+      hasDoctorProfile: !!user?.doctorProfile,
+      doctorId: user?.doctorProfile?.id
     });
 
     if (!user || !user.doctorProfile) {
@@ -124,17 +131,11 @@ export class AppointmentsController {
       throw new BadRequestException('Doctor profile not found');
     }
 
-    console.log(`Doctor profile found: ${user.doctorProfile.id}`);
+    console.log(`Fetching appointments for doctor ID: ${user.doctorProfile.id}`);
     const appointments = await this.appointmentsService.getAppointmentsByDoctor(
       user.doctorProfile.id,
     );
-    console.log(`Returning ${appointments.length} appointments`);
-    return appointments;
-  }
-
-  /**
-   * Get available doctors (publicly accessible for booking)
-   * IMPORTANT: Must come before @Get(':id') to avoid route conflicts
+    console.log(`=== Returning ${appointments.length} appointments ===\n`);
    */
   @Public()
   @Get('doctors')

@@ -124,6 +124,10 @@ export class AppointmentsService {
     patientId: string,
     analysisId?: string,
   ) {
+    console.log(
+      `Creating appointment: patientId=${patientId}, doctorId=${dto.doctorId}, date=${dto.date}, time=${dto.time}`,
+    );
+
     // Check if doctor is available
     const appointmentDate = new Date(dto.date);
     const isAvailable = await this.isDoctorAvailable(
@@ -191,6 +195,10 @@ export class AppointmentsService {
         },
       },
     });
+
+    console.log(
+      `Appointment created successfully: appointmentId=${appointment.id}, status=${appointment.status}, patientId=${appointment.id}, doctorId=${appointment.doctorId}`,
+    );
 
     // Create notification for patient
     try {
