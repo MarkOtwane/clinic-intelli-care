@@ -62,6 +62,7 @@ interface DoctorDashboard {
   imports: [
     CommonModule,
     ReactiveFormsModule,
+    RouterModule,
 
     // Material modules
     MatCardModule,
