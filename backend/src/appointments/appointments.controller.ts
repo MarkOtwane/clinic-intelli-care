@@ -213,66 +213,6 @@ export class AppointmentsController {
   }
 
   /**
-   * Set doctor availability (DOCTOR only, own availability)
-   */
-  @Post('availability')
-  @Roles('DOCTOR')
-  async setDoctorAvailability(
-    @Body()
-    body: {
-      dayOfWeek: number;
-      startTime: string;
-      endTime: string;
-      isAvailable: boolean;
-    },
-    @CurrentUser('id') userId: string,
-  ) {
-    const user = await this.prisma.user.findUnique({
-      where: { id: userId },
-      include: { doctorProfile: true },
-    });
-
-    if (!user || !user.doctorProfile) {
-      throw new BadRequestException('Doctor profile not found');
-    }
-
-    return this.appointmentsService.setDoctorAvailability(
-      user.doctorProfile.id,
-      body.dayOfWeek,
-      body.startTime,
-      body.endTime,
-      body.isAvailable,
-    );
-  }
-
-  /**
-   * Get single appointment by ID
-   */
-  @Get(':id')
-  @Roles('ADMIN', 'DOCTOR', 'PATIENT')
-  getAppointmentById(@Param('id') id: string) {
-    return this.appointmentsService.getAppointmentById(id);
-  }
-
-  /**
-   * Get appointments for a specific patient (by patient ID)
-   */
-  @Get('patient/:patientId')
-  @Roles('ADMIN', 'DOCTOR')
-  getAppointmentsByPatient(@Param('patientId') patientId: string) {
-    return this.appointmentsService.getAppointmentsByPatient(patientId);
-  }
-
-  /**
-   * Get appointments for a specific doctor (by doctor ID)
-   */
-  @Get('doctor/:doctorId')
-  @Roles('ADMIN')
-  getAppointmentsByDoctor(@Param('doctorId') doctorId: string) {
-    return this.appointmentsService.getAppointmentsByDoctor(doctorId);
-  }
-
-  /**
    * Update appointment (DOCTOR, ADMIN only)
    */
   @Patch(':id')
