@@ -1,31 +1,49 @@
 import {
-  Controller,
-  Post,
-  Get,
-  Patch,
-  Delete,
-  Param,
+  BadRequestException,
   Body,
-  UseGuards,
+  Controller,
+  Delete,
+  Get,
+  Param,
+  Patch,
+  Post,
   Query,
+  UseGuards,
 } from '@nestjs/common';
-import { CommentsService } from './comments.service';
-import { CreateCommentDto } from './dtos/create-comment.dto';
-import { UpdateCommentDto } from './dtos/update-comment.dto';
+import { CurrentUser } from '../auth/decorators/user.decorator';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
 import { Roles } from '../auth/roles.decorator';
-import { CurrentUser } from '../auth/decorators/user.decorator';
+import { PrismaService } from '../prisma/prisma.service';
+import { CommentsService } from './comments.service';
+import { CreateCommentDto } from './dtos/create-comment.dto';
+import { UpdateCommentDto } from './dtos/update-comment.dto';
 
 @Controller('comments')
 @UseGuards(JwtAuthGuard, RolesGuard)
 export class CommentsController {
-  constructor(private readonly commentsService: CommentsService) {}
+  constructor(
+    private readonly commentsService: CommentsService,
+    private prisma: PrismaService,
+  ) {}
 
   @Post()
   @Roles('PATIENT')
-  create(@Body() dto: CreateCommentDto, @CurrentUser('id') patientId: string) {
-    return this.commentsService.create(dto, patientId);
+  async create(
+    @Body() dto: CreateCommentDto,
+    @CurrentUser('id') userId: string,
+  ) {
+    // Get the patient profile for this user
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+      include: { patientProfile: true },
+    });
+
+    if (!user || !user.patientProfile) {
+      throw new BadRequestException('Patient profile not found');
+    }
+
+    return this.commentsService.create(dto, user.patientProfile.id);
   }
 
   @Get()
