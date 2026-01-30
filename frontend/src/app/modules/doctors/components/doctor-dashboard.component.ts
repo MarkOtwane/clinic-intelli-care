@@ -82,774 +82,814 @@ interface DoctorDashboard {
     MatNativeDateModule,
   ],
   template: `
-    <div class="doctor-dashboard">
-      <!-- Header Section -->
-      <div class="dashboard-header">
-        <div class="welcome-section">
-          <h1>Welcome back, Dr. {{ currentUser?.firstName }}!</h1>
-          <p class="subtitle">Here's your practice overview for today</p>
+    <div class="doctor-dashboard-container">
+      <!-- Professional Header -->
+      <div class="professional-header">
+        <div class="header-content">
+          <div class="header-left">
+            <h1 class="doctor-name">
+              Dr. {{ currentUser?.firstName }} {{ currentUser?.lastName }}
+            </h1>
+            <p class="header-subtitle">Practice Management Dashboard</p>
+          </div>
+          <div class="header-right">
+            <div class="date-time">
+              <mat-icon>calendar_today</mat-icon>
+              <span>{{ currentDate | date: 'EEEE, MMMM d, y' }}</span>
+            </div>
+          </div>
         </div>
-        <div class="quick-actions">
-          <button
-            mat-raised-button
-            color="primary"
-            (click)="openAvailabilityDialog()"
-          >
+      </div>
+
+      <!-- KPI Metrics Banner -->
+      <div class="kpi-banner">
+        <div class="kpi-card pending">
+          <div class="kpi-icon">
+            <mat-icon>hourglass_empty</mat-icon>
+          </div>
+          <div class="kpi-content">
+            <div class="kpi-value">
+              {{ dashboardData?.pendingCases?.length || 0 }}
+            </div>
+            <div class="kpi-label">Cases Pending</div>
+          </div>
+        </div>
+
+        <div class="kpi-card scheduled">
+          <div class="kpi-icon">
             <mat-icon>schedule</mat-icon>
-            Manage Availability
-          </button>
-          <button mat-raised-button color="accent" routerLink="/doctor/blogs">
-            <mat-icon>edit_note</mat-icon>
-            Write Blog
-          </button>
+          </div>
+          <div class="kpi-content">
+            <div class="kpi-value">
+              {{ dashboardData?.todayAppointments?.length || 0 }}
+            </div>
+            <div class="kpi-label">Today's Schedule</div>
+          </div>
+        </div>
+
+        <div class="kpi-card patients">
+          <div class="kpi-icon">
+            <mat-icon>group</mat-icon>
+          </div>
+          <div class="kpi-content">
+            <div class="kpi-value">
+              {{ dashboardData?.weeklyStats?.totalAppointments || 0 }}
+            </div>
+            <div class="kpi-label">Weekly Total</div>
+          </div>
+        </div>
+
+        <div class="kpi-card analytics">
+          <div class="kpi-icon">
+            <mat-icon>bar_chart</mat-icon>
+          </div>
+          <div class="kpi-content">
+            <div class="kpi-value">
+              {{ dashboardData?.weeklyStats?.newPatients || 0 }}
+            </div>
+            <div class="kpi-label">New Patients</div>
+          </div>
         </div>
       </div>
 
-      <!-- Stats Cards -->
-      <div class="stats-grid">
-        <mat-card class="stat-card pending-cases">
-          <mat-card-content>
-            <div class="stat-content">
-              <div class="stat-icon">
-                <mat-icon color="warn">pending_actions</mat-icon>
-              </div>
-              <div class="stat-info">
-                <h3>{{ dashboardData?.pendingCases?.length || 0 }}</h3>
-                <p>Pending AI Cases</p>
-              </div>
-            </div>
-          </mat-card-content>
-        </mat-card>
-
-        <mat-card class="stat-card today-appointments">
-          <mat-card-content>
-            <div class="stat-content">
-              <div class="stat-icon">
-                <mat-icon color="primary">event</mat-icon>
-              </div>
-              <div class="stat-info">
-                <h3>{{ dashboardData?.todayAppointments?.length || 0 }}</h3>
-                <p>Today's Appointments</p>
-              </div>
-            </div>
-          </mat-card-content>
-        </mat-card>
-
-        <mat-card class="stat-card weekly-consultations">
-          <mat-card-content>
-            <div class="stat-content">
-              <div class="stat-icon">
-                <mat-icon color="accent">people</mat-icon>
-              </div>
-              <div class="stat-info">
-                <h3>
-                  {{ dashboardData?.weeklyStats?.completedConsultations || 0 }}
-                </h3>
-                <p>This Week's Consultations</p>
-              </div>
-            </div>
-          </mat-card-content>
-        </mat-card>
-
-        <mat-card class="stat-card reviews">
-          <mat-card-content>
-            <div class="stat-content">
-              <div class="stat-icon">
-                <mat-icon color="warn">review</mat-icon>
-              </div>
-              <div class="stat-info">
-                <h3>
-                  {{ dashboardData?.weeklyStats?.aiAnalysesReviewed || 0 }}
-                </h3>
-                <p>AI Reviews This Week</p>
-              </div>
-            </div>
-          </mat-card-content>
-        </mat-card>
+      <!-- Action Bar -->
+      <div class="action-bar">
+        <button
+          mat-raised-button
+          color="primary"
+          (click)="openAvailabilityDialog()"
+        >
+          <mat-icon>edit_calendar</mat-icon>
+          Manage Schedule
+        </button>
+        <button mat-raised-button routerLink="/doctor/patients">
+          <mat-icon>people</mat-icon>
+          Patient Records
+        </button>
+        <button mat-raised-button routerLink="/doctor/blogs">
+          <mat-icon>create</mat-icon>
+          Write Article
+        </button>
+        <button mat-raised-button routerLink="/doctor/analytics">
+          <mat-icon>trending_up</mat-icon>
+          Analytics
+        </button>
       </div>
 
-      <!-- Main Content Tabs -->
-      <mat-tab-group class="dashboard-tabs">
-        <!-- Patient Analyses Tab -->
-        <mat-tab label="Patient Analyses">
-          <div class="tab-content">
-            <mat-card class="section-card">
-              <mat-card-header>
-                <mat-card-title>Patient AI Analyses</mat-card-title>
-                <mat-card-subtitle
-                  >View AI analysis reports for patients who have booked
-                  appointments with you</mat-card-subtitle
-                >
-              </mat-card-header>
-
-              <mat-card-content>
-                <div
-                  class="analyses-list"
-                  *ngIf="patientAnalyses?.length; else noAnalyses"
-                >
-                  <mat-card
-                    class="analysis-card"
-                    *ngFor="let analysis of patientAnalyses"
+      <!-- Main Content Grid -->
+      <div class="main-content">
+        <!-- Left Column: Cases & Appointments -->
+        <div class="left-column">
+          <!-- Pending Cases Kanban -->
+          <div class="section-container">
+            <div class="section-header">
+              <h2>
+                <mat-icon>assignment</mat-icon>
+                Pending Cases
+              </h2>
+              <span class="badge">{{
+                dashboardData?.pendingCases?.length || 0
+              }}</span>
+            </div>
+            <div class="cases-board">
+              <div
+                *ngIf="!dashboardData?.pendingCases?.length"
+                class="empty-board"
+              >
+                <mat-icon>check_circle</mat-icon>
+                <p>All cases reviewed</p>
+              </div>
+              <div
+                class="case-card"
+                *ngFor="let case of dashboardData?.pendingCases | slice: 0 : 5"
+              >
+                <div class="case-header-mini">
+                  <span class="case-id">Case #{{ case.id.slice(-6) }}</span>
+                  <mat-chip
+                    [color]="getConfidenceColor(case.confidence)"
+                    selected
                   >
-                    <mat-card-header>
-                      <div class="analysis-header">
-                        <mat-card-title
-                          >Analysis #{{ analysis.id.slice(-8) }}</mat-card-title
-                        >
-                        <mat-chip
-                          [color]="getConfidenceColor(analysis.confidence)"
-                          selected
-                        >
-                          {{ analysis.confidence }}% confidence
-                        </mat-chip>
-                      </div>
-                      <mat-card-subtitle>
-                        Patient: {{ analysis.patient?.name || 'Unknown' }} |
-                        Created: {{ analysis.createdAt | date: 'short' }}
-                      </mat-card-subtitle>
-                    </mat-card-header>
-
-                    <mat-card-content>
-                      <div class="analysis-details">
-                        <div class="symptoms-section">
-                          <h4>Symptoms:</h4>
-                          <mat-chip-set>
-                            <mat-chip
-                              *ngFor="
-                                let symptom of analysis.symptoms?.symptoms || []
-                              "
-                            >
-                              {{ symptom }}
-                            </mat-chip>
-                          </mat-chip-set>
-                        </div>
-
-                        <div class="predictions-section">
-                          <h4>AI Predictions:</h4>
-                          <div
-                            class="prediction-item"
-                            *ngFor="
-                              let prediction of analysis.predictedDiseases || []
-                            "
-                          >
-                            <div class="prediction-header">
-                              <span class="disease-name">{{
-                                prediction.name
-                              }}</span>
-                              <mat-chip
-                                [color]="
-                                  getProbabilityColor(prediction.probability)
-                                "
-                              >
-                                {{ prediction.probability }}%
-                              </mat-chip>
-                            </div>
-                          </div>
-                        </div>
-
-                        <div class="recommendations-section">
-                          <h4>AI Recommendations:</h4>
-                          <p>
-                            {{
-                              analysis.recommendations ||
-                                'No specific recommendations'
-                            }}
-                          </p>
-                        </div>
-                      </div>
-                    </mat-card-content>
-
-                    <mat-card-actions>
-                      <button
-                        mat-button
-                        color="primary"
-                        (click)="viewFullAnalysis(analysis)"
-                      >
-                        <mat-icon>visibility</mat-icon>
-                        View Full Report
-                      </button>
-                      <button
-                        mat-button
-                        color="accent"
-                        (click)="scheduleFollowUp(analysis)"
-                      >
-                        <mat-icon>event</mat-icon>
-                        Schedule Follow-up
-                      </button>
-                    </mat-card-actions>
-                  </mat-card>
+                    {{ case.confidence }}%
+                  </mat-chip>
                 </div>
-
-                <ng-template #noAnalyses>
-                  <div class="empty-state">
-                    <mat-icon>analytics</mat-icon>
-                    <h3>No patient analyses yet</h3>
-                    <p>
-                      AI analysis reports for your patients will appear here
-                    </p>
-                  </div>
-                </ng-template>
-              </mat-card-content>
-            </mat-card>
-          </div>
-        </mat-tab>
-
-        <!-- AI Cases Tab -->
-        <mat-tab label="AI Cases">
-          <div class="tab-content">
-            <mat-card class="section-card">
-              <mat-card-header>
-                <mat-card-title>Pending AI Cases</mat-card-title>
-                <mat-card-subtitle
-                  >Review and respond to AI-suggested patient
-                  cases</mat-card-subtitle
-                >
-              </mat-card-header>
-
-              <mat-card-content>
-                <div
-                  class="cases-grid"
-                  *ngIf="dashboardData?.pendingCases?.length; else noCases"
-                >
-                  <mat-card
-                    class="case-card"
-                    *ngFor="let case of dashboardData?.pendingCases"
-                  >
-                    <mat-card-header>
-                      <div class="case-header">
-                        <mat-card-title
-                          >Patient Analysis #{{
-                            case.id.slice(-8)
-                          }}</mat-card-title
-                        >
-                        <mat-chip
-                          [color]="getConfidenceColor(case.confidence)"
-                          selected
-                        >
-                          {{ case.confidence }}% confidence
-                        </mat-chip>
-                      </div>
-                      <mat-card-subtitle>
-                        Received: {{ case.createdAt | date: 'short' }}
-                      </mat-card-subtitle>
-                    </mat-card-header>
-
-                    <mat-card-content>
-                      <div class="case-details">
-                        <div class="symptoms-section">
-                          <h4>Symptoms Reported:</h4>
-                          <mat-chip-set>
-                            <mat-chip
-                              *ngFor="let symptom of case.symptoms.symptoms"
-                            >
-                              {{ symptom }}
-                            </mat-chip>
-                          </mat-chip-set>
-                        </div>
-
-                        <div class="predictions-section">
-                          <h4>AI Predictions:</h4>
-                          <div
-                            class="prediction-item"
-                            *ngFor="let prediction of case.predictions"
-                          >
-                            <div class="prediction-header">
-                              <span class="disease-name">{{
-                                prediction.disease
-                              }}</span>
-                              <mat-chip
-                                [color]="
-                                  getProbabilityColor(prediction.probability)
-                                "
-                              >
-                                {{ prediction.probability }}%
-                              </mat-chip>
-                            </div>
-                          </div>
-                        </div>
-
-                        <div class="severity-info">
-                          <mat-chip
-                            >{{ case.symptoms.severity }} severity</mat-chip
-                          >
-                          <mat-chip
-                            >Duration:
-                            {{ case.symptoms.duration }} days</mat-chip
-                          >
-                        </div>
-                      </div>
-                    </mat-card-content>
-
-                    <mat-card-actions>
-                      <button
-                        mat-button
-                        color="primary"
-                        (click)="reviewCase(case)"
-                      >
-                        <mat-icon>visibility</mat-icon>
-                        Review Case
-                      </button>
-                      <button
-                        mat-button
-                        color="accent"
-                        (click)="scheduleAppointment(case)"
-                      >
-                        <mat-icon>event</mat-icon>
-                        Schedule Appointment
-                      </button>
-                      <button mat-button (click)="dismissCase(case)">
-                        <mat-icon>close</mat-icon>
-                        Dismiss
-                      </button>
-                    </mat-card-actions>
-                  </mat-card>
-                </div>
-
-                <ng-template #noCases>
-                  <div class="empty-state">
-                    <mat-icon>check_circle</mat-icon>
-                    <h3>No pending AI cases</h3>
-                    <p>All patient analyses have been reviewed</p>
-                  </div>
-                </ng-template>
-              </mat-card-content>
-            </mat-card>
-          </div>
-        </mat-tab>
-
-        <!-- Appointments Tab -->
-        <mat-tab label="Appointments">
-          <div class="tab-content">
-            <mat-card class="section-card">
-              <mat-card-header>
-                <mat-card-title>Today's Schedule</mat-card-title>
-                <mat-card-subtitle>{{
-                  currentDate | date: 'fullDate'
-                }}</mat-card-subtitle>
-              </mat-card-header>
-
-              <mat-card-content>
-                <div
-                  class="appointments-list"
-                  *ngIf="
-                    dashboardData?.todayAppointments?.length;
-                    else noAppointments
-                  "
-                >
-                  <div
-                    class="appointment-item"
-                    *ngFor="let appointment of dashboardData?.todayAppointments"
-                  >
-                    <div class="appointment-time">
-                      <strong>{{ appointment.startTime }}</strong>
-                      <span class="duration">{{ appointment.endTime }}</span>
-                    </div>
-
-                    <div class="appointment-info">
-                      <h4>Patient Appointment</h4>
-                      <p>{{ appointment.reason }}</p>
-                      <mat-chip
-                        [color]="getStatusColor(appointment.status)"
-                        selected
-                      >
-                        {{ appointment.status }}
-                      </mat-chip>
-                    </div>
-
-                    <div class="appointment-actions">
-                      <button
-                        mat-icon-button
-                        [matMenuTriggerFor]="appointmentMenu"
-                      >
-                        <mat-icon>more_vert</mat-icon>
-                      </button>
-                      <mat-menu #appointmentMenu="matMenu">
-                        <button
-                          mat-menu-item
-                          (click)="viewAppointment(appointment)"
-                        >
-                          <mat-icon>visibility</mat-icon>
-                          <span>View Details</span>
-                        </button>
-                        <button
-                          mat-menu-item
-                          (click)="updateStatus(appointment)"
-                        >
-                          <mat-icon>edit</mat-icon>
-                          <span>Update Status</span>
-                        </button>
-                        <button
-                          mat-menu-item
-                          (click)="createPrescription(appointment)"
-                        >
-                          <mat-icon>medication</mat-icon>
-                          <span>Create Prescription</span>
-                        </button>
-                      </mat-menu>
-                    </div>
-                  </div>
-                </div>
-
-                <ng-template #noAppointments>
-                  <div class="empty-state">
-                    <mat-icon>event_available</mat-icon>
-                    <h3>No appointments today</h3>
-                    <p>Your schedule is clear for today</p>
-                  </div>
-                </ng-template>
-              </mat-card-content>
-            </mat-card>
-          </div>
-        </mat-tab>
-
-        <!-- Analytics Tab -->
-        <mat-tab label="Analytics">
-          <div class="tab-content">
-            <div class="analytics-grid">
-              <mat-card class="analytics-card">
-                <mat-card-header>
-                  <mat-card-title>Weekly Overview</mat-card-title>
-                </mat-card-header>
-                <mat-card-content>
-                  <div class="metric-item">
-                    <span class="metric-label">Total Appointments</span>
-                    <span class="metric-value">{{
-                      dashboardData?.weeklyStats?.totalAppointments || 0
-                    }}</span>
-                  </div>
-                  <div class="metric-item">
-                    <span class="metric-label">Completed Consultations</span>
-                    <span class="metric-value">{{
-                      dashboardData?.weeklyStats?.completedConsultations || 0
-                    }}</span>
-                  </div>
-                  <div class="metric-item">
-                    <span class="metric-label">New Patients</span>
-                    <span class="metric-value">{{
-                      dashboardData?.weeklyStats?.newPatients || 0
-                    }}</span>
-                  </div>
-                  <div class="metric-item">
-                    <span class="metric-label">AI Cases Reviewed</span>
-                    <span class="metric-value">{{
-                      dashboardData?.weeklyStats?.aiAnalysesReviewed || 0
-                    }}</span>
-                  </div>
-                </mat-card-content>
-              </mat-card>
-
-              <mat-card class="analytics-card">
-                <mat-card-header>
-                  <mat-card-title>Recent Activity</mat-card-title>
-                </mat-card-header>
-                <mat-card-content>
-                  <div class="activity-list">
-                    <div
-                      class="activity-item"
-                      *ngFor="let activity of dashboardData?.recentActivity"
+                <div class="case-body">
+                  <p class="patient-name">
+                    {{ case.patient?.name || 'Patient' }}
+                  </p>
+                  <div class="symptoms-tags">
+                    <span
+                      class="tag"
+                      *ngFor="
+                        let symptom of case.symptoms?.symptoms | slice: 0 : 2
+                      "
                     >
-                      <mat-icon [color]="getActivityColor(activity.type)">
-                        {{ getActivityIcon(activity.type) }}
-                      </mat-icon>
-                      <div class="activity-content">
-                        <h4>{{ activity.title }}</h4>
-                        <p>{{ activity.description }}</p>
-                        <small>{{ activity.timestamp | date: 'short' }}</small>
-                      </div>
-                    </div>
+                      {{ symptom }}
+                    </span>
+                    <span
+                      class="tag more"
+                      *ngIf="case.symptoms?.symptoms?.length > 2"
+                    >
+                      +{{ case.symptoms?.symptoms?.length - 2 }}
+                    </span>
                   </div>
-                </mat-card-content>
-              </mat-card>
+                </div>
+                <div class="case-actions">
+                  <button mat-icon-button (click)="reviewCase(case)">
+                    <mat-icon>visibility</mat-icon>
+                  </button>
+                  <button mat-icon-button (click)="dismissCase(case)">
+                    <mat-icon>close</mat-icon>
+                  </button>
+                </div>
+              </div>
             </div>
           </div>
-        </mat-tab>
-      </mat-tab-group>
+
+          <!-- Today's Appointments -->
+          <div class="section-container">
+            <div class="section-header">
+              <h2>
+                <mat-icon>today</mat-icon>
+                Today's Schedule
+              </h2>
+              <span class="time-info">{{ currentDate | date: 'EEEE' }}</span>
+            </div>
+            <div class="appointments-timeline">
+              <div
+                *ngIf="!dashboardData?.todayAppointments?.length"
+                class="empty-state-inline"
+              >
+                <p>No appointments scheduled</p>
+              </div>
+              <div
+                class="appointment-card"
+                *ngFor="
+                  let apt of dashboardData?.todayAppointments | slice: 0 : 4
+                "
+              >
+                <div class="time-slot">
+                  <div class="time">{{ apt.time }}</div>
+                </div>
+                <div class="apt-details">
+                  <div class="apt-patient">Patient Name</div>
+                  <div class="apt-type">{{ apt.type || 'Consultation' }}</div>
+                  <mat-chip
+                    [color]="getStatusColor(apt.status)"
+                    selected
+                    size="small"
+                  >
+                    {{ apt.status }}
+                  </mat-chip>
+                </div>
+                <div class="apt-menu">
+                  <button mat-icon-button [matMenuTriggerFor]="menu">
+                    <mat-icon>more_vert</mat-icon>
+                  </button>
+                  <mat-menu #menu="matMenu">
+                    <button mat-menu-item (click)="viewAppointment(apt)">
+                      <mat-icon>visibility</mat-icon>
+                      <span>View</span>
+                    </button>
+                    <button mat-menu-item (click)="updateStatus(apt)">
+                      <mat-icon>edit</mat-icon>
+                      <span>Update</span>
+                    </button>
+                    <button mat-menu-item (click)="createPrescription(apt)">
+                      <mat-icon>medication</mat-icon>
+                      <span>Prescription</span>
+                    </button>
+                  </mat-menu>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Right Column: Analytics & Activity -->
+        <div class="right-column">
+          <!-- Performance Metrics -->
+          <div class="section-container">
+            <div class="section-header">
+              <h2>
+                <mat-icon>assessment</mat-icon>
+                Weekly Performance
+              </h2>
+            </div>
+            <div class="metrics-list">
+              <div class="metric-row">
+                <span class="metric-name">Total Appointments</span>
+                <span class="metric-value">{{
+                  dashboardData?.weeklyStats?.totalAppointments || 0
+                }}</span>
+              </div>
+              <div class="metric-row">
+                <span class="metric-name">Completed Consultations</span>
+                <span class="metric-value">{{
+                  dashboardData?.weeklyStats?.completedConsultations || 0
+                }}</span>
+              </div>
+              <div class="metric-row">
+                <span class="metric-name">New Patients</span>
+                <span class="metric-value">{{
+                  dashboardData?.weeklyStats?.newPatients || 0
+                }}</span>
+              </div>
+              <div class="metric-row">
+                <span class="metric-name">AI Cases Reviewed</span>
+                <span class="metric-value">{{
+                  dashboardData?.weeklyStats?.aiAnalysesReviewed || 0
+                }}</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Recent Activity Feed -->
+          <div class="section-container">
+            <div class="section-header">
+              <h2>
+                <mat-icon>history</mat-icon>
+                Activity Feed
+              </h2>
+            </div>
+            <div class="activity-feed">
+              <div
+                *ngIf="!dashboardData?.recentActivity?.length"
+                class="empty-state-inline"
+              >
+                <p>No recent activity</p>
+              </div>
+              <div
+                class="activity-entry"
+                *ngFor="
+                  let activity of dashboardData?.recentActivity | slice: 0 : 5
+                "
+              >
+                <div
+                  class="activity-icon"
+                  [ngClass]="'activity-' + activity.type"
+                >
+                  <mat-icon>{{ getActivityIcon(activity.type) }}</mat-icon>
+                </div>
+                <div class="activity-info">
+                  <div class="activity-title">{{ activity.title }}</div>
+                  <div class="activity-desc">{{ activity.description }}</div>
+                  <div class="activity-time">
+                    {{ activity.timestamp | date: 'short' }}
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
   `,
   styles: [
     `
-      .doctor-dashboard {
-        padding: 24px;
+      .doctor-dashboard-container {
+        background: #f5f7fa;
+        min-height: 100vh;
+        padding: 20px;
+      }
+
+      .professional-header {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 30px 40px;
+        border-radius: 12px;
+        margin-bottom: 30px;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+      }
+
+      .header-content {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
         max-width: 1400px;
         margin: 0 auto;
       }
 
-      .dashboard-header {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        margin-bottom: 32px;
-      }
-
-      .welcome-section h1 {
-        color: #2c3e50;
-        margin: 0 0 8px 0;
-      }
-
-      .subtitle {
-        color: #7f8c8d;
-        margin: 0;
-      }
-
-      .quick-actions {
-        display: flex;
-        gap: 16px;
-      }
-
-      .stats-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-        gap: 24px;
-        margin-bottom: 32px;
-      }
-
-      .stat-card {
-        cursor: pointer;
-        transition:
-          transform 0.2s,
-          box-shadow 0.2s;
-      }
-
-      .stat-card:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-      }
-
-      .stat-content {
-        display: flex;
-        align-items: center;
-        gap: 16px;
-      }
-
-      .stat-icon {
-        padding: 12px;
-        border-radius: 50%;
-        background: #f8f9fa;
-      }
-
-      .stat-info h3 {
-        margin: 0;
-        font-size: 2rem;
+      .header-left h1 {
+        font-size: 28px;
+        margin: 0 0 5px 0;
         font-weight: 600;
-        color: #2c3e50;
       }
 
-      .stat-info p {
-        margin: 4px 0 0 0;
-        color: #7f8c8d;
+      .header-subtitle {
+        margin: 0;
+        opacity: 0.9;
         font-size: 14px;
       }
 
-      .dashboard-tabs {
-        background: white;
-        border-radius: 8px;
-        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+      .date-time {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 14px;
       }
 
-      .tab-content {
-        padding: 24px;
-      }
-
-      .section-card {
-        margin-bottom: 24px;
-      }
-
-      .cases-grid {
+      .kpi-banner {
         display: grid;
-        gap: 24px;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 20px;
+        margin-bottom: 30px;
+        max-width: 1400px;
+        margin-left: auto;
+        margin-right: auto;
       }
 
-      .case-card {
+      .kpi-card {
+        background: white;
+        padding: 20px;
+        border-radius: 10px;
+        display: flex;
+        gap: 15px;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
+        transition: all 0.3s ease;
+      }
+
+      .kpi-card:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 8px 20px rgba(0, 0, 0, 0.12);
+      }
+
+      .kpi-card.pending {
+        border-left: 4px solid #e74c3c;
+      }
+
+      .kpi-card.scheduled {
         border-left: 4px solid #3498db;
       }
 
-      .case-header {
+      .kpi-card.patients {
+        border-left: 4px solid #2ecc71;
+      }
+
+      .kpi-card.analytics {
+        border-left: 4px solid #f39c12;
+      }
+
+      .kpi-icon {
+        width: 50px;
+        height: 50px;
+        border-radius: 50%;
         display: flex;
-        justify-content: space-between;
         align-items: center;
-        width: 100%;
+        justify-content: center;
+        flex-shrink: 0;
       }
 
-      .case-details {
-        margin-top: 16px;
+      .kpi-card.pending .kpi-icon {
+        background: #ffe0e0;
+        color: #e74c3c;
       }
 
-      .symptoms-section,
-      .predictions-section {
-        margin-bottom: 16px;
+      .kpi-card.scheduled .kpi-icon {
+        background: #e3f2fd;
+        color: #3498db;
       }
 
-      .symptoms-section h4,
-      .predictions-section h4 {
-        margin: 0 0 8px 0;
+      .kpi-card.patients .kpi-icon {
+        background: #e8f5e9;
+        color: #2ecc71;
+      }
+
+      .kpi-card.analytics .kpi-icon {
+        background: #fff3e0;
+        color: #f39c12;
+      }
+
+      .kpi-content {
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+      }
+
+      .kpi-value {
+        font-size: 24px;
+        font-weight: 700;
         color: #2c3e50;
       }
 
-      .prediction-item {
-        margin-bottom: 8px;
+      .kpi-label {
+        font-size: 12px;
+        color: #7f8c8d;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        margin-top: 4px;
       }
 
-      .prediction-header {
+      .action-bar {
+        display: flex;
+        gap: 12px;
+        margin-bottom: 30px;
+        max-width: 1400px;
+        margin-left: auto;
+        margin-right: auto;
+        flex-wrap: wrap;
+      }
+
+      .action-bar button {
+        flex: 1;
+        min-width: 180px;
+      }
+
+      .main-content {
+        display: grid;
+        grid-template-columns: 2fr 1fr;
+        gap: 30px;
+        max-width: 1400px;
+        margin: 0 auto;
+      }
+
+      .left-column,
+      .right-column {
+        display: flex;
+        flex-direction: column;
+        gap: 30px;
+      }
+
+      .section-container {
+        background: white;
+        border-radius: 10px;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
+        overflow: hidden;
+      }
+
+      .section-header {
         display: flex;
         justify-content: space-between;
         align-items: center;
+        padding: 20px 24px;
+        border-bottom: 1px solid #e8ecf1;
       }
 
-      .disease-name {
-        font-weight: 500;
-      }
-
-      .severity-info {
-        display: flex;
-        gap: 8px;
-        margin-top: 16px;
-      }
-
-      .appointments-list {
-        display: flex;
-        flex-direction: column;
-        gap: 16px;
-      }
-
-      .appointment-item {
+      .section-header h2 {
         display: flex;
         align-items: center;
-        padding: 16px;
-        border: 1px solid #e0e0e0;
-        border-radius: 8px;
-        background: #fafafa;
-      }
-
-      .appointment-time {
-        min-width: 100px;
-        text-align: center;
-      }
-
-      .appointment-time strong {
-        display: block;
+        gap: 10px;
+        margin: 0;
         font-size: 18px;
         color: #2c3e50;
       }
 
-      .duration {
-        color: #7f8c8d;
-        font-size: 14px;
+      .section-header h2 mat-icon {
+        font-size: 22px;
+        width: 22px;
+        height: 22px;
+        color: #667eea;
       }
 
-      .appointment-info {
-        flex: 1;
-        margin: 0 16px;
-      }
-
-      .appointment-info h4 {
-        margin: 0 0 4px 0;
-        color: #2c3e50;
-      }
-
-      .appointment-info p {
-        margin: 0 0 8px 0;
-        color: #7f8c8d;
-      }
-
-      .appointment-actions {
-        min-width: 60px;
-        text-align: right;
-      }
-
-      .analytics-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
-        gap: 24px;
-      }
-
-      .analytics-card {
-        height: fit-content;
-      }
-
-      .metric-item {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        padding: 12px 0;
-        border-bottom: 1px solid #ecf0f1;
-      }
-
-      .metric-item:last-child {
-        border-bottom: none;
-      }
-
-      .metric-label {
-        color: #7f8c8d;
-      }
-
-      .metric-value {
-        font-size: 24px;
+      .badge {
+        background: #667eea;
+        color: white;
+        padding: 4px 12px;
+        border-radius: 20px;
+        font-size: 12px;
         font-weight: 600;
-        color: #2c3e50;
       }
 
-      .activity-list {
+      .time-info {
+        font-size: 14px;
+        color: #7f8c8d;
+      }
+
+      .cases-board {
+        padding: 24px;
         display: flex;
         flex-direction: column;
         gap: 16px;
       }
 
-      .activity-item {
-        display: flex;
-        align-items: flex-start;
-        gap: 12px;
-      }
-
-      .activity-content {
-        flex: 1;
-      }
-
-      .activity-content h4 {
-        margin: 0 0 4px 0;
-        color: #2c3e50;
-      }
-
-      .activity-content p {
-        margin: 0 0 4px 0;
+      .empty-board {
+        text-align: center;
+        padding: 40px 20px;
         color: #7f8c8d;
       }
 
-      .activity-content small {
+      .empty-board mat-icon {
+        font-size: 48px;
+        width: 48px;
+        height: 48px;
+        margin-bottom: 10px;
         color: #bdc3c7;
       }
 
-      .empty-state {
+      .case-card {
+        border: 1px solid #e8ecf1;
+        border-radius: 8px;
+        padding: 16px;
+        background: #fafbfc;
+        transition: all 0.2s ease;
+      }
+
+      .case-card:hover {
+        background: #f0f4f8;
+        border-color: #667eea;
+      }
+
+      .case-header-mini {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 12px;
+      }
+
+      .case-id {
+        font-weight: 600;
+        font-size: 14px;
+        color: #2c3e50;
+      }
+
+      .case-body {
+        margin-bottom: 12px;
+      }
+
+      .patient-name {
+        margin: 0 0 8px 0;
+        font-weight: 500;
+        color: #2c3e50;
+      }
+
+      .symptoms-tags {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+      }
+
+      .tag {
+        background: #e8eef7;
+        color: #667eea;
+        padding: 4px 10px;
+        border-radius: 6px;
+        font-size: 12px;
+      }
+
+      .tag.more {
+        background: #667eea;
+        color: white;
+      }
+
+      .case-actions {
+        display: flex;
+        gap: 4px;
+        justify-content: flex-end;
+      }
+
+      .appointments-timeline {
+        padding: 24px;
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+      }
+
+      .empty-state-inline {
         text-align: center;
-        padding: 48px 24px;
+        padding: 40px 20px;
         color: #7f8c8d;
       }
 
-      .empty-state mat-icon {
-        font-size: 64px;
-        margin-bottom: 16px;
-        opacity: 0.5;
+      .appointment-card {
+        display: flex;
+        align-items: center;
+        gap: 16px;
+        padding: 16px;
+        border: 1px solid #e8ecf1;
+        border-radius: 8px;
+        background: #fafbfc;
+        transition: all 0.2s ease;
       }
 
-      .empty-state h3 {
-        margin: 0 0 8px 0;
+      .appointment-card:hover {
+        background: #f0f4f8;
+        border-color: #667eea;
       }
 
-      .empty-state p {
+      .time-slot {
+        min-width: 70px;
+        text-align: center;
+      }
+
+      .time {
+        font-weight: 600;
+        font-size: 16px;
+        color: #667eea;
+      }
+
+      .apt-details {
+        flex: 1;
+      }
+
+      .apt-patient {
+        font-weight: 600;
+        color: #2c3e50;
+        margin-bottom: 4px;
+      }
+
+      .apt-type {
+        font-size: 13px;
+        color: #7f8c8d;
+        margin-bottom: 8px;
+      }
+
+      .apt-menu {
+        text-align: right;
+      }
+
+      .metrics-list {
+        padding: 24px;
+        display: flex;
+        flex-direction: column;
+        gap: 20px;
+      }
+
+      .metric-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding-bottom: 16px;
+        border-bottom: 1px solid #e8ecf1;
+      }
+
+      .metric-row:last-child {
+        border-bottom: none;
+      }
+
+      .metric-name {
+        color: #7f8c8d;
+        font-size: 14px;
+      }
+
+      .metric-value {
+        font-size: 24px;
+        font-weight: 700;
+        color: #667eea;
+      }
+
+      .activity-feed {
+        padding: 24px;
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
+      }
+
+      .activity-entry {
+        display: flex;
+        gap: 12px;
+        padding: 12px;
+        border-radius: 8px;
+        background: #fafbfc;
+        transition: all 0.2s ease;
+      }
+
+      .activity-entry:hover {
+        background: #f0f4f8;
+      }
+
+      .activity-icon {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+      }
+
+      .activity-icon mat-icon {
+        font-size: 20px;
+        width: 20px;
+        height: 20px;
+      }
+
+      .activity-appointment {
+        background: #e3f2fd;
+        color: #3498db;
+      }
+
+      .activity-analysis {
+        background: #f3e5f5;
+        color: #9c27b0;
+      }
+
+      .activity-prescription {
+        background: #e8f5e9;
+        color: #2ecc71;
+      }
+
+      .activity-blog {
+        background: #fff3e0;
+        color: #f39c12;
+      }
+
+      .activity-info {
+        flex: 1;
+        min-width: 0;
+      }
+
+      .activity-title {
+        margin: 0 0 4px 0;
+        font-weight: 600;
+        font-size: 14px;
+        color: #2c3e50;
+      }
+
+      .activity-desc {
+        margin: 0 0 4px 0;
+        font-size: 13px;
+        color: #7f8c8d;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+
+      .activity-time {
         margin: 0;
+        font-size: 12px;
+        color: #bdc3c7;
       }
 
-      /* Color themes for different card types */
-      .pending-cases {
-        border-left: 4px solid #e74c3c;
+      @media (max-width: 1024px) {
+        .main-content {
+          grid-template-columns: 1fr;
+        }
+
+        .action-bar button {
+          min-width: 120px;
+        }
       }
-      .today-appointments {
-        border-left: 4px solid #3498db;
-      }
-      .weekly-consultations {
-        border-left: 4px solid #f39c12;
-      }
-      .reviews {
-        border-left: 4px solid #9b59b6;
+
+      @media (max-width: 599px) {
+        .professional-header {
+          padding: 20px;
+        }
+
+        .header-content {
+          flex-direction: column;
+          text-align: center;
+        }
+
+        .header-left h1 {
+          font-size: 24px;
+        }
+
+        .date-time {
+          margin-top: 10px;
+          justify-content: center;
+        }
+
+        .kpi-banner {
+          grid-template-columns: 1fr;
+        }
+
+        .action-bar {
+          flex-direction: column;
+        }
+
+        .action-bar button {
+          min-width: auto;
+          width: 100%;
+        }
       }
     `,
   ],
