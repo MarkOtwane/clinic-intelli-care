@@ -341,21 +341,37 @@ export class AppointmentsService {
    * @returns Array of doctor's appointments
    */
   async getAppointmentsByDoctor(doctorId: string) {
-    return this.prisma.appointment.findMany({
+    console.log(`Fetching appointments for doctor: ${doctorId}`);
+
+    const appointments = await this.prisma.appointment.findMany({
       where: { doctorId },
       include: {
-        patient: {
+        patient: true, // Include all patient fields for better debugging
+        doctor: {
           select: {
             id: true,
             name: true,
-            age: true,
-            gender: true,
-            phone: true,
+            specialization: true,
           },
         },
       },
-      orderBy: { date: 'asc' }, // Ascending for upcoming appointments first
+      orderBy: { createdAt: 'desc' }, // Most recent first
     });
+
+    console.log(
+      `Found ${appointments.length} appointments for doctor ${doctorId}`,
+    );
+    appointments.forEach((apt, idx) => {
+      console.log(`Appointment ${idx + 1}:`, {
+        id: apt.id,
+        status: apt.status,
+        date: apt.date,
+        patientId: apt.patientId,
+        patientName: apt.patient?.name,
+        doctorId: apt.doctorId,
+      });
+    });
+    return appointments;
   }
 
   /**

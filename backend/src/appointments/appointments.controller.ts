@@ -112,18 +112,24 @@ export class AppointmentsController {
   @Get('my-doctor-appointments')
   @Roles('DOCTOR')
   async getMyDoctorAppointments(@CurrentUser('id') userId: string) {
+    console.log(`Getting doctor appointments for user: ${userId}`);
+    
     const user = await this.prisma.user.findUnique({
       where: { id: userId },
       include: { doctorProfile: true },
     });
 
     if (!user || !user.doctorProfile) {
+      console.error(`Doctor profile not found for user: ${userId}`);
       throw new BadRequestException('Doctor profile not found');
     }
 
-    return this.appointmentsService.getAppointmentsByDoctor(
+    console.log(`Doctor profile found: ${user.doctorProfile.id}`);
+    const appointments = await this.appointmentsService.getAppointmentsByDoctor(
       user.doctorProfile.id,
     );
+    console.log(`Returning ${appointments.length} appointments`);
+    return appointments;
   }
 
   /**
