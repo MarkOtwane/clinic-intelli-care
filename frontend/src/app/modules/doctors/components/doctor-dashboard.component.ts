@@ -28,18 +28,34 @@ import { DoctorsService } from '../../../core/services/doctors.service';
 import { AvailabilityDialogComponent } from './availability-dialog.component';
 
 // Models
-import {
-  AIAnalysis,
-  AnalysisStatus,
-} from '../../../core/models/ai-analysis.model';
+import { AIAnalysis } from '../../../core/models/ai-analysis.model';
 import {
   Appointment,
   AppointmentStatus,
 } from '../../../core/models/appointment.model';
 import { User } from '../../../core/models/user.model';
 
+interface PatientCase {
+  id: string;
+  patientId: string;
+  patient?: {
+    name?: string;
+    age?: number;
+    gender?: string;
+    phone?: string;
+  };
+  reason?: string;
+  status: string;
+  date?: Date | string;
+  time?: string;
+  symptoms?: {
+    symptoms: string[];
+  };
+  confidence: number;
+}
+
 interface DoctorDashboard {
-  pendingCases: AIAnalysis[];
+  pendingCases: PatientCase[];
   patientAnalyses: any[];
   todayAppointments: Appointment[];
   weeklyStats: {
@@ -206,39 +222,43 @@ interface DoctorDashboard {
                 *ngFor="let case of dashboardData?.pendingCases | slice: 0 : 5"
               >
                 <div class="case-header-mini">
-                  <span class="case-id">Case #{{ case.id.slice(-6) }}</span>
+                  <span class="case-id">{{
+                    case.patient?.name || 'Patient'
+                  }}</span>
                   <mat-chip
                     [color]="getConfidenceColor(case.confidence)"
                     selected
                   >
-                    {{ case.confidence }}%
+                    {{ case.status }}
                   </mat-chip>
                 </div>
                 <div class="case-body">
-                  <p class="patient-name">Patient Case</p>
-                  <div class="symptoms-tags">
-                    <span
-                      class="tag"
-                      *ngFor="
-                        let symptom of case.symptoms.symptoms | slice: 0 : 2
-                      "
+                  <p class="patient-name">
+                    <mat-icon class="small-icon">person</mat-icon>
+                    Age: {{ case.patient?.age || 'N/A' }}
+                    <span *ngIf="case.patient?.gender" class="separator"
+                      >•</span
                     >
-                      {{ symptom }}
-                    </span>
-                    <span
-                      class="tag more"
-                      *ngIf="case.symptoms.symptoms.length > 2"
-                    >
-                      +{{ case.symptoms.symptoms.length - 2 }}
-                    </span>
+                    {{ case.patient?.gender || '' }}
+                  </p>
+                  <p class="patient-contact" *ngIf="case.patient?.phone">
+                    <mat-icon class="small-icon">phone</mat-icon>
+                    {{ case.patient?.phone }}
+                  </p>
+                  <div class="symptoms-tags" *ngIf="case.reason">
+                    <span class="tag">{{ case.reason }}</span>
                   </div>
+                  <p class="case-time" *ngIf="case.date">
+                    <mat-icon class="small-icon">schedule</mat-icon>
+                    {{ case.date | date: 'MMM d' }} at {{ case.time }}
+                  </p>
                 </div>
                 <div class="case-actions">
-                  <button mat-icon-button (click)="reviewCase(case)">
+                  <button mat-icon-button (click)="viewAppointment(case)">
                     <mat-icon>visibility</mat-icon>
                   </button>
-                  <button mat-icon-button (click)="dismissCase(case)">
-                    <mat-icon>close</mat-icon>
+                  <button mat-icon-button (click)="updateStatus(case)">
+                    <mat-icon>edit</mat-icon>
                   </button>
                 </div>
               </div>
@@ -651,6 +671,40 @@ interface DoctorDashboard {
         margin: 0 0 8px 0;
         font-weight: 500;
         color: #2c3e50;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        font-size: 14px;
+      }
+
+      .patient-contact {
+        margin: 0 0 8px 0;
+        font-size: 13px;
+        color: #7f8c8d;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+      }
+
+      .case-time {
+        margin: 8px 0 0 0;
+        font-size: 13px;
+        color: #667eea;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        font-weight: 500;
+      }
+
+      .small-icon {
+        font-size: 14px;
+        width: 14px;
+        height: 14px;
+      }
+
+      .separator {
+        margin: 0 4px;
+        color: #bdc3c7;
       }
 
       .symptoms-tags {
@@ -950,6 +1004,27 @@ export class DoctorDashboardComponent implements OnInit, OnDestroy {
               new Date(a.date).toDateString() === new Date().toDateString(),
           );
 
+          // Create pending cases from upcoming appointments (real patient data)
+          // These represent open cases/appointments needing attention
+          const pendingCases = dashboardData.upcomingAppointments
+            .filter((a: any) => a.status !== 'COMPLETED')
+            .slice(0, 5)
+            .map((appointment: any) => ({
+              id: appointment.id,
+              patientId: appointment.patientId,
+              patient: appointment.patient,
+              reason: appointment.reason,
+              status: appointment.status,
+              date: appointment.date,
+              time: appointment.startTime,
+              symptoms: {
+                symptoms: appointment.reason
+                  ? appointment.reason.split(',').map((s: string) => s.trim())
+                  : [],
+              },
+              confidence: 85, // Default confidence for appointment cases
+            }));
+
           // Calculate weekly stats from the available data
           const weeklyStats = {
             totalAppointments: dashboardData.stats.totalAppointments,
@@ -958,21 +1033,33 @@ export class DoctorDashboardComponent implements OnInit, OnDestroy {
             aiAnalysesReviewed: 0,
           };
 
-          // Mock recent activity
-          const recentActivity = [
-            {
+          // Build recent activity from recent appointments
+          const recentActivity = dashboardData.recentAppointments
+            .slice(0, 5)
+            .map((apt: any) => ({
               type: 'appointment' as const,
-              title: 'New Appointment',
+              title: `Completed with ${apt.patient?.name || 'Patient'}`,
+              description: apt.reason || 'General consultation',
+              timestamp: new Date(apt.date),
+              status: apt.status,
+            }));
+
+          if (
+            recentActivity.length === 0 &&
+            dashboardData.upcomingAppointments.length > 0
+          ) {
+            recentActivity.push({
+              type: 'appointment' as const,
+              title: `Upcoming appointment with ${dashboardData.upcomingAppointments[0].patient?.name || 'patient'}`,
               description:
-                dashboardData.upcomingAppointments.length > 0
-                  ? `Appointment with ${dashboardData.upcomingAppointments[0].patient?.name || 'patient'}`
-                  : 'No upcoming appointments',
-              timestamp: new Date(),
-            },
-          ];
+                dashboardData.upcomingAppointments[0].reason ||
+                'Scheduled consultation',
+              timestamp: new Date(dashboardData.upcomingAppointments[0].date),
+            });
+          }
 
           this.dashboardData = {
-            pendingCases: [], // AI cases will be loaded separately
+            pendingCases,
             patientAnalyses: [],
             todayAppointments,
             weeklyStats,
@@ -1006,22 +1093,6 @@ export class DoctorDashboardComponent implements OnInit, OnDestroy {
           this.patientAnalyses = [];
         },
       });
-
-    // Load pending AI cases
-    this.aiAnalysisService
-      .getPatientAnalyses(this.currentUser.id)
-      .pipe(takeUntil(this.destroy$))
-      .subscribe({
-        next: (analyses) => {
-          const pendingCases = analyses.filter((a) => a.status === 'COMPLETED');
-          if (this.dashboardData) {
-            this.dashboardData.pendingCases = pendingCases;
-          }
-        },
-        error: () => {
-          // Silent fail for AI cases
-        },
-      });
   }
 
   reviewCase(analysis: AIAnalysis): void {
@@ -1038,35 +1109,19 @@ export class DoctorDashboardComponent implements OnInit, OnDestroy {
     // Open appointment scheduling dialog with pre-filled patient info
   }
 
-  dismissCase(analysis: AIAnalysis): void {
-    this.aiAnalysisService
-      .updateAnalysisStatus(analysis.id, AnalysisStatus.COMPLETED)
-      .pipe(takeUntil(this.destroy$))
-      .subscribe({
-        next: () => {
-          this.snackBar.open('Case dismissed successfully', 'Close', {
-            duration: 3000,
-          });
-          this.loadDashboardData();
-        },
-        error: () => {
-          this.snackBar.open('Failed to dismiss case', 'Close', {
-            duration: 3000,
-          });
-        },
-      });
-  }
-
-  viewAppointment(appointment: Appointment): void {
-    this.snackBar.open(`Viewing appointment ${appointment.id}`, 'Close', {
-      duration: 2000,
-    });
+  viewAppointment(appointment: any): void {
+    this.snackBar.open(
+      `Viewing appointment for ${appointment.patient?.name || appointment.patientId}`,
+      'Close',
+      { duration: 2000 },
+    );
     // Navigate to appointment details
   }
 
-  updateStatus(appointment: Appointment): void {
+  updateStatus(appointment: any): void {
     const newStatus =
-      appointment.status === AppointmentStatus.SCHEDULED
+      appointment.status === AppointmentStatus.SCHEDULED ||
+      appointment.status === 'SCHEDULED'
         ? AppointmentStatus.CONFIRMED
         : AppointmentStatus.COMPLETED;
 

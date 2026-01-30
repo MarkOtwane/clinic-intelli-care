@@ -10,6 +10,8 @@ import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { MatTableModule } from '@angular/material/table';
 import { MatTabsModule } from '@angular/material/tabs';
 import { MatTooltipModule } from '@angular/material/tooltip';
+import { RouterModule } from '@angular/router';
+import { AppointmentStatus } from '../../../core/models/appointment.model';
 import { AppointmentsService } from '../../../core/services/appointments.service';
 import { DoctorsService } from '../../../core/services/doctors.service';
 import { PatientDetailsDialogComponent } from '../components/patient-details-dialog.component';
@@ -20,6 +22,7 @@ import { ScheduleFollowupDialogComponent } from '../components/schedule-followup
   standalone: true,
   imports: [
     CommonModule,
+    RouterModule,
     MatCardModule,
     MatIconModule,
     MatButtonModule,
@@ -32,27 +35,39 @@ import { ScheduleFollowupDialogComponent } from '../components/schedule-followup
     MatTooltipModule,
   ],
   template: `
-    <section class="doctor-appointments-page">
-      <header class="page-header">
-        <div>
-          <p class="eyebrow">Clinical Schedule</p>
-          <h1>Appointment Management</h1>
-          <p class="muted">
-            Review patient bookings, approve pending requests, and manage your
-            schedule
-          </p>
+    <div class="doctor-appointments-professional">
+      <!-- Professional Medical Header -->
+      <div class="medical-header">
+        <div class="header-main">
+          <div class="header-icon">
+            <mat-icon>event_note</mat-icon>
+          </div>
+          <div class="header-text">
+            <h1>Appointment Management</h1>
+            <p class="subtitle">
+              Clinical Schedule & Patient Booking Oversight
+            </p>
+          </div>
         </div>
-      </header>
+        <div class="header-actions">
+          <button
+            mat-raised-button
+            color="primary"
+            routerLink="/doctor/dashboard"
+          >
+            <mat-icon>dashboard</mat-icon>
+            Dashboard
+          </button>
+        </div>
+      </div>
 
       <!-- Error State -->
       <mat-card class="error-card" *ngIf="hasError">
-        <mat-card-content>
-          <div class="error-message-container">
-            <mat-icon class="error-icon">error_outline</mat-icon>
-            <div>
-              <h3>Unable to Load Appointments</h3>
-              <p>{{ errorMessage }}</p>
-            </div>
+        <div class="error-content">
+          <mat-icon class="error-icon">error_outline</mat-icon>
+          <div class="error-text">
+            <h3>Unable to Load Appointments</h3>
+            <p>{{ errorMessage }}</p>
           </div>
           <button
             mat-raised-button
@@ -62,321 +77,371 @@ import { ScheduleFollowupDialogComponent } from '../components/schedule-followup
             <mat-icon>refresh</mat-icon>
             Retry
           </button>
-        </mat-card-content>
+        </div>
       </mat-card>
 
-      <div class="stats-cards" *ngIf="!isLoading">
-        <mat-card class="stat-card pending">
-          <mat-icon>schedule</mat-icon>
-          <div class="stat-info">
-            <h3>{{ pendingAppointments.length }}</h3>
-            <p>Pending Approval</p>
+      <!-- Quick Stats Dashboard -->
+      <div class="stats-dashboard" *ngIf="!isLoading && !hasError">
+        <div class="stat-card priority-stat">
+          <div class="stat-icon pending-icon">
+            <mat-icon>pending_actions</mat-icon>
           </div>
-        </mat-card>
-        <mat-card class="stat-card upcoming">
-          <mat-icon>event</mat-icon>
-          <div class="stat-info">
-            <h3>{{ upcomingAppointments.length }}</h3>
-            <p>Upcoming</p>
+          <div class="stat-data">
+            <span class="stat-value">{{ pendingAppointments.length }}</span>
+            <span class="stat-label">Awaiting Approval</span>
+            <span class="stat-desc">Requires your action</span>
           </div>
-        </mat-card>
-        <mat-card class="stat-card today">
-          <mat-icon>today</mat-icon>
-          <div class="stat-info">
-            <h3>{{ todayAppointments.length }}</h3>
-            <p>Today</p>
+        </div>
+
+        <div class="stat-card today-stat">
+          <div class="stat-icon today-icon">
+            <mat-icon>today</mat-icon>
           </div>
-        </mat-card>
+          <div class="stat-data">
+            <span class="stat-value">{{ todayAppointments.length }}</span>
+            <span class="stat-label">Today's Schedule</span>
+            <span class="stat-desc">{{ currentDate | date: 'EEEE' }}</span>
+          </div>
+        </div>
+
+        <div class="stat-card upcoming-stat">
+          <div class="stat-icon upcoming-icon">
+            <mat-icon>event_available</mat-icon>
+          </div>
+          <div class="stat-data">
+            <span class="stat-value">{{ upcomingAppointments.length }}</span>
+            <span class="stat-label">Confirmed Upcoming</span>
+            <span class="stat-desc">Next 7 days</span>
+          </div>
+        </div>
       </div>
 
-      <!-- View Toggle -->
-      <div class="view-toggle">
-        <button
-          mat-icon-button
-          [class.active]="viewMode === 'table'"
-          (click)="setViewMode('table')"
-          matTooltip="Table View"
-        >
-          <mat-icon>table_chart</mat-icon>
-        </button>
-        <button
-          mat-icon-button
-          [class.active]="viewMode === 'card'"
-          (click)="setViewMode('card')"
-          matTooltip="Card View"
-        >
-          <mat-icon>dashboard</mat-icon>
-        </button>
-      </div>
-
-      <mat-tab-group class="appointments-tabs">
-        <!-- Pending Approvals Tab -->
+      <!-- Main Content Tabs -->
+      <mat-tab-group class="medical-tabs" animationDuration="300ms">
+        <!-- PENDING APPROVALS TAB -->
         <mat-tab>
           <ng-template mat-tab-label>
-            <mat-icon>pending_actions</mat-icon>
-            Pending Approvals
-            <span class="badge" *ngIf="pendingAppointments.length">{{
-              pendingAppointments.length
-            }}</span>
-          </ng-template>
-          <div class="tab-content">
-            <div *ngIf="isLoading" class="loading-state">
-              <mat-spinner></mat-spinner>
-              <p>Loading appointments...</p>
+            <div class="tab-label-content">
+              <mat-icon>pending_actions</mat-icon>
+              <span>Pending Approvals</span>
+              <span class="priority-badge" *ngIf="pendingAppointments.length">
+                {{ pendingAppointments.length }}
+              </span>
             </div>
+          </ng-template>
+
+          <div class="tab-panel">
+            <!-- Loading State -->
+            <div *ngIf="isLoading" class="loading-container">
+              <mat-spinner diameter="50"></mat-spinner>
+              <p>Loading appointment requests...</p>
+            </div>
+
+            <!-- Empty State -->
             <div
               *ngIf="!isLoading && pendingAppointments.length === 0"
-              class="empty-state"
+              class="empty-container"
             >
-              <mat-icon>check_circle</mat-icon>
-              <h3>No pending approvals</h3>
-              <p>All appointment requests have been processed</p>
+              <mat-icon>check_circle_outline</mat-icon>
+              <h3>All Clear!</h3>
+              <p>No pending appointment requests at this time</p>
             </div>
 
-            <!-- Table View -->
-            <div
-              class="appointments-table-view"
-              *ngIf="
-                !isLoading &&
-                pendingAppointments.length > 0 &&
-                viewMode === 'table'
-              "
-            >
-              <table class="appointments-table">
-                <thead>
-                  <tr>
-                    <th>Patient</th>
-                    <th>Date & Time</th>
-                    <th>Type</th>
-                    <th>Age</th>
-                    <th>Contact</th>
-                    <th>Actions</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr
-                    *ngFor="let appointment of pendingAppointments"
-                    class="appointment-row pending-row"
-                  >
-                    <td class="patient-name">
-                      <div class="patient-badge">
-                        {{
-                          appointment.patient?.name?.charAt(0).toUpperCase() ||
-                            'P'
-                        }}
-                      </div>
-                      <div class="patient-details">
-                        <strong>{{
-                          appointment.patient?.name || 'Unknown Patient'
-                        }}</strong>
-                        <small>{{
-                          appointment.patient?.gender || 'Not specified'
-                        }}</small>
-                      </div>
-                    </td>
-                    <td class="appointment-datetime">
-                      <div>{{ appointment.date | date: 'MMM d, y' }}</div>
-                      <div class="time">{{ appointment.time }}</div>
-                    </td>
-                    <td class="appointment-type">
-                      {{ appointment.type || 'General Checkup' }}
-                    </td>
-                    <td class="patient-age">
-                      {{ appointment.patient?.age || '-' }}
-                    </td>
-                    <td class="patient-contact">
-                      {{ appointment.patient?.phone || 'N/A' }}
-                    </td>
-                    <td class="appointment-actions">
-                      <button
-                        mat-icon-button
-                        color="primary"
-                        (click)="approveAppointment(appointment)"
-                        matTooltip="Approve"
-                      >
-                        <mat-icon>check_circle</mat-icon>
-                      </button>
-                      <button
-                        mat-icon-button
-                        color="warn"
-                        (click)="rejectAppointment(appointment)"
-                        matTooltip="Reject"
-                      >
-                        <mat-icon>cancel</mat-icon>
-                      </button>
-                    </td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
-
-            <!-- Card View -->
+            <!-- Pending Appointments Grid -->
             <div
               class="appointments-grid"
-              *ngIf="
-                !isLoading &&
-                pendingAppointments.length > 0 &&
-                viewMode === 'card'
-              "
+              *ngIf="!isLoading && pendingAppointments.length > 0"
             >
-              <mat-card
-                class="appointment-card pending-card doctor-card"
-                *ngFor="let appointment of pendingAppointments"
+              <div
+                class="appointment-request-card"
+                *ngFor="let apt of pendingAppointments"
               >
-                <div class="card-accent pending-accent"></div>
-                <mat-card-header class="doctor-card-header">
-                  <div class="patient-avatar pending">
-                    <mat-icon>person</mat-icon>
-                  </div>
-                  <div class="header-content">
-                    <mat-card-title>{{
-                      appointment.patient?.name || 'Unknown Patient'
-                    }}</mat-card-title>
-                    <mat-card-subtitle>
-                      {{ appointment.date | date: 'EEE, MMM d' }} at
-                      {{ appointment.time }}
-                    </mat-card-subtitle>
-                  </div>
-                  <mat-chip class="status-pending-chip">PENDING</mat-chip>
-                </mat-card-header>
-                <mat-card-content class="doctor-card-content">
-                  <div class="info-grid">
-                    <div class="info-item">
-                      <mat-icon>cake</mat-icon>
-                      <div>
-                        <small>Age</small>
-                        <strong>{{
-                          appointment.patient?.age || 'Unknown'
-                        }}</strong>
-                      </div>
+                <div class="request-header">
+                  <div class="patient-info-header">
+                    <div class="patient-avatar">
+                      {{ apt.patient?.name?.charAt(0)?.toUpperCase() || 'P' }}
                     </div>
-                    <div class="info-item">
-                      <mat-icon>wc</mat-icon>
-                      <div>
-                        <small>Gender</small>
-                        <strong>{{
-                          appointment.patient?.gender || 'Not specified'
-                        }}</strong>
-                      </div>
-                    </div>
-                    <div class="info-item">
-                      <mat-icon>phone</mat-icon>
-                      <div>
-                        <small>Phone</small>
-                        <strong>{{
-                          appointment.patient?.phone || 'N/A'
-                        }}</strong>
-                      </div>
+                    <div class="patient-name-section">
+                      <h3>{{ apt.patient?.name || 'Unknown Patient' }}</h3>
+                      <p class="patient-meta">
+                        <span *ngIf="apt.patient?.age"
+                          >{{ apt.patient.age }} years</span
+                        >
+                        <span *ngIf="apt.patient?.gender" class="separator"
+                          >•</span
+                        >
+                        <span *ngIf="apt.patient?.gender">{{
+                          apt.patient.gender
+                        }}</span>
+                      </p>
                     </div>
                   </div>
-                  <div class="notes-section" *ngIf="appointment.notes">
+                  <mat-chip class="pending-chip">NEEDS APPROVAL</mat-chip>
+                </div>
+
+                <div class="request-details">
+                  <div class="detail-row">
+                    <mat-icon>event</mat-icon>
+                    <div>
+                      <span class="detail-label">Requested Date & Time</span>
+                      <span class="detail-value">
+                        {{ apt.date | date: 'EEEE, MMMM d, y' }} at
+                        {{ apt.time || apt.startTime }}
+                      </span>
+                    </div>
+                  </div>
+
+                  <div class="detail-row" *ngIf="apt.reason">
                     <mat-icon>description</mat-icon>
                     <div>
-                      <strong>Patient Notes</strong>
-                      <p>{{ appointment.notes }}</p>
+                      <span class="detail-label">Reason for Visit</span>
+                      <span class="detail-value">{{ apt.reason }}</span>
                     </div>
                   </div>
-                </mat-card-content>
-                <mat-card-actions class="doctor-card-actions">
+
+                  <div class="detail-row">
+                    <mat-icon>phone</mat-icon>
+                    <div>
+                      <span class="detail-label">Contact</span>
+                      <span class="detail-value">{{
+                        apt.patient?.phone || 'Not provided'
+                      }}</span>
+                    </div>
+                  </div>
+
+                  <div class="detail-row" *ngIf="apt.notes">
+                    <mat-icon>note</mat-icon>
+                    <div>
+                      <span class="detail-label">Additional Notes</span>
+                      <span class="detail-value">{{ apt.notes }}</span>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="request-actions">
                   <button
                     mat-raised-button
                     color="primary"
-                    (click)="approveAppointment(appointment)"
+                    (click)="approveAppointment(apt)"
+                    class="approve-btn"
                   >
-                    <mat-icon>done</mat-icon>
-                    Approve
+                    <mat-icon>check_circle</mat-icon>
+                    Approve Appointment
                   </button>
                   <button
                     mat-stroked-button
                     color="warn"
-                    (click)="rejectAppointment(appointment)"
+                    (click)="rejectAppointment(apt)"
+                    class="reject-btn"
                   >
-                    <mat-icon>close</mat-icon>
-                    Reject
+                    <mat-icon>cancel</mat-icon>
+                    Decline
                   </button>
-                </mat-card-actions>
-              </mat-card>
+                  <button
+                    mat-stroked-button
+                    (click)="viewPatientDetails(apt.patient)"
+                    *ngIf="apt.patient"
+                  >
+                    <mat-icon>info</mat-icon>
+                    Patient Details
+                  </button>
+                </div>
+              </div>
             </div>
           </div>
         </mat-tab>
 
-        <!-- Upcoming Appointments Tab -->
+        <!-- TODAY'S SCHEDULE TAB -->
         <mat-tab>
           <ng-template mat-tab-label>
-            <mat-icon>event_available</mat-icon>
-            Upcoming Appointments
-          </ng-template>
-          <div class="tab-content">
-            <div *ngIf="isLoading" class="loading-state">
-              <mat-spinner></mat-spinner>
-              <p>Loading appointments...</p>
+            <div class="tab-label-content">
+              <mat-icon>today</mat-icon>
+              <span>Today's Schedule</span>
+              <span class="info-badge" *ngIf="todayAppointments.length">
+                {{ todayAppointments.length }}
+              </span>
             </div>
+          </ng-template>
+
+          <div class="tab-panel">
+            <!-- Loading State -->
+            <div *ngIf="isLoading" class="loading-container">
+              <mat-spinner diameter="50"></mat-spinner>
+              <p>Loading today's schedule...</p>
+            </div>
+
+            <!-- Empty State -->
             <div
-              *ngIf="!isLoading && upcomingAppointments.length === 0"
-              class="empty-state"
+              *ngIf="!isLoading && todayAppointments.length === 0"
+              class="empty-container"
             >
               <mat-icon>event_busy</mat-icon>
-              <h3>No upcoming appointments</h3>
-              <p>Your schedule is clear</p>
+              <h3>No Appointments Today</h3>
+              <p>
+                Your schedule is clear for
+                {{ currentDate | date: 'EEEE, MMMM d' }}
+              </p>
             </div>
+
+            <!-- Today's Appointments -->
             <div
-              class="appointments-grid"
+              class="timeline-view"
+              *ngIf="!isLoading && todayAppointments.length > 0"
+            >
+              <div class="timeline-item" *ngFor="let apt of todayAppointments">
+                <div class="timeline-marker"></div>
+                <div class="timeline-content">
+                  <div class="appointment-time">
+                    {{ apt.time || apt.startTime }}
+                  </div>
+                  <mat-card class="today-appointment-card">
+                    <div class="today-apt-header">
+                      <div class="patient-brief">
+                        <div class="patient-avatar-small">
+                          {{
+                            apt.patient?.name?.charAt(0)?.toUpperCase() || 'P'
+                          }}
+                        </div>
+                        <div>
+                          <h4>{{ apt.patient?.name || 'Patient' }}</h4>
+                          <p class="apt-type">
+                            {{ apt.type || 'General Consultation' }}
+                          </p>
+                        </div>
+                      </div>
+                      <mat-chip
+                        [class]="'status-chip-' + apt.status?.toLowerCase()"
+                      >
+                        {{ apt.status }}
+                      </mat-chip>
+                    </div>
+                    <div class="today-apt-info">
+                      <div class="info-pill" *ngIf="apt.patient?.age">
+                        <mat-icon>person</mat-icon>
+                        {{ apt.patient.age }} yrs,
+                        {{ apt.patient.gender || 'N/A' }}
+                      </div>
+                      <div class="info-pill" *ngIf="apt.patient?.phone">
+                        <mat-icon>phone</mat-icon>
+                        {{ apt.patient.phone }}
+                      </div>
+                    </div>
+                    <div class="today-apt-actions">
+                      <button
+                        mat-button
+                        (click)="viewPatientDetails(apt.patient)"
+                      >
+                        <mat-icon>visibility</mat-icon>
+                        View Details
+                      </button>
+                      <button
+                        mat-button
+                        color="primary"
+                        (click)="markAsCompleted(apt)"
+                      >
+                        <mat-icon>done_all</mat-icon>
+                        Mark Complete
+                      </button>
+                    </div>
+                  </mat-card>
+                </div>
+              </div>
+            </div>
+          </div>
+        </mat-tab>
+
+        <!-- UPCOMING APPOINTMENTS TAB -->
+        <mat-tab>
+          <ng-template mat-tab-label>
+            <div class="tab-label-content">
+              <mat-icon>event_available</mat-icon>
+              <span>Confirmed Appointments</span>
+            </div>
+          </ng-template>
+
+          <div class="tab-panel">
+            <!-- Loading State -->
+            <div *ngIf="isLoading" class="loading-container">
+              <mat-spinner diameter="50"></mat-spinner>
+              <p>Loading confirmed appointments...</p>
+            </div>
+
+            <!-- Empty State -->
+            <div
+              *ngIf="!isLoading && upcomingAppointments.length === 0"
+              class="empty-container"
+            >
+              <mat-icon>event_busy</mat-icon>
+              <h3>No Confirmed Appointments</h3>
+              <p>You don't have any confirmed appointments scheduled</p>
+            </div>
+
+            <!-- Upcoming Appointments Grid -->
+            <div
+              class="appointments-list"
               *ngIf="!isLoading && upcomingAppointments.length > 0"
             >
               <mat-card
-                class="appointment-card"
-                *ngFor="let appointment of upcomingAppointments"
+                class="upcoming-apt-card"
+                *ngFor="let apt of upcomingAppointments"
               >
-                <mat-card-header>
-                  <mat-icon mat-card-avatar class="patient-icon"
-                    >person</mat-icon
-                  >
-                  <mat-card-title>{{
-                    appointment.patient?.name || 'Unknown Patient'
-                  }}</mat-card-title>
-                  <mat-card-subtitle>
-                    {{ appointment.date | date: 'EEEE, MMMM d, y' }} at
-                    {{ appointment.time }}
-                  </mat-card-subtitle>
-                </mat-card-header>
-                <mat-card-content>
-                  <div class="patient-info">
-                    <div class="info-row">
-                      <mat-icon>phone</mat-icon>
-                      <span>{{ appointment.patient?.phone || 'N/A' }}</span>
-                    </div>
-                    <div class="info-row" *ngIf="appointment.patient?.age">
-                      <mat-icon>cake</mat-icon>
-                      <span>{{ appointment.patient?.age }} years old</span>
-                    </div>
+                <div class="upcoming-header">
+                  <div class="date-badge">
+                    <div class="date-day">{{ apt.date | date: 'd' }}</div>
+                    <div class="date-month">{{ apt.date | date: 'MMM' }}</div>
                   </div>
-                  <mat-chip-set>
-                    <mat-chip
-                      [class]="'status-' + appointment.status.toLowerCase()"
-                    >
-                      {{ appointment.status }}
-                    </mat-chip>
-                  </mat-chip-set>
-                </mat-card-content>
-                <mat-card-actions>
-                  <button
-                    mat-button
-                    (click)="viewPatientDetails(appointment.patient)"
+                  <div class="upcoming-patient-info">
+                    <h3>{{ apt.patient?.name || 'Patient' }}</h3>
+                    <p class="appointment-datetime">
+                      {{ apt.date | date: 'EEEE' }} at
+                      {{ apt.time || apt.startTime }}
+                    </p>
+                  </div>
+                  <mat-chip
+                    [class]="'status-chip-' + apt.status?.toLowerCase()"
                   >
-                    <mat-icon>visibility</mat-icon>
-                    View Details
+                    {{ apt.status }}
+                  </mat-chip>
+                </div>
+
+                <div class="upcoming-details">
+                  <div class="detail-item">
+                    <mat-icon>person_outline</mat-icon>
+                    <span
+                      >{{ apt.patient?.age || 'N/A' }} years,
+                      {{ apt.patient?.gender || 'N/A' }}</span
+                    >
+                  </div>
+                  <div class="detail-item">
+                    <mat-icon>phone_in_talk</mat-icon>
+                    <span>{{ apt.patient?.phone || 'No contact' }}</span>
+                  </div>
+                  <div class="detail-item" *ngIf="apt.reason">
+                    <mat-icon>medical_services</mat-icon>
+                    <span>{{ apt.reason }}</span>
+                  </div>
+                </div>
+
+                <div class="upcoming-actions">
+                  <button mat-button (click)="viewPatientDetails(apt.patient)">
+                    <mat-icon>info_outline</mat-icon>
+                    Patient Info
                   </button>
-                  <button mat-button (click)="scheduleFollowUp(appointment)">
-                    <mat-icon>add_circle</mat-icon>
+                  <button mat-button (click)="scheduleFollowUp(apt)">
+                    <mat-icon>event</mat-icon>
                     Schedule Follow-up
                   </button>
-                </mat-card-actions>
+                  <button mat-button (click)="rescheduleAppointment(apt)">
+                    <mat-icon>schedule</mat-icon>
+                    Reschedule
+                  </button>
+                </div>
               </mat-card>
             </div>
           </div>
         </mat-tab>
       </mat-tab-group>
-    </section>
+    </div>
   `,
   styles: [
     `
@@ -949,7 +1014,7 @@ export class DoctorAppointmentsComponent implements OnInit {
   pendingAppointments: any[] = [];
   upcomingAppointments: any[] = [];
   todayAppointments: any[] = [];
-  viewMode: 'table' | 'card' = 'card'; // Toggle between table and card view
+  currentDate = new Date();
 
   constructor(
     private doctorsService: DoctorsService,
@@ -962,43 +1027,31 @@ export class DoctorAppointmentsComponent implements OnInit {
     this.loadAppointments();
   }
 
-  setViewMode(mode: 'table' | 'card'): void {
-    this.viewMode = mode;
-  }
-
   loadAppointments(): void {
     this.isLoading = true;
     this.hasError = false;
     this.errorMessage = '';
 
-    this.doctorsService.getDoctorDashboard().subscribe({
-      next: (data: any) => {
-        console.log('Dashboard data received:', data);
+    // Use the doctor-specific appointments endpoint
+    this.appointmentsService.getMyDoctorAppointments().subscribe({
+      next: (appointments: any[]) => {
+        console.log('Doctor appointments received:', appointments);
 
-        // Ensure we have appointments data
-        if (!data || !data.upcomingAppointments) {
-          console.warn('No appointments data received');
-          this.pendingAppointments = [];
-          this.upcomingAppointments = [];
-          this.todayAppointments = [];
-          this.isLoading = false;
-          return;
-        }
-
-        // Filter pending appointments
-        this.pendingAppointments = data.upcomingAppointments.filter(
+        // Filter pending appointments (need approval)
+        this.pendingAppointments = appointments.filter(
           (apt: any) => apt.status === 'PENDING',
         );
 
         // Filter confirmed/scheduled upcoming appointments
-        this.upcomingAppointments = data.upcomingAppointments.filter(
+        this.upcomingAppointments = appointments.filter(
           (apt: any) =>
-            apt.status === 'CONFIRMED' || apt.status === 'SCHEDULED',
+            (apt.status === 'CONFIRMED' || apt.status === 'SCHEDULED') &&
+            new Date(apt.date) >= new Date(),
         );
 
         // Filter today's appointments
         const today = new Date().toDateString();
-        this.todayAppointments = data.upcomingAppointments.filter(
+        this.todayAppointments = appointments.filter(
           (apt: any) => new Date(apt.date).toDateString() === today,
         );
 
@@ -1023,6 +1076,7 @@ export class DoctorAppointmentsComponent implements OnInit {
 
         this.snackBar.open('Failed to load appointments', 'Close', {
           duration: 3000,
+          panelClass: 'error-snackbar',
         });
       },
     });
@@ -1127,5 +1181,36 @@ export class DoctorAppointmentsComponent implements OnInit {
         patient: patient,
       },
     });
+  }
+
+  markAsCompleted(appointment: any): void {
+    this.appointmentsService
+      .updateAppointment(appointment.id, {
+        status: AppointmentStatus.COMPLETED,
+      })
+      .subscribe({
+        next: () => {
+          this.snackBar.open('Appointment marked as completed', 'Close', {
+            duration: 3000,
+            panelClass: 'success-snackbar',
+          });
+          this.loadAppointments();
+        },
+        error: () => {
+          this.snackBar.open('Failed to update appointment', 'Close', {
+            duration: 3000,
+            panelClass: 'error-snackbar',
+          });
+        },
+      });
+  }
+
+  rescheduleAppointment(appointment: any): void {
+    this.snackBar.open(
+      'Reschedule functionality - Contact patient to reschedule',
+      'Close',
+      { duration: 3000 },
+    );
+    // TODO: Implement reschedule dialog
   }
 }
