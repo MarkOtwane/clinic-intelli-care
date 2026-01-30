@@ -9,12 +9,14 @@ export interface User {
   isActive: boolean;
   createdAt: Date;
   updatedAt: Date;
+  doctorProfile?: DoctorProfile;
+  patientProfile?: PatientProfile;
 }
 
 export enum UserRole {
   PATIENT = 'PATIENT',
   DOCTOR = 'DOCTOR',
-  ADMIN = 'ADMIN'
+  ADMIN = 'ADMIN',
 }
 
 export interface PatientProfile {

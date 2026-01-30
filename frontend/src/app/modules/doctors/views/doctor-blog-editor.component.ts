@@ -1,10 +1,10 @@
 import { CommonModule } from '@angular/common';
 import { Component, OnDestroy, OnInit } from '@angular/core';
 import {
-  FormBuilder,
-  FormGroup,
-  ReactiveFormsModule,
-  Validators,
+    FormBuilder,
+    FormGroup,
+    ReactiveFormsModule,
+    Validators,
 } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
 import { MatCardModule } from '@angular/material/card';
@@ -19,27 +19,7 @@ import { Subscription } from 'rxjs';
 import { Blog, CreateBlogDto } from '../../../core/models/blog.model';
 import { MediaType } from '../../../core/models/media.model';
 import { BlogService } from '../../../core/services/blog.service';
-import {
-  UploadProgress,
-  UploadService,
-} from '../../../core/services/upload.service';
-
-@Component({
-  selector: 'app-doctor-blog-editor',
-  standalone: true,
-  imports: [
-    CommonModule,
-    ReactiveFormsModule,
-    RouterLink,
-    MatCardModule,
-    MatFormFieldModule,
-    MatInputModule,
-    MatButtonModule,
-    MatCheckboxModule,
-    MatSnackBarModule,
-    MatIconModule,
-  ],
-  template: `
+import { AuthService } from '../../../core/services/auth.service';
     <section class="portal-section">
       <div class="editor-header">
         <button mat-button color="primary" routerLink="/doctor/blog">
@@ -201,6 +181,7 @@ export class DoctorBlogEditorComponent implements OnInit, OnDestroy {
     private fb: FormBuilder,
     private blogService: BlogService,
     private uploadService: UploadService,
+    private authService: AuthService,
     private snackBar: MatSnackBar,
     private router: Router,
     private route: ActivatedRoute
@@ -213,6 +194,26 @@ export class DoctorBlogEditorComponent implements OnInit, OnDestroy {
   }
 
   ngOnInit(): void {
+    // Verify doctor profile exists before allowing blog creation
+    this.authService.currentUser$.subscribe((user) => {
+      if (user && user.role === 'DOCTOR') {
+        // Check if user has completed doctor profile
+        if (!user.doctorProfile) {
+          this.snackBar.open(
+            'Please complete your doctor profile to write blog posts',
+            'Go to Profile',
+            { duration: 5000 }
+          ).onAction().subscribe(() => {
+            this.router.navigate(['/doctor/profile']);
+          });
+          // Still allow loading of existing blogs for editing
+          if (!this.route.snapshot.paramMap.get('id')) {
+            this.router.navigate(['/doctor/blogs']);
+          }
+        }
+      }
+    });
+
     this.route.paramMap.subscribe((params) => {
       const id = params.get('id');
       if (id) {
@@ -340,15 +341,16 @@ export class DoctorBlogEditorComponent implements OnInit, OnDestroy {
           lower.includes('doctor profile not found') ||
           lower.includes('doctor profile')
         ) {
-          // Optional brief feedback before redirecting
+          // Brief feedback before redirecting with clear instructions
           this.snackBar.open(
-            'Doctor profile missing — redirecting to Settings...',
-            undefined,
+            'Please complete your doctor profile to write blog posts',
+            'Go to Settings',
             {
-              duration: 2000,
+              duration: 5000,
             }
-          );
-          void this.router.navigate(['/settings']);
+          ).onAction().subscribe(() => {
+            this.router.navigate(['/doctor/profile']);
+          });
           return;
         }
 
