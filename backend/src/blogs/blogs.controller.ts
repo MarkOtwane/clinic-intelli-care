@@ -128,25 +128,6 @@ export class BlogsController {
   }
 
   /**
-   * Get blogs by specific doctor ID
-   */
-  @Get('doctor/:id')
-  @Roles('DOCTOR', 'ADMIN')
-  findByDoctor(@Param('id') id: string) {
-    return this.blogsService.findByDoctor(id);
-  }
-
-  /**
-   * Get blogs by current doctor (DOCTOR only)
-   */
-  @Get('my-blogs')
-  @Roles('DOCTOR')
-  async findMyBlogs(@CurrentUser('id') userId: string) {
-    const doctor = await this.getDoctorProfile(userId);
-    return this.blogsService.findByDoctor(doctor.id);
-  }
-
-  /**
    * Like a blog post (PATIENT, DOCTOR, ADMIN)
    */
   @Post(':id/like')
