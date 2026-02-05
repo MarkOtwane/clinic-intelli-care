@@ -1,114 +1,125 @@
-# HealthFlow AI 🏥🤖  
-**AI-Powered Hospital Management & Smart Patient Routing System**  
+# Clinic IntelliCare 🏥🤖
 
-## 📌 Introduction  
-HealthFlow AI is a **Hospital Management System (HMS)** enhanced with **artificial intelligence** to assist in:  
-- Patient symptom entry and self-assessment.  
-- AI-driven disease prediction with probability scores.  
-- Intelligent routing to the right doctor based on predicted conditions.  
-- Automated scheduling to reduce overcrowding and streamline hospital workflow.  
+**AI-Assisted Hospital Management & Smart Patient Routing System**
 
-This project is developed as an **academic end-year project** to demonstrate how AI can be integrated into healthcare systems to improve **efficiency, accuracy, and accessibility**.  
+## 📌 Overview
 
----
+Clinic IntelliCare is a full‑stack hospital/clinic management system that combines traditional HMS workflows with AI‑assisted symptom analysis and smart routing. It is built as an academic project to demonstrate how AI can improve triage, scheduling, and clinical decision support.
 
-## 🚀 Key Features  
-### Patient Module  
-- Register / log in securely.  
-- Enter **symptoms, severity level, and medication history**.  
-- Receive **AI-powered preliminary diagnosis** with probability percentages.  
-- Get follow-up **questions from AI** if symptoms are unclear.  
-- Receive **feedback, prescriptions, or test requests** after doctor’s review.  
+## 🚀 Key Features
 
-### AI Diagnosis Module  
-- Processes patient symptoms.  
-- Predicts probable diseases using ML/AI models.  
-- Provides immediate health advice.  
-- Forwards case details to relevant specialists.  
+### Patient Experience
 
-### Doctor Module  
-- Dashboard to view **forwarded cases from AI**.  
-- Confirm or reject AI predictions.  
-- Prescribe treatment or request tests.  
-- Approve/schedule appointments.  
+- Secure registration and login.
+- Symptom submission with severity and duration.
+- AI‑assisted preliminary analysis with probability scores.
+- Follow‑up questions when symptoms are ambiguous.
+- View appointments and prescriptions.
 
-### Scheduling Module  
-- Intelligent appointment booking based on:  
-  - Disease type.  
-  - Doctor availability.  
-  - Workload balancing (to avoid overcrowding).  
-- Automatic patient notifications & reminders.  
+### Clinical & Admin Workflow
 
-### Admin Module  
-- Manage doctors, patients, schedules, and hospital data.  
-- Monitor disease trends and doctor utilization.  
+- Doctor dashboard for forwarded cases.
+- Confirm or reject AI predictions and issue prescriptions.
+- Appointment scheduling and availability management.
+- Admin tools for users, roles, and system oversight.
 
----
+### Additional Modules
 
-## 🛠️ System Architecture  
-- **Frontend:** Angular (patient & doctor dashboards).  
-- **Backend:** Nestjs.  
-- **AI Engine:** Python (scikit-learn / TensorFlow for disease prediction).  
-- **Database:** PostgreSQL (patients, doctors, appointments, prescriptions).  
-- **Authentication:** JWT / OAuth2 (secure logins).  
-- **Hosting:** Render / Vercel / AWS / Azure / Local deployment.  
+- Blog and community content (backend complete; UI in progress).
+- Notifications (in‑app and email).
+- Media uploads via Cloudinary.
 
----
+## 🧱 Tech Stack
 
-## ⚙️ Installation & Setup  
-1. Clone the repository:  
-   ```bash
-   git clone https://github.com/your-username/healthflow-ai.git
-   cd healthflow-ai
-2. Install dependencies:
-    ```bash
-    npm install   # For frontend
-    pip install -r requirements.txt   # For AI backend
-3. Configure environment variables (.env file):
-    DATABASE_URL=your_database_url
-    SECRET_KEY=your_secret_key
-    AI_MODEL_PATH=path_to_trained_model
-4. Run backend server:
-    ```bash
-    python manage.py runserver
-5. Run frontend:
-    ```bash
-    npm start
+- **Frontend:** Angular 19 (Angular Material, standalone components)
+- **Backend:** NestJS 11
+- **Database:** PostgreSQL (via Prisma ORM)
+- **AI:** Google Gemini API with optional OpenAI fallback
+- **Auth:** JWT + refresh tokens
+- **Email:** SMTP (configurable)
 
-🎯 Usage Flow
+## 📁 Repository Structure
 
-Patient logs in and submits symptoms.
+```
+backend/   # NestJS API, Prisma schema, migrations
+frontend/  # Angular application
+```
 
-AI predicts possible diseases + probabilities.
+## ⚙️ Setup & Installation
 
-Relevant doctor is automatically notified.
+### 1) Backend
 
-Doctor confirms diagnosis or requests tests.
+```
+cd backend
+npm install
+```
 
-Appointment is scheduled automatically.
+Create a .env file from the template:
 
-Patient receives treatment plan or next steps.
+```
+cp .env.example .env
+```
 
-🔮 Future Enhancements
+Run Prisma migrations:
 
-Integration with Electronic Health Records (EHRs).
+```
+npx prisma migrate dev
+```
 
-Real-time lab test result integration.
+Start the API:
 
-Telemedicine module for virtual doctor consultations.
+```
+npm run start:dev
+```
 
-Mobile app version (Android/iOS).
+### 2) Frontend
 
-NLP-powered chatbot for patient interaction.
+```
+cd frontend
+npm install
+npm start
+```
 
-📚 Acknowledgments
+Frontend runs at http://localhost:4200 and backend at http://localhost:3000 by default.
 
-Project Supervisor: [Your Lecturer’s Name]
+## 🔐 Environment Variables
 
-Institution: Chuka University.
+Required backend variables are listed in [backend/.env.example](backend/.env.example).
+Key options include:
 
-Inspired by global efforts to make AI in healthcare more accessible.
+- `DATABASE_URL`
+- `JWT_SECRET`, `REFRESH_TOKEN_SECRET`
+- `AI_API_KEY` (Gemini)
+- `USE_OPENAI`, `OPENAI_API_KEY` (optional)
+- `CLOUDINARY_*`
+- `EMAIL_*`
 
-📝 License
+## ✅ Current Status
 
-This project is for academic purposes
+The system is actively developed. Core patient and prescription workflows are complete, with blog UI and notifications in progress. See [DEVELOPMENT_PROGRESS.md](DEVELOPMENT_PROGRESS.md) for detailed status.
+
+## 🧪 Testing
+
+Backend tests:
+
+```
+cd backend
+npm run test
+```
+
+Frontend tests:
+
+```
+cd frontend
+npm test
+```
+
+## 📚 Documentation
+
+- Backend module map: [BACKEND_STRUCTURE.md](BACKEND_STRUCTURE.md)
+- AI analysis fixes and test script: [AI_ANALYSIS_FIXES.md](AI_ANALYSIS_FIXES.md)
+- Responsive UI references: [RESPONSIVE_QUICK_REFERENCE.md](RESPONSIVE_QUICK_REFERENCE.md)
+
+## 📝 License
+
+This project is for academic purposes.
