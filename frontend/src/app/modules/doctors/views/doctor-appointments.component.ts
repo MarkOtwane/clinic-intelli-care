@@ -445,47 +445,70 @@ import { ScheduleFollowupDialogComponent } from '../components/schedule-followup
   `,
   styles: [
     `
+      :host {
+        --primary-orange: #ff6f00;
+        --primary-orange-light: #ff9100;
+        --primary-blue: #1976d2;
+        --primary-blue-light: #42a5f5;
+        --primary-green: #388e3c;
+        --primary-green-light: #66bb6a;
+        --gray-50: #fafafa;
+        --gray-100: #f5f5f5;
+        --gray-200: #eeeeee;
+        --gray-300: #e0e0e0;
+        --gray-600: #757575;
+        --gray-700: #616161;
+        --gray-900: #212121;
+      }
+
       .doctor-appointments-page {
-        padding: var(--space-6);
+        padding: 32px;
         max-width: 1400px;
         margin: 0 auto;
+        background: #f5f7fa;
       }
 
       .page-header {
-        margin-bottom: var(--space-6);
+        margin-bottom: 32px;
       }
 
       .page-header h1 {
-        margin: var(--space-2) 0;
+        margin: 8px 0;
         font-size: 2rem;
         font-weight: 700;
+        color: var(--gray-900);
       }
 
       .eyebrow {
         text-transform: uppercase;
         letter-spacing: 0.1em;
-        font-size: var(--font-size-xs);
-        color: var(--gray-500);
-        margin: 0 0 var(--space-2);
+        font-size: 12px;
+        color: var(--gray-600);
+        margin: 0 0 8px;
+        font-weight: 600;
       }
 
       .muted {
         color: var(--gray-600);
         margin: 0;
+        font-size: 14px;
       }
 
       .stats-cards {
         display: grid;
         grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-        gap: var(--space-4);
-        margin-bottom: var(--space-6);
+        gap: 20px;
+        margin-bottom: 32px;
       }
 
       .stat-card {
         display: flex;
         align-items: center;
-        gap: var(--space-4);
-        padding: var(--space-5);
+        gap: 20px;
+        padding: 24px;
+        background: white;
+        border-radius: 12px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
       }
 
       .stat-card mat-icon {
@@ -495,34 +518,36 @@ import { ScheduleFollowupDialogComponent } from '../components/schedule-followup
       }
 
       .stat-card.pending mat-icon {
-        color: #ff9800;
+        color: var(--primary-orange);
       }
 
       .stat-card.upcoming mat-icon {
-        color: #2196f3;
+        color: var(--primary-blue);
       }
 
       .stat-card.today mat-icon {
-        color: #4caf50;
+        color: var(--primary-green);
       }
 
       .stat-info h3 {
         font-size: 2rem;
         margin: 0;
         font-weight: 700;
+        color: var(--gray-900);
       }
 
       .stat-info p {
         margin: 0;
         color: var(--gray-600);
+        font-size: 14px;
       }
 
       .appointments-tabs {
-        margin-top: var(--space-6);
+        margin-top: 32px;
       }
 
       .tab-content {
-        padding: var(--space-6) 0;
+        padding: 32px 0;
       }
 
       .loading-state,
@@ -531,7 +556,7 @@ import { ScheduleFollowupDialogComponent } from '../components/schedule-followup
         flex-direction: column;
         align-items: center;
         justify-content: center;
-        padding: var(--space-8);
+        padding: 64px;
         text-align: center;
       }
 
@@ -539,21 +564,35 @@ import { ScheduleFollowupDialogComponent } from '../components/schedule-followup
         font-size: 64px;
         width: 64px;
         height: 64px;
-        color: var(--gray-400);
-        margin-bottom: var(--space-4);
+        color: #bdbdbd;
+        margin-bottom: 20px;
+      }
+
+      .empty-state h3 {
+        font-size: 1.25rem;
+        font-weight: 600;
+        color: var(--gray-900);
+        margin: 0 0 8px;
+      }
+
+      .empty-state p {
+        color: var(--gray-600);
+        margin: 0;
       }
 
       .error-card {
         background: #ffebee;
-        border-left: 4px solid #f44336;
-        margin-bottom: var(--space-6);
+        border-left: 4px solid #d32f2f;
+        margin-bottom: 32px;
+        border-radius: 8px;
       }
 
       .error-message-container {
         display: flex;
         align-items: flex-start;
-        gap: var(--space-4);
-        margin-bottom: var(--space-4);
+        gap: 20px;
+        margin-bottom: 20px;
+        padding: 20px;
       }
 
       .error-icon {
@@ -579,21 +618,39 @@ import { ScheduleFollowupDialogComponent } from '../components/schedule-followup
 
       .appointments-grid {
         display: grid;
-        grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
-        gap: var(--space-4);
+        grid-template-columns: repeat(auto-fill, minmax(380px, 1fr));
+        gap: 24px;
       }
 
       .appointment-card {
-        border-radius: var(--radius-lg);
+        border-radius: 12px;
+        background: white;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+        transition: all 0.3s ease;
+        border: 1px solid rgba(0, 0, 0, 0.04);
+      }
+
+      .appointment-card:hover {
+        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+        transform: translateY(-4px);
       }
 
       .pending-card {
-        border-left: 4px solid #ff9800;
+        border-left: 4px solid var(--primary-orange);
       }
 
       .patient-icon {
-        background-color: var(--primary-100);
-        color: var(--primary-700);
+        background: linear-gradient(135deg, #fff3e0, #ffe0b2);
+        color: var(--primary-orange);
+        width: 56px;
+        height: 56px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 24px;
+        font-weight: 600;
+        box-shadow: 0 2px 8px rgba(255, 111, 0, 0.15);
       }
 
       .patient-info {
@@ -1004,6 +1061,271 @@ import { ScheduleFollowupDialogComponent } from '../components/schedule-followup
           width: 100%;
         }
       }
+
+      /* Medical Header Styling */
+      .medical-header {
+        background: white;
+        padding: 32px;
+        border-radius: 16px;
+        box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+        margin-bottom: 32px;
+        border-left: 6px solid var(--primary-blue);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      }
+
+      .header-main {
+        display: flex;
+        align-items: center;
+        gap: 20px;
+      }
+
+      .header-icon mat-icon {
+        font-size: 48px;
+        width: 48px;
+        height: 48px;
+        color: var(--primary-blue);
+      }
+
+      .header-text h1 {
+        font-size: 28px;
+        font-weight: 700;
+        color: var(--gray-900);
+        margin: 0 0 6px;
+        letter-spacing: -0.5px;
+      }
+
+      .subtitle {
+        color: var(--gray-600);
+        font-size: 14px;
+        margin: 0;
+      }
+
+      /* Stats Dashboard Styling */
+      .stats-dashboard {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        gap: 24px;
+        margin-bottom: 32px;
+      }
+
+      .stat-data {
+        flex: 1;
+      }
+
+      .stat-value {
+        font-size: 2.5rem;
+        font-weight: 700;
+        color: var(--gray-900);
+        display: block;
+        line-height: 1;
+        margin-bottom: 6px;
+      }
+
+      .stat-label {
+        font-size: 15px;
+        font-weight: 600;
+        color: var(--gray-700);
+        display: block;
+        margin-bottom: 2px;
+      }
+
+      .stat-desc {
+        font-size: 13px;
+        color: var(--gray-600);
+        display: block;
+      }
+
+      /* Tab Styling */
+      .medical-tabs {
+        background: white;
+        border-radius: 16px;
+        box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
+        overflow: hidden;
+      }
+
+      .tab-panel {
+        padding: 32px;
+      }
+
+      /* Request Cards */
+      .appointment-request-card {
+        background: white;
+        border-radius: 16px;
+        overflow: hidden;
+        box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        border: 1px solid rgba(0, 0, 0, 0.04);
+        position: relative;
+      }
+
+      .appointment-request-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 4px;
+        background: linear-gradient(
+          90deg,
+          var(--primary-orange),
+          var(--primary-orange-light)
+        );
+      }
+
+      .appointment-request-card:hover {
+        box-shadow: 0 12px 32px rgba(0, 0, 0, 0.12);
+        transform: translateY(-6px);
+      }
+
+      .request-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 24px;
+        border-bottom: 1px solid var(--gray-100);
+        background: #fafafa;
+      }
+
+      .patient-info-header {
+        display: flex;
+        align-items: center;
+        gap: 16px;
+      }
+
+      .patient-name-section h3 {
+        font-size: 18px;
+        font-weight: 700;
+        color: var(--gray-900);
+        margin: 0 0 4px;
+      }
+
+      .patient-meta {
+        font-size: 13px;
+        color: var(--gray-600);
+        margin: 0;
+      }
+
+      .separator {
+        margin: 0 8px;
+      }
+
+      .pending-chip {
+        background: linear-gradient(135deg, #fff3e0, #ffe0b2) !important;
+        color: var(--primary-orange) !important;
+        font-weight: 700 !important;
+        font-size: 11px !important;
+        padding: 6px 14px !important;
+        border-radius: 16px !important;
+        box-shadow: 0 2px 6px rgba(255, 111, 0, 0.15);
+      }
+
+      .request-details {
+        padding: 24px;
+      }
+
+      .detail-row {
+        display: flex;
+        align-items: flex-start;
+        gap: 16px;
+        margin-bottom: 20px;
+      }
+
+      .detail-row:last-child {
+        margin-bottom: 0;
+      }
+
+      .detail-row mat-icon {
+        color: var(--primary-blue);
+        flex-shrink: 0;
+        margin-top: 2px;
+      }
+
+      .detail-label {
+        display: block;
+        font-size: 12px;
+        color: var(--gray-600);
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        font-weight: 600;
+        margin-bottom: 4px;
+      }
+
+      .detail-value {
+        display: block;
+        font-size: 15px;
+        color: var(--gray-900);
+        font-weight: 500;
+      }
+
+      .request-actions {
+        display: flex;
+        gap: 12px;
+        padding: 20px 24px;
+        background: #fafafa;
+        border-top: 1px solid var(--gray-100);
+      }
+
+      .approve-btn {
+        flex: 1;
+        font-weight: 600 !important;
+        font-size: 14px !important;
+        padding: 12px 24px !important;
+        box-shadow: 0 2px 8px rgba(25, 118, 210, 0.25) !important;
+      }
+
+      .reject-btn {
+        font-weight: 600 !important;
+        font-size: 14px !important;
+        padding: 12px 24px !important;
+      }
+
+      /* Loading state */
+      .loading-container {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        padding: 80px;
+        gap: 20px;
+      }
+
+      .loading-container p {
+        color: var(--gray-600);
+        font-size: 15px;
+      }
+
+      /* Empty state */
+      .empty-container {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        padding: 80px;
+        text-align: center;
+      }
+
+      .empty-container mat-icon {
+        font-size: 72px;
+        width: 72px;
+        height: 72px;
+        color: #bdbdbd;
+        margin-bottom: 24px;
+      }
+
+      .empty-container h3 {
+        font-size: 1.5rem;
+        font-weight: 600;
+        color: var(--gray-900);
+        margin: 0 0 8px;
+      }
+
+      .empty-container p {
+        color: var(--gray-600);
+        font-size: 15px;
+        margin: 0;
+      }
     `,
   ],
 })
@@ -1036,24 +1358,41 @@ export class DoctorAppointmentsComponent implements OnInit {
     this.appointmentsService.getMyDoctorAppointments().subscribe({
       next: (appointments: any[]) => {
         console.log('Doctor appointments received:', appointments);
+        console.log('Total appointments:', appointments.length);
+
+        // Log all appointment statuses for debugging
+        appointments.forEach((apt, idx) => {
+          console.log(
+            `Appointment ${idx}: status="${apt.status}", date=${apt.date}`,
+          );
+        });
 
         // Filter pending appointments (need approval)
         this.pendingAppointments = appointments.filter(
           (apt: any) => apt.status === 'PENDING',
         );
+        console.log('Pending appointments:', this.pendingAppointments.length);
 
-        // Filter confirmed/scheduled upcoming appointments
-        this.upcomingAppointments = appointments.filter(
-          (apt: any) =>
-            (apt.status === 'CONFIRMED' || apt.status === 'SCHEDULED') &&
-            new Date(apt.date) >= new Date(),
-        );
+        // Filter confirmed/scheduled upcoming appointments (compare date only, not time)
+        const today = new Date();
+        today.setHours(0, 0, 0, 0); // Reset time to start of day
+
+        this.upcomingAppointments = appointments.filter((apt: any) => {
+          if (apt.status !== 'CONFIRMED' && apt.status !== 'SCHEDULED') {
+            return false;
+          }
+          const aptDate = new Date(apt.date);
+          aptDate.setHours(0, 0, 0, 0); // Reset time to start of day
+          return aptDate >= today;
+        });
+        console.log('Upcoming appointments:', this.upcomingAppointments.length);
 
         // Filter today's appointments
-        const today = new Date().toDateString();
+        const todayStr = new Date().toDateString();
         this.todayAppointments = appointments.filter(
-          (apt: any) => new Date(apt.date).toDateString() === today,
+          (apt: any) => new Date(apt.date).toDateString() === todayStr,
         );
+        console.log('Today appointments:', this.todayAppointments.length);
 
         this.isLoading = false;
       },
@@ -1083,16 +1422,23 @@ export class DoctorAppointmentsComponent implements OnInit {
   }
 
   approveAppointment(appointment: any): void {
+    console.log('Approving appointment:', appointment.id);
     this.appointmentsService.approveAppointment(appointment.id).subscribe({
-      next: () => {
+      next: (result) => {
+        console.log('Appointment approved successfully:', result);
         this.snackBar.open('Appointment approved successfully', 'Close', {
           duration: 3000,
+          panelClass: 'success-snackbar',
         });
         this.loadAppointments();
       },
-      error: () => {
-        this.snackBar.open('Failed to approve appointment', 'Close', {
-          duration: 3000,
+      error: (error) => {
+        console.error('Failed to approve appointment:', error);
+        const errorMsg =
+          error.error?.message || 'Failed to approve appointment';
+        this.snackBar.open(errorMsg, 'Close', {
+          duration: 5000,
+          panelClass: 'error-snackbar',
         });
       },
     });
@@ -1100,18 +1446,30 @@ export class DoctorAppointmentsComponent implements OnInit {
 
   rejectAppointment(appointment: any): void {
     const reason = prompt('Reason for rejection (optional):');
+    if (reason === null) {
+      // User cancelled the prompt
+      return;
+    }
+
+    console.log('Rejecting appointment:', appointment.id, 'Reason:', reason);
     this.appointmentsService
       .rejectAppointment(appointment.id, reason || undefined)
       .subscribe({
-        next: () => {
+        next: (result) => {
+          console.log('Appointment rejected successfully:', result);
           this.snackBar.open('Appointment rejected', 'Close', {
             duration: 3000,
+            panelClass: 'success-snackbar',
           });
           this.loadAppointments();
         },
-        error: () => {
-          this.snackBar.open('Failed to reject appointment', 'Close', {
-            duration: 3000,
+        error: (error) => {
+          console.error('Failed to reject appointment:', error);
+          const errorMsg =
+            error.error?.message || 'Failed to reject appointment';
+          this.snackBar.open(errorMsg, 'Close', {
+            duration: 5000,
+            panelClass: 'error-snackbar',
           });
         },
       });

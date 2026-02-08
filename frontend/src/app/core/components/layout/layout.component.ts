@@ -122,7 +122,7 @@ import { NotificationService } from '../../services/notification.service';
             </a>
             <a
               mat-list-item
-              routerLink="/appointments"
+              routerLink="/doctor/appointments"
               routerLinkActive="active-link"
               (click)="closeDrawerOnMobile()"
             >

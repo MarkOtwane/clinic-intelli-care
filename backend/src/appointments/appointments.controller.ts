@@ -248,12 +248,20 @@ export class AppointmentsController {
     @Param('id') id: string,
     @CurrentUser('id') userId: string,
   ) {
+    console.log('=== APPROVE APPOINTMENT ===');
+    console.log('Appointment ID:', id);
+    console.log('User ID:', userId);
+
     const user = await this.prisma.user.findUnique({
       where: { id: userId },
       include: { doctorProfile: true },
     });
 
+    console.log('User found:', user?.email);
+    console.log('Doctor profile:', user?.doctorProfile?.id);
+
     if (!user || !user.doctorProfile) {
+      console.error('Doctor profile not found for user:', userId);
       throw new BadRequestException('Doctor profile not found');
     }
 
@@ -273,12 +281,21 @@ export class AppointmentsController {
     @CurrentUser('id') userId: string,
     @Body() body: { reason?: string },
   ) {
+    console.log('=== REJECT APPOINTMENT ===');
+    console.log('Appointment ID:', id);
+    console.log('User ID:', userId);
+    console.log('Reason:', body.reason);
+
     const user = await this.prisma.user.findUnique({
       where: { id: userId },
       include: { doctorProfile: true },
     });
 
+    console.log('User found:', user?.email);
+    console.log('Doctor profile:', user?.doctorProfile?.id);
+
     if (!user || !user.doctorProfile) {
+      console.error('Doctor profile not found for user:', userId);
       throw new BadRequestException('Doctor profile not found');
     }
 
