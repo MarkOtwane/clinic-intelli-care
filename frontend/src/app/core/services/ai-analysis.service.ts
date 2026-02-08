@@ -93,7 +93,7 @@ export class AiAnalysisService {
    */
   getAvailableSymptoms(): Observable<{ name: string; category: string }[]> {
     return this.http.get<{ name: string; category: string }[]>(
-      `${this.apiUrl}/symptoms`,
+      `/api/symptoms`,
       this.httpOptions,
     );
   }

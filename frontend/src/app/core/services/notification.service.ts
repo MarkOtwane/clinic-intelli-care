@@ -27,18 +27,8 @@ export class NotificationService {
   /**
    * Get all notifications for a user
    */
-  getNotifications(
-    userId: string,
-    page = 1,
-    limit = 20,
-  ): Observable<{
-    notifications: Notification[];
-    total: number;
-    unreadCount: number;
-  }> {
-    return this.http.get<any>(`${this.apiUrl}/user/${userId}`, {
-      params: { page: page.toString(), limit: limit.toString() },
-    });
+  getNotifications(): Observable<Notification[]> {
+    return this.http.get<Notification[]>(`${this.apiUrl}/user`);
   }
 
   /**
