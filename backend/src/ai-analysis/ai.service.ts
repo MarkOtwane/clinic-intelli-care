@@ -16,6 +16,7 @@ export interface AISymptomAnalysis {
   recommendations: string[];
   confidence: number;
   followUpQuestions?: string[];
+  message?: string;
 }
 
 interface GeminiResponse {
@@ -40,6 +41,13 @@ interface GeminiListModelsResponse {
 export class AIService {
   private readonly logger = new Logger(AIService.name);
   private openai: OpenAI;
+  private geminiConsecutiveFailures = 0;
+  private geminiCircuitOpenUntil: number | null = null;
+
+  private readonly GEMINI_FAILURE_THRESHOLD = 3;
+  private readonly GEMINI_CIRCUIT_COOLDOWN_MS = 60_000;
+  private readonly SAFE_DEFAULT_MESSAGE =
+    'Unable to analyze symptoms at this time. Please consult a doctor directly.';
 
   constructor(private configService: ConfigService) {
     const openaiApiKey = this.configService.get<string>('OPENAI_API_KEY');
@@ -69,26 +77,190 @@ export class AIService {
 
       if (useOpenAI && this.openai) {
         try {
-          return await this.analyzeSymptomsWithChatGPT(
+          const chatGptAnalysis = await this.analyzeSymptomsWithChatGPT(
             symptoms,
             additionalInfo,
           );
+          return this.ensureValidAnalysis(chatGptAnalysis);
         } catch (chatgptError) {
           this.logger.warn(
             'ChatGPT analysis failed, falling back to Gemini:',
             chatgptError,
           );
-          // Fall back to Gemini if ChatGPT fails
-          return await this.analyzeSymptomsWithGemini(symptoms, additionalInfo);
+          return await this.tryGeminiThenFallback(symptoms, additionalInfo);
         }
       }
 
       // Use Gemini by default
-      return await this.analyzeSymptomsWithGemini(symptoms, additionalInfo);
+      return await this.tryGeminiThenFallback(symptoms, additionalInfo);
     } catch (error) {
       this.logger.error('AI analysis failed:', error);
-      // Fallback to basic analysis if both AI services fail
-      return this.fallbackAnalysis(symptoms);
+      return this.tryRuleBasedFallback(symptoms);
+    }
+  }
+
+  private isGeminiCircuitOpen(): boolean {
+    if (!this.geminiCircuitOpenUntil) {
+      return false;
+    }
+
+    if (Date.now() >= this.geminiCircuitOpenUntil) {
+      this.geminiCircuitOpenUntil = null;
+      this.geminiConsecutiveFailures = 0;
+      return false;
+    }
+
+    return true;
+  }
+
+  private recordGeminiFailure(): void {
+    this.geminiConsecutiveFailures += 1;
+
+    if (this.geminiConsecutiveFailures >= this.GEMINI_FAILURE_THRESHOLD) {
+      this.geminiCircuitOpenUntil =
+        Date.now() + this.GEMINI_CIRCUIT_COOLDOWN_MS;
+      this.logger.warn(
+        `Gemini circuit breaker opened for ${this.GEMINI_CIRCUIT_COOLDOWN_MS / 1000}s after ${this.geminiConsecutiveFailures} consecutive failures`,
+      );
+    }
+  }
+
+  private resetGeminiFailures(): void {
+    this.geminiConsecutiveFailures = 0;
+    this.geminiCircuitOpenUntil = null;
+  }
+
+  private getSafeDefaultAnalysis(): AISymptomAnalysis {
+    return {
+      predictions: [],
+      recommendations: [this.SAFE_DEFAULT_MESSAGE],
+      confidence: 0,
+      followUpQuestions: [],
+      message: this.SAFE_DEFAULT_MESSAGE,
+    };
+  }
+
+  private ensureValidAnalysis(analysis: unknown): AISymptomAnalysis {
+    if (!analysis || typeof analysis !== 'object') {
+      return this.getSafeDefaultAnalysis();
+    }
+
+    const raw = analysis as Partial<AISymptomAnalysis>;
+    const predictions = Array.isArray(raw.predictions)
+      ? raw.predictions
+          .map((pred) => ({
+            disease: pred?.disease || 'Unknown Condition',
+            probability: Math.min(
+              100,
+              Math.max(0, Number(pred?.probability ?? 0)),
+            ),
+            description: pred?.description || '',
+            suggestedActions: Array.isArray(pred?.suggestedActions)
+              ? pred.suggestedActions.filter(
+                  (action): action is string => typeof action === 'string',
+                )
+              : [],
+          }))
+          .filter((pred) => typeof pred.disease === 'string')
+      : [];
+
+    const recommendations = Array.isArray(raw.recommendations)
+      ? raw.recommendations.filter(
+          (rec): rec is string => typeof rec === 'string',
+        )
+      : [];
+
+    const followUpQuestions = Array.isArray(raw.followUpQuestions)
+      ? raw.followUpQuestions.filter((q): q is string => typeof q === 'string')
+      : [];
+
+    const confidence = Number.isFinite(raw.confidence)
+      ? Math.min(100, Math.max(0, Number(raw.confidence)))
+      : 0;
+
+    const message =
+      typeof raw.message === 'string' && raw.message.trim().length > 0
+        ? raw.message
+        : predictions.length === 0
+          ? this.SAFE_DEFAULT_MESSAGE
+          : undefined;
+
+    const normalized: AISymptomAnalysis = {
+      predictions,
+      recommendations:
+        recommendations.length > 0 ? recommendations : message ? [message] : [],
+      confidence,
+      followUpQuestions,
+      ...(message ? { message } : {}),
+    };
+
+    // Guarantee safe default semantics for empty prediction sets.
+    if (normalized.predictions.length === 0 && !normalized.message) {
+      return this.getSafeDefaultAnalysis();
+    }
+
+    if (
+      normalized.predictions.length === 0 &&
+      normalized.recommendations.length === 0
+    ) {
+      return this.getSafeDefaultAnalysis();
+    }
+
+    return normalized;
+  }
+
+  private async tryRuleBasedFallback(
+    symptoms: string[],
+  ): Promise<AISymptomAnalysis> {
+    try {
+      const fallback = this.fallbackAnalysis(symptoms);
+      return this.ensureValidAnalysis(fallback);
+    } catch (fallbackError) {
+      this.logger.error(
+        'Rule-based fallback failed. Returning safe default response.',
+        fallbackError,
+      );
+      return this.getSafeDefaultAnalysis();
+    }
+  }
+
+  private async tryGeminiThenFallback(
+    symptoms: string[],
+    additionalInfo?: {
+      severity?: string;
+      duration?: number;
+      location?: string;
+      medications?: string[];
+    },
+  ): Promise<AISymptomAnalysis> {
+    if (this.isGeminiCircuitOpen()) {
+      this.logger.warn(
+        'Gemini circuit breaker is open. Skipping Gemini API call and using fallback.',
+      );
+      return this.tryRuleBasedFallback(symptoms);
+    }
+
+    try {
+      const geminiResult = await this.analyzeSymptomsWithGemini(
+        symptoms,
+        additionalInfo,
+      );
+      this.resetGeminiFailures();
+      return this.ensureValidAnalysis(geminiResult);
+    } catch (geminiError) {
+      this.recordGeminiFailure();
+      this.logger.error(
+        'Gemini analysis failed, switching to rule-based fallback.',
+        geminiError,
+      );
+      if (axios.isAxiosError(geminiError)) {
+        this.logger.error('Gemini API error details:', {
+          status: geminiError.response?.status,
+          statusText: geminiError.response?.statusText,
+          data: geminiError.response?.data,
+        });
+      }
+      return this.tryRuleBasedFallback(symptoms);
     }
   }
 
@@ -184,81 +356,59 @@ export class AIService {
       medications?: string[];
     },
   ): Promise<AISymptomAnalysis> {
-    try {
-      const apiKey = this.configService.get<string>('AI_API_KEY');
-      const geminiModel =
-        this.configService.get<string>('GEMINI_MODEL') || 'gemini-flash-latest';
+    const apiKey = this.configService.get<string>('AI_API_KEY');
+    const geminiModel =
+      this.configService.get<string>('GEMINI_MODEL') || 'gemini-flash-latest';
 
-      if (!apiKey) {
-        throw new Error('AI API key (AI_API_KEY) is missing');
-      }
-
-      // Build the prompt for medical symptom analysis
-      const prompt = this.buildAnalysisPrompt(symptoms, additionalInfo);
-
-      // Construct the Gemini API endpoint using v1beta/models/{model}:generateContent
-      const normalizedModel = geminiModel.startsWith('models/')
-        ? geminiModel
-        : `models/${geminiModel}`;
-      const apiUrl = `https://generativelanguage.googleapis.com/v1beta/${normalizedModel}:generateContent`;
-
-      // Call Gemini API
-      const response = await axios.post<GeminiResponse>(
-        apiUrl,
-        {
-          contents: [
-            {
-              parts: [
-                {
-                  text: prompt,
-                },
-              ],
-            },
-          ],
-          generationConfig: {
-            temperature: 0.1, // Low temperature for medical accuracy
-            topK: 40,
-            topP: 0.95,
-            maxOutputTokens: 2048,
-            responseMimeType: 'application/json', // Request JSON response
-          },
-        },
-        {
-          headers: {
-            'Content-Type': 'application/json',
-            'x-goog-api-key': apiKey,
-          },
-        },
-      );
-
-      // Parse the AI response
-      if (!response.data?.candidates?.[0]?.content?.parts?.[0]?.text) {
-        this.logger.warn('Invalid Gemini response structure, using fallback');
-        return this.fallbackAnalysis(symptoms);
-      }
-
-      const aiResponse = response.data.candidates[0].content.parts[0].text;
-      try {
-        return this.parseAIResponse(aiResponse);
-      } catch (parseError) {
-        this.logger.error(
-          'Failed to parse Gemini response, using fallback:',
-          parseError,
-        );
-        return this.fallbackAnalysis(symptoms);
-      }
-    } catch (error) {
-      this.logger.error('Gemini AI analysis failed:', error);
-      if (axios.isAxiosError(error)) {
-        this.logger.error('API Error Details:', {
-          status: error.response?.status,
-          statusText: error.response?.statusText,
-          data: error.response?.data,
-        });
-      }
-      // Fallback to basic analysis if AI fails
-      return this.fallbackAnalysis(symptoms);
+    if (!apiKey) {
+      throw new Error('AI API key (AI_API_KEY) is missing');
     }
+
+    // Build the prompt for medical symptom analysis
+    const prompt = this.buildAnalysisPrompt(symptoms, additionalInfo);
+
+    // Construct the Gemini API endpoint using v1beta/models/{model}:generateContent
+    const normalizedModel = geminiModel.startsWith('models/')
+      ? geminiModel
+      : `models/${geminiModel}`;
+    const apiUrl = `https://generativelanguage.googleapis.com/v1beta/${normalizedModel}:generateContent`;
+
+    // Call Gemini API
+    const response = await axios.post<GeminiResponse>(
+      apiUrl,
+      {
+        contents: [
+          {
+            parts: [
+              {
+                text: prompt,
+              },
+            ],
+          },
+        ],
+        generationConfig: {
+          temperature: 0.1, // Low temperature for medical accuracy
+          topK: 40,
+          topP: 0.95,
+          maxOutputTokens: 2048,
+          responseMimeType: 'application/json', // Request JSON response
+        },
+      },
+      {
+        headers: {
+          'Content-Type': 'application/json',
+          'x-goog-api-key': apiKey,
+        },
+      },
+    );
+
+    // Parse the AI response
+    if (!response.data?.candidates?.[0]?.content?.parts?.[0]?.text) {
+      throw new Error('Invalid Gemini response structure');
+    }
+
+    const aiResponse = response.data.candidates[0].content.parts[0].text;
+    return this.parseAIResponse(aiResponse);
   }
 
   /**
@@ -475,6 +625,9 @@ Guidelines:
         'Are your symptoms getting better, worse, or staying the same?',
         'Do you have any known medical conditions or allergies?',
       ],
+      ...(predictions.length === 0
+        ? { message: this.SAFE_DEFAULT_MESSAGE }
+        : {}),
     };
   }
 

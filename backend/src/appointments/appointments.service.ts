@@ -16,6 +16,30 @@ import { UpdateAppointmentDto } from './dtos/update-appointment.dto';
 export class AppointmentsService {
   constructor(private prisma: PrismaService) {}
 
+  private toUTC(date: Date): Date {
+    return new Date(
+      Date.UTC(
+        date.getUTCFullYear(),
+        date.getUTCMonth(),
+        date.getUTCDate(),
+        date.getUTCHours(),
+        date.getUTCMinutes(),
+        date.getUTCSeconds(),
+        date.getUTCMilliseconds(),
+      ),
+    );
+  }
+
+  private parseToUTC(dateValue: string | Date): Date {
+    const date = dateValue instanceof Date ? dateValue : new Date(dateValue);
+
+    if (Number.isNaN(date.getTime())) {
+      throw new BadRequestException('Invalid appointment date');
+    }
+
+    return this.toUTC(date);
+  }
+
   /**
    * Find available doctors based on AI analysis prediction
    * Automatically routes to appropriate doctor based on predicted disease
@@ -129,10 +153,10 @@ export class AppointmentsService {
     );
 
     // Check if doctor is available
-    const appointmentDate = new Date(dto.date);
+    const appointmentDateUtc = this.parseToUTC(dto.date);
     const isAvailable = await this.isDoctorAvailable(
       dto.doctorId,
-      appointmentDate,
+      appointmentDateUtc,
       dto.time,
     );
 
@@ -170,7 +194,7 @@ export class AppointmentsService {
     // Create appointment
     const appointment = await this.prisma.appointment.create({
       data: {
-        date: appointmentDate,
+        date: appointmentDateUtc,
         time: dto.time,
         notes: dto.notes,
         patient: { connect: { id: patientId } },
@@ -214,7 +238,7 @@ export class AppointmentsService {
             message: `Your appointment with Dr. ${doctor.name} (${doctor.specialization}) has been scheduled for ${dto.date} at ${dto.time}.`,
             userId: patient.user.id,
             type: 'BOTH',
-            scheduledAt: appointmentDate,
+            scheduledAt: appointmentDateUtc,
           },
         });
       }
@@ -236,7 +260,7 @@ export class AppointmentsService {
             message: `A new appointment has been scheduled with ${appointment.patient.name} on ${dto.date} at ${dto.time}.`,
             userId: doctorUser.user.id,
             type: 'BOTH',
-            scheduledAt: appointmentDate,
+            scheduledAt: appointmentDateUtc,
           },
         });
       }
@@ -411,7 +435,7 @@ export class AppointmentsService {
       where: { id },
       data: {
         ...dto,
-        ...(dto.date && { date: new Date(dto.date) }),
+        ...(dto.date && { date: this.parseToUTC(dto.date) }),
         updatedAt: new Date(),
       },
       include: {
@@ -641,8 +665,8 @@ export class AppointmentsService {
    * @returns Array of available time slots
    */
   async getAvailableTimeSlots(doctorId: string, date: string) {
-    const appointmentDate = new Date(date);
-    const dayOfWeek = appointmentDate.getDay(); // 0 = Sunday, 1 = Monday, etc.
+    const appointmentDateUtc = this.parseToUTC(date);
+    const dayOfWeek = appointmentDateUtc.getUTCDay(); // 0 = Sunday, 1 = Monday, etc.
 
     // Check if doctor has availability set for this day
     let doctorAvailabilities = await this.prisma.doctorAvailability.findMany({
@@ -680,7 +704,7 @@ export class AppointmentsService {
       where: {
         doctorId,
         date: {
-          equals: appointmentDate,
+          equals: appointmentDateUtc,
         },
         status: {
           not: 'CANCELLED',
