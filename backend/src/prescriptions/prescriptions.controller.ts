@@ -28,11 +28,20 @@ export class PrescriptionsController {
 
   @Post()
   @Roles('DOCTOR')
-  create(
+  async create(
     @Body() dto: CreatePrescriptionDto,
-    @CurrentUser('id') doctorId: string,
+    @CurrentUser('id') userId: string,
   ) {
-    return this.prescriptionsService.create(dto, doctorId);
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+      include: { doctorProfile: true },
+    });
+
+    if (!user || !user.doctorProfile) {
+      throw new BadRequestException('Doctor profile not found');
+    }
+
+    return this.prescriptionsService.create(dto, user.doctorProfile.id);
   }
 
   @Get()

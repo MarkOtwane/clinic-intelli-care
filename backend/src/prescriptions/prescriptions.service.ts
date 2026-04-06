@@ -1,4 +1,9 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  ForbiddenException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreatePrescriptionDto } from './dtos/create-prescription.dto';
 import { UpdatePrescriptionDto } from './dtos/update-prescription.dto';
@@ -8,11 +13,40 @@ export class PrescriptionsService {
   constructor(private prisma: PrismaService) {}
 
   async create(dto: CreatePrescriptionDto, doctorId: string) {
+    if (!dto.appointmentId) {
+      throw new BadRequestException('Appointment ID is required');
+    }
+
+    const appointment = await this.prisma.appointment.findUnique({
+      where: { id: dto.appointmentId },
+      select: {
+        id: true,
+        doctorId: true,
+        patientId: true,
+      },
+    });
+
+    if (!appointment) {
+      throw new NotFoundException('Appointment not found');
+    }
+
+    if (appointment.doctorId !== doctorId) {
+      throw new ForbiddenException(
+        'You can only create prescriptions for your own appointments',
+      );
+    }
+
+    if (dto.patientId && dto.patientId !== appointment.patientId) {
+      throw new BadRequestException(
+        'Patient ID does not match the selected appointment',
+      );
+    }
+
     return this.prisma.prescription.create({
       data: {
-        patientId: dto.patientId,
+        patientId: appointment.patientId,
         doctorId,
-        appointmentId: dto.appointmentId,
+        appointmentId: appointment.id,
         analysisId: dto.analysisId,
         medications: dto.medications,
         notes: dto.notes,

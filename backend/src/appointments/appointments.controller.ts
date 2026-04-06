@@ -3,6 +3,7 @@ import {
   Body,
   Controller,
   Delete,
+  ForbiddenException,
   Get,
   Param,
   Patch,
@@ -221,8 +222,29 @@ export class AppointmentsController {
    * Get appointments for a specific doctor (by doctor ID)
    */
   @Get('doctor/:doctorId')
-  @Roles('ADMIN')
-  getAppointmentsByDoctor(@Param('doctorId') doctorId: string) {
+  @Roles('ADMIN', 'DOCTOR')
+  async getAppointmentsByDoctor(
+    @Param('doctorId') doctorId: string,
+    @CurrentUser('id') userId: string,
+    @CurrentUser('role') role: string,
+  ) {
+    if (role === 'DOCTOR') {
+      const user = await this.prisma.user.findUnique({
+        where: { id: userId },
+        include: { doctorProfile: true },
+      });
+
+      if (!user || !user.doctorProfile) {
+        throw new BadRequestException('Doctor profile not found');
+      }
+
+      if (user.doctorProfile.id !== doctorId) {
+        throw new ForbiddenException(
+          'You can only access your own appointments',
+        );
+      }
+    }
+
     return this.appointmentsService.getAppointmentsByDoctor(doctorId);
   }
 

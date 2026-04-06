@@ -33,7 +33,8 @@ export class PrismaService
   }
 
   async enableShutdownHooks(app: INestApplication) {
-    this.$on('beforeExit', async () => {
+    // Prisma library engine (v5+) requires hooking process.beforeExit directly.
+    process.once('beforeExit', async () => {
       await app.close();
     });
   }
