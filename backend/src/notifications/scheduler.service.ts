@@ -51,8 +51,11 @@ export class SchedulerService {
 
     for (const notification of dueNotifications) {
       await this.notificationsService.deliver(notification);
+      const scheduledAtLog = notification.scheduledAt
+        ? this.toUtcIsoOffset(notification.scheduledAt)
+        : 'null';
       this.logger.log(
-        `Delivered scheduled notification: ${notification.title} | scheduledAt=${this.toUtcIsoOffset(notification.scheduledAt)} | deliveredAt=${this.toUtcIsoOffset(new Date())}`,
+        `Delivered scheduled notification: ${notification.title} | scheduledAt=${scheduledAtLog} | deliveredAt=${this.toUtcIsoOffset(new Date())}`,
       );
     }
   }

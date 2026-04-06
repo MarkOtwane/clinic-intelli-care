@@ -28,13 +28,12 @@ export class PrismaService
   }
 
   async onModuleInit() {
-    // Prisma connects lazily on first query, no need to explicitly connect
-    this.logger.log('Prisma client initialized');
+    await this.$connect();
+    this.logger.log('Prisma client connected');
   }
 
   async enableShutdownHooks(app: INestApplication) {
-    // Use process event instead of Prisma event
-    process.on('beforeExit', async () => {
+    this.$on('beforeExit', async () => {
       await app.close();
     });
   }

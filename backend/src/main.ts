@@ -5,10 +5,12 @@ import { NestFactory, Reflector } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { JwtAuthGuard } from './auth/guards/jwt-auth.guard';
 import { RolesGuard } from './auth/guards/roles.guard';
+import { PrismaService } from './prisma/prisma.service';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
   const configService = app.get(ConfigService);
+  const prismaService = app.get(PrismaService);
 
   // Enable CORS for frontend communication
   const frontendUrl = configService.get<string>('FRONTEND_URL');
@@ -42,6 +44,8 @@ async function bootstrap() {
 
   // Get port from environment or default to 3000
   const port = configService.get<number>('PORT') || 3000;
+
+  await prismaService.enableShutdownHooks(app);
 
   await app.listen(port);
   console.log(`🚀 Application is running on: http://localhost:${port}/api`);
