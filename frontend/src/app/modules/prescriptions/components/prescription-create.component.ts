@@ -613,8 +613,12 @@ export class PrescriptionCreateComponent implements OnInit, OnDestroy {
         },
         error: (error) => {
           console.error('Error creating prescription:', error);
+          const backendMessage = Array.isArray(error?.error?.message)
+            ? error.error.message.join(', ')
+            : error?.error?.message;
           this.snackBar.open(
-            'Failed to create prescription. Please try again.',
+            backendMessage ||
+              'Failed to create prescription. Please try again.',
             'Close',
             { duration: 3000 },
           );

@@ -61,7 +61,26 @@ export class PrescriptionService {
   createPrescription(
     prescriptionData: CreatePrescriptionRequest,
   ): Observable<Prescription> {
-    return this.http.post<Prescription>(this.apiUrl, prescriptionData);
+    const notesParts = [
+      prescriptionData.diagnosis
+        ? `Diagnosis: ${prescriptionData.diagnosis}`
+        : '',
+      prescriptionData.instructions
+        ? `Instructions: ${prescriptionData.instructions}`
+        : '',
+      prescriptionData.validUntil
+        ? `Valid Until: ${new Date(prescriptionData.validUntil).toISOString().split('T')[0]}`
+        : '',
+    ].filter(Boolean);
+
+    const payload = {
+      patientId: prescriptionData.patientId,
+      appointmentId: prescriptionData.appointmentId,
+      medications: prescriptionData.medications,
+      notes: notesParts.join('\n'),
+    };
+
+    return this.http.post<Prescription>(this.apiUrl, payload);
   }
 
   /**
