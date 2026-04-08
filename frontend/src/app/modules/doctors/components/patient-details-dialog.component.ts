@@ -189,6 +189,137 @@ import { AiAnalysisService } from '../../../core/services/ai-analysis.service';
                           </li>
                         </ul>
                       </div>
+
+                      <button
+                        mat-stroked-button
+                        color="primary"
+                        class="history-button"
+                        (click)="toggleConversationHistory(analysis)"
+                      >
+                        <mat-icon>
+                          {{
+                            expandedAnalysisId === analysis.id
+                              ? 'expand_less'
+                              : 'history'
+                          }}
+                        </mat-icon>
+                        {{
+                          expandedAnalysisId === analysis.id
+                            ? 'Hide conversation history'
+                            : 'View conversation history'
+                        }}
+                      </button>
+
+                      <div
+                        class="conversation-history"
+                        *ngIf="expandedAnalysisId === analysis.id"
+                      >
+                        <div
+                          *ngIf="loadingHistoryAnalysisId === analysis.id"
+                          class="history-loading"
+                        >
+                          <mat-spinner diameter="28"></mat-spinner>
+                          <span>Loading conversation history...</span>
+                        </div>
+
+                        <div
+                          *ngIf="
+                            loadingHistoryAnalysisId !== analysis.id &&
+                            (analysisHistories[analysis.id] || []).length > 0
+                          "
+                          class="history-list"
+                        >
+                          <div
+                            *ngFor="let entry of analysisHistories[analysis.id]"
+                            class="history-entry"
+                          >
+                            <div class="history-entry-header">
+                              <span class="history-pill">{{ entry.type }}</span>
+                              <span class="history-timestamp">
+                                {{ entry.timestamp | date: 'short' }}
+                              </span>
+                            </div>
+
+                            <div *ngIf="entry.type === 'INITIAL'">
+                              <p>
+                                <strong>Symptoms:</strong>
+                                {{ entry.analysis?.symptoms?.join(', ') }}
+                              </p>
+                              <p><strong>Predictions:</strong></p>
+                              <ul class="history-bullets">
+                                <li
+                                  *ngFor="
+                                    let pred of entry.analysis?.predictions
+                                  "
+                                >
+                                  {{ pred.name || pred.disease }}
+                                  <span class="muted-inline">
+                                    ({{
+                                      (pred.probability ||
+                                        pred.confidence ||
+                                        0) * 100 | number: '1.0-0'
+                                    }}%)
+                                  </span>
+                                </li>
+                              </ul>
+                            </div>
+
+                            <div *ngIf="entry.type === 'FOLLOW_UP_QUESTIONS'">
+                              <p><strong>Follow-up questions:</strong></p>
+                              <ul class="history-bullets">
+                                <li *ngFor="let question of entry.questions">
+                                  {{ question.question }}
+                                </li>
+                              </ul>
+                            </div>
+
+                            <div *ngIf="entry.type === 'FINAL_ANALYSIS'">
+                              <p>
+                                <strong>Final diagnosis:</strong>
+                                {{ entry.analysis?.diagnosis }}
+                              </p>
+                              <p>
+                                <strong>Reasoning:</strong>
+                                {{ entry.analysis?.reasoning }}
+                              </p>
+                              <p
+                                *ngIf="
+                                  entry.analysis?.recommendations?.length > 0
+                                "
+                              >
+                                <strong>Final recommendations:</strong>
+                              </p>
+                              <ul
+                                class="history-bullets"
+                                *ngIf="
+                                  entry.analysis?.recommendations?.length > 0
+                                "
+                              >
+                                <li
+                                  *ngFor="
+                                    let recommendation of entry.analysis
+                                      ?.recommendations
+                                  "
+                                >
+                                  {{ recommendation }}
+                                </li>
+                              </ul>
+                            </div>
+                          </div>
+                        </div>
+
+                        <div
+                          *ngIf="
+                            loadingHistoryAnalysisId !== analysis.id &&
+                            (!analysisHistories[analysis.id] ||
+                              analysisHistories[analysis.id].length === 0)
+                          "
+                          class="empty-history"
+                        >
+                          <mat-icon>info</mat-icon>
+                          <span>No conversation history available yet.</span>
+                        </div>
+                      </div>
                     </div>
                   </mat-card-content>
                 </mat-card>
@@ -416,6 +547,77 @@ import { AiAnalysisService } from '../../../core/services/ai-analysis.service';
         font-size: 13px;
       }
 
+      .history-button {
+        margin-top: var(--space-2);
+      }
+
+      .history-button mat-icon {
+        margin-right: var(--space-1);
+      }
+
+      .conversation-history {
+        margin-top: var(--space-3);
+        padding: var(--space-3);
+        border: 1px solid var(--gray-200);
+        border-radius: var(--radius-md);
+        background: var(--gray-50);
+      }
+
+      .history-loading,
+      .empty-history {
+        display: flex;
+        align-items: center;
+        gap: var(--space-2);
+        color: var(--gray-600);
+      }
+
+      .history-list {
+        display: flex;
+        flex-direction: column;
+        gap: var(--space-3);
+      }
+
+      .history-entry {
+        padding: var(--space-3);
+        background: #fff;
+        border-radius: var(--radius-md);
+        border: 1px solid var(--gray-200);
+      }
+
+      .history-entry-header {
+        display: flex;
+        justify-content: space-between;
+        gap: var(--space-2);
+        align-items: center;
+        margin-bottom: var(--space-2);
+      }
+
+      .history-pill {
+        padding: 4px 10px;
+        border-radius: var(--radius-full);
+        background: var(--primary-100);
+        color: var(--primary-700);
+        font-size: 12px;
+        font-weight: 600;
+      }
+
+      .history-timestamp {
+        font-size: 12px;
+        color: var(--gray-500);
+      }
+
+      .history-bullets {
+        margin: 0;
+        padding-left: 18px;
+        display: flex;
+        flex-direction: column;
+        gap: var(--space-1);
+      }
+
+      .muted-inline {
+        color: var(--gray-500);
+      }
+
       mat-dialog-actions {
         gap: var(--space-2);
       }
@@ -442,6 +644,9 @@ export class PatientDetailsDialogComponent implements OnInit {
   patientData: any;
   analyses: any[] = [];
   analysisLoading = true;
+  expandedAnalysisId: string | null = null;
+  loadingHistoryAnalysisId: string | null = null;
+  analysisHistories: Record<string, any[]> = {};
 
   constructor(
     public dialogRef: MatDialogRef<PatientDetailsDialogComponent>,
@@ -466,6 +671,36 @@ export class PatientDetailsDialogComponent implements OnInit {
         console.error('Failed to load patient analyses:', error);
         this.analyses = [];
         this.analysisLoading = false;
+      },
+    });
+  }
+
+  toggleConversationHistory(analysis: any): void {
+    if (!analysis?.id) {
+      return;
+    }
+
+    if (this.expandedAnalysisId === analysis.id) {
+      this.expandedAnalysisId = null;
+      return;
+    }
+
+    this.expandedAnalysisId = analysis.id;
+
+    if (this.analysisHistories[analysis.id]) {
+      return;
+    }
+
+    this.loadingHistoryAnalysisId = analysis.id;
+    this.aiAnalysisService.getConversationHistory(analysis.id).subscribe({
+      next: (response: any) => {
+        this.analysisHistories[analysis.id] = response.history || [];
+        this.loadingHistoryAnalysisId = null;
+      },
+      error: (error: any) => {
+        console.error('Failed to load conversation history:', error);
+        this.analysisHistories[analysis.id] = [];
+        this.loadingHistoryAnalysisId = null;
       },
     });
   }

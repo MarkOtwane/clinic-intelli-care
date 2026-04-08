@@ -11,7 +11,7 @@ export interface Symptom {
 export enum SymptomSeverity {
   MILD = 'MILD',
   MODERATE = 'MODERATE',
-  SEVERE = 'SEVERE'
+  SEVERE = 'SEVERE',
 }
 
 export interface SymptomInput {
@@ -28,10 +28,18 @@ export interface AIAnalysis {
   patientId: string;
   symptoms: SymptomInput;
   predictions: DiseasePrediction[];
+  topPredictions?: (DiseasePrediction & {
+    confidence?: number;
+    name?: string;
+  })[];
   followUpQuestions?: FollowUpQuestion[];
   recommendations: string[];
   confidence: number;
   status: AnalysisStatus;
+  analysisStatus?: 'INITIAL' | 'AWAITING_ANSWERS' | 'COMPLETED' | string;
+  followUpAnswers?: any[];
+  conversationHistory?: any[];
+  doctorId?: string | null;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -54,5 +62,5 @@ export interface FollowUpQuestion {
 export enum AnalysisStatus {
   PENDING = 'PENDING',
   COMPLETED = 'COMPLETED',
-  FOLLOWUP_REQUIRED = 'FOLLOWUP_REQUIRED'
+  FOLLOWUP_REQUIRED = 'FOLLOWUP_REQUIRED',
 }

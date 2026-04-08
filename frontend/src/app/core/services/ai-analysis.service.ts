@@ -1,6 +1,6 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
-import { BehaviorSubject, Observable } from 'rxjs';
+import { BehaviorSubject, Observable, map } from 'rxjs';
 import { AIAnalysis, AnalysisStatus } from '../models/ai-analysis.model';
 
 export interface SymptomAnalysisRequest {
@@ -44,48 +44,133 @@ export class AiAnalysisService {
 
   constructor(private http: HttpClient) {}
 
+  private normalizePredictions(predictions: any): any[] {
+    if (!Array.isArray(predictions)) {
+      return [];
+    }
+
+    return predictions.map((prediction) => {
+      const disease = prediction?.disease ?? prediction?.name ?? 'Unknown';
+      const probabilityValue =
+        typeof prediction?.probability === 'number'
+          ? prediction.probability
+          : typeof prediction?.confidence === 'number'
+            ? prediction.confidence
+            : 0;
+      const probability =
+        probabilityValue <= 1 ? probabilityValue * 100 : probabilityValue;
+      const confidence = probability > 1 ? probability / 100 : probability;
+
+      const suggestedActions = Array.isArray(prediction?.suggestedActions)
+        ? prediction.suggestedActions
+        : prediction?.recommendation
+          ? String(prediction.recommendation)
+              .split('. ')
+              .map((action: string) => action.trim())
+              .filter(Boolean)
+          : [];
+
+      return {
+        ...prediction,
+        disease,
+        name: disease,
+        probability,
+        confidence,
+        suggestedActions,
+      };
+    });
+  }
+
+  private normalizeRecommendations(recommendations: any): string[] {
+    if (Array.isArray(recommendations)) {
+      return recommendations.map((item) => String(item)).filter(Boolean);
+    }
+
+    if (typeof recommendations === 'string') {
+      return recommendations
+        .split('\n')
+        .map((item) => item.trim())
+        .filter(Boolean);
+    }
+
+    return [];
+  }
+
+  private normalizeAnalysis<T extends AIAnalysis>(analysis: any): T {
+    if (!analysis) {
+      return analysis;
+    }
+
+    const predictions = this.normalizePredictions(
+      analysis.predictions ??
+        analysis.topPredictions ??
+        analysis.predictedDiseases ??
+        analysis.results,
+    );
+
+    return {
+      ...analysis,
+      predictions,
+      topPredictions: predictions,
+      recommendations: this.normalizeRecommendations(analysis.recommendations),
+    } as T;
+  }
+
   /**
    * Submit symptoms for AI analysis
    */
   analyzeSymptoms(
     request: SymptomAnalysisRequest,
   ): Observable<SymptomAnalysisResponse> {
-    return this.http.post<SymptomAnalysisResponse>(
-      `${this.apiUrl}/analyze`,
-      request,
-      this.httpOptions,
-    );
+    return this.http
+      .post<SymptomAnalysisResponse>(
+        `${this.apiUrl}/analyze`,
+        request,
+        this.httpOptions,
+      )
+      .pipe(
+        map((response) => ({
+          ...response,
+          analysis: this.normalizeAnalysis(response.analysis),
+        })),
+      );
   }
 
   /**
    * Submit follow-up answers to complete analysis
    */
   submitFollowUp(analysisId: string, answers: any): Observable<AIAnalysis> {
-    return this.http.post<AIAnalysis>(
-      `${this.apiUrl}/${analysisId}/follow-up`,
-      { answers },
-      this.httpOptions,
-    );
+    return this.http
+      .post<AIAnalysis>(
+        `${this.apiUrl}/${analysisId}/follow-up`,
+        { answers },
+        this.httpOptions,
+      )
+      .pipe(map((analysis) => this.normalizeAnalysis(analysis)));
   }
 
   /**
    * Get analysis by ID
    */
   getAnalysis(analysisId: string): Observable<AIAnalysis> {
-    return this.http.get<AIAnalysis>(
-      `${this.apiUrl}/${analysisId}`,
-      this.httpOptions,
-    );
+    return this.http
+      .get<AIAnalysis>(`${this.apiUrl}/${analysisId}`, this.httpOptions)
+      .pipe(map((analysis) => this.normalizeAnalysis(analysis)));
   }
 
   /**
    * Get patient's analysis history
    */
   getPatientAnalyses(patientId: string): Observable<AIAnalysis[]> {
-    return this.http.get<AIAnalysis[]>(
-      `${this.apiUrl}/patient/${patientId}`,
-      this.httpOptions,
-    );
+    return this.http
+      .get<
+        AIAnalysis[]
+      >(`${this.apiUrl}/patient/${patientId}`, this.httpOptions)
+      .pipe(
+        map((analyses) =>
+          analyses.map((analysis) => this.normalizeAnalysis(analysis)),
+        ),
+      );
   }
 
   /**
@@ -105,22 +190,26 @@ export class AiAnalysisService {
     analysisId: string,
     status: AnalysisStatus,
   ): Observable<AIAnalysis> {
-    return this.http.patch<AIAnalysis>(
-      `${this.apiUrl}/${analysisId}/status`,
-      { status },
-      this.httpOptions,
-    );
+    return this.http
+      .patch<AIAnalysis>(
+        `${this.apiUrl}/${analysisId}/status`,
+        { status },
+        this.httpOptions,
+      )
+      .pipe(map((analysis) => this.normalizeAnalysis(analysis)));
   }
 
   /**
    * Save analysis to patient's history
    */
   saveAnalysis(analysisId: string): Observable<AIAnalysis> {
-    return this.http.post<AIAnalysis>(
-      `${this.apiUrl}/${analysisId}/save`,
-      {},
-      this.httpOptions,
-    );
+    return this.http
+      .post<AIAnalysis>(
+        `${this.apiUrl}/${analysisId}/save`,
+        {},
+        this.httpOptions,
+      )
+      .pipe(map((analysis) => this.normalizeAnalysis(analysis)));
   }
 
   /**

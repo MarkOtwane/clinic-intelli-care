@@ -978,7 +978,22 @@ Return ONLY a JSON object with no additional text in this exact format:
     const isDoctor = user.doctorProfile?.id === analysis.doctorId;
     const isAdmin = user.role === 'ADMIN';
 
-    if (!isPatient && !isDoctor && !isAdmin) {
+    let isTreatingDoctor = false;
+    if (!isDoctor && user.role === 'DOCTOR' && user.doctorProfile?.id) {
+      const sharedAppointment = await this.prisma.appointment.findFirst({
+        where: {
+          doctorId: user.doctorProfile.id,
+          patientId: analysis.patientId,
+        },
+        select: {
+          id: true,
+        },
+      });
+
+      isTreatingDoctor = !!sharedAppointment;
+    }
+
+    if (!isPatient && !isDoctor && !isTreatingDoctor && !isAdmin) {
       throw new BadRequestException(
         'You do not have access to this analysis history',
       );
