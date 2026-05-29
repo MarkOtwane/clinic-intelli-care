@@ -1,12 +1,12 @@
-# Clinic IntelliCare 🏥🤖
+# Clinic IntelliCare 
 
 **AI-Assisted Hospital Management & Smart Patient Routing System**
 
-## 📌 Overview
+##  Overview
 
 Clinic IntelliCare is a full‑stack hospital/clinic management system that combines traditional HMS workflows with AI‑assisted symptom analysis and smart routing. It is built as an academic project to demonstrate how AI can improve triage, scheduling, and clinical decision support.
 
-## 🚀 Key Features
+##  Key Features
 
 ### Patient Experience
 
@@ -29,7 +29,7 @@ Clinic IntelliCare is a full‑stack hospital/clinic management system that comb
 - Notifications (in‑app and email).
 - Media uploads via Cloudinary.
 
-## 🧱 Tech Stack
+##  Tech Stack
 
 - **Frontend:** Angular 19 (Angular Material, standalone components)
 - **Backend:** NestJS 11
@@ -38,7 +38,7 @@ Clinic IntelliCare is a full‑stack hospital/clinic management system that comb
 - **Auth:** JWT + refresh tokens
 - **Email:** SMTP (configurable)
 
-## 📁 Repository Structure
+##  Repository Structure
 
 ```
 backend/   # NestJS API, Prisma schema, migrations
@@ -82,7 +82,7 @@ npm start
 
 Frontend runs at http://localhost:4200 and backend at http://localhost:3000 by default.
 
-## 🔐 Environment Variables
+##  Environment Variables
 
 Required backend variables are listed in [backend/.env.example](backend/.env.example).
 Key options include:
@@ -114,12 +114,12 @@ cd frontend
 npm test
 ```
 
-## 📚 Documentation
+##  Documentation
 
 - Backend module map: [BACKEND_STRUCTURE.md](BACKEND_STRUCTURE.md)
 - AI analysis fixes and test script: [AI_ANALYSIS_FIXES.md](AI_ANALYSIS_FIXES.md)
 - Responsive UI references: [RESPONSIVE_QUICK_REFERENCE.md](RESPONSIVE_QUICK_REFERENCE.md)
 
-## 📝 License
+##  License
 
 This project is for academic purposes.
