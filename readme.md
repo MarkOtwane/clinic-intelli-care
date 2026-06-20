@@ -1,125 +1,264 @@
-# Clinic IntelliCare 
+Fix the rider delivery workflow and assignment system.
 
-**AI-Assisted Hospital Management & Smart Patient Routing System**
+## Issue 1: Rider should automatically become online
 
-##  Overview
+Currently riders must manually become online.
 
-Clinic IntelliCare is a full‑stack hospital/clinic management system that combines traditional HMS workflows with AI‑assisted symptom analysis and smart routing. It is built as an academic project to demonstrate how AI can improve triage, scheduling, and clinical decision support.
+Required behavior:
 
-##  Key Features
+* When a rider successfully logs in, automatically set:
 
-### Patient Experience
+  * online_status = true
+  * availability_status = available
+  * last_seen = current timestamp
+* Establish Socket.IO connection immediately after login.
+* Send heartbeat updates automatically while the app is active.
+* If the rider logs out:
 
-- Secure registration and login.
-- Symptom submission with severity and duration.
-- AI‑assisted preliminary analysis with probability scores.
-- Follow‑up questions when symptoms are ambiguous.
-- View appointments and prescriptions.
+  * online_status = false
+  * availability_status = offline
+* If no activity is detected for 5 minutes:
 
-### Clinical & Admin Workflow
+  * online_status = false
+  * availability_status = offline
+* Remove the requirement for riders to manually toggle online after login.
 
-- Doctor dashboard for forwarded cases.
-- Confirm or reject AI predictions and issue prescriptions.
-- Appointment scheduling and availability management.
-- Admin tools for users, roles, and system oversight.
+## Issue 2: Rider gets blank screen after accepting assignment
 
-### Additional Modules
+Current error:
 
-- Blog and community content (backend complete; UI in progress).
-- Notifications (in‑app and email).
-- Media uploads via Cloudinary.
+TypeError: Cannot read properties of undefined (reading 'slice')
 
-##  Tech Stack
+This occurs immediately after the rider accepts a delivery assignment.
 
-- **Frontend:** Angular 19 (Angular Material, standalone components)
-- **Backend:** NestJS 11
-- **Database:** PostgreSQL (via Prisma ORM)
-- **AI:** Google Gemini API with optional OpenAI fallback
-- **Auth:** JWT + refresh tokens
-- **Email:** SMTP (configurable)
+Tasks:
 
-##  Repository Structure
+1. Find the exact source of the error.
+2. Identify which field is undefined and where .slice() is being called.
+3. Add defensive checks before calling:
 
-```
-backend/   # NestJS API, Prisma schema, migrations
-frontend/  # Angular application
-```
+   * slice()
+   * substring()
+   * map()
+   * filter()
+   * reduce()
+4. Ensure all order data is validated before rendering.
+5. Prevent any rider page from crashing because of missing order fields.
+6. Add loading and error states.
+7. If required order information is missing, display a fallback message instead of a blank screen.
 
-## ⚙️ Setup & Installation
+Example:
 
-### 1) Backend
+Bad:
+order.id.slice(0,8)
 
-```
-cd backend
-npm install
-```
+Good:
+order?.id ? order.id.slice(0,8) : "Unknown Order"
 
-Create a .env file from the template:
+## Issue 3: Delivery workflow is incorrect
 
-```
-cp .env.example .env
-```
+Current workflow:
+Order Assigned → Rider Accepts → Delivered
 
-Run Prisma migrations:
+This is not enough verification.
 
-```
-npx prisma migrate dev
-```
+Replace with the following workflow.
 
-Start the API:
+### Step 1: Order Assigned
 
-```
-npm run start:dev
-```
+Status:
+ASSIGNED
 
-### 2) Frontend
+Rider receives notification.
 
-```
-cd frontend
-npm install
-npm start
-```
+Actions:
 
-Frontend runs at http://localhost:4200 and backend at http://localhost:3000 by default.
+* Accept
+* Reject
 
-##  Environment Variables
+### Step 2: Rider Accepts
 
-Required backend variables are listed in [backend/.env.example](backend/.env.example).
-Key options include:
+Status:
+ACCEPTED
 
-- `DATABASE_URL`
-- `JWT_SECRET`, `REFRESH_TOKEN_SECRET`
-- `AI_API_KEY` (Gemini)
-- `USE_OPENAI`, `OPENAI_API_KEY` (optional)
-- `CLOUDINARY_*`
-- `EMAIL_*`
+After accepting:
 
-## ✅ Current Status
+* Redirect rider to active delivery screen.
+* Show:
 
-The system is actively developed. Core patient and prescription workflows are complete, with blog UI and notifications in progress. See [DEVELOPMENT_PROGRESS.md](DEVELOPMENT_PROGRESS.md) for detailed status.
+  * Restaurant details
+  * Customer details
+  * Pickup location
+  * Delivery location
+  * Call buttons
+  * Navigation buttons
 
-## 🧪 Testing
+The rider should NOT immediately see delivery completion options.
 
-Backend tests:
+## Step 3: Restaurant Verification
 
-```
-cd backend
-npm run test
-```
+Status:
+READY_FOR_PICKUP
 
-Frontend tests:
+Restaurant dashboard should display:
 
-```
-cd frontend
-npm test
-```
+"Rider Arrived"
 
-##  Documentation
+Button:
+MARK AS PICKED UP
 
-- Backend module map: [BACKEND_STRUCTURE.md](BACKEND_STRUCTURE.md)
-- AI analysis fixes and test script: [AI_ANALYSIS_FIXES.md](AI_ANALYSIS_FIXES.md)
-- Responsive UI references: [RESPONSIVE_QUICK_REFERENCE.md](RESPONSIVE_QUICK_REFERENCE.md)
+Only restaurant staff/vendor can click this button.
 
-##  License
+When clicked:
 
-This project is for academic purposes.
+* Verify that rider has collected the order.
+* Update order status:
+
+PICKED_UP
+
+Send notifications to:
+
+* Rider
+* Customer
+
+This serves as proof that the rider actually collected the food.
+
+## Step 4: Rider Starts Delivery
+
+Once restaurant marks PICKED_UP:
+
+Status:
+OUT_FOR_DELIVERY
+
+Rider dashboard should show:
+
+* Customer information
+* Delivery address
+* Navigation
+* Call customer button
+
+Button:
+MARK AS DELIVERED
+
+Only rider can click.
+
+When clicked:
+Status becomes:
+
+DELIVERED_PENDING_CUSTOMER_CONFIRMATION
+
+Notify customer:
+"Your order has arrived. Please confirm receipt."
+
+## Step 5: Customer Verification
+
+Customer sees:
+
+Order Delivered
+
+Button:
+CONFIRM RECEIVED
+
+Only customer can click.
+
+When clicked:
+Status becomes:
+
+COMPLETED
+
+Notifications:
+
+* Rider
+* Restaurant
+
+Only after customer confirms receipt should:
+
+* Ratings become available
+* Reviews become available
+* Order be considered completed
+
+## Status Flow
+
+ASSIGNED
+↓
+ACCEPTED
+↓
+READY_FOR_PICKUP
+↓
+PICKED_UP
+↓
+OUT_FOR_DELIVERY
+↓
+DELIVERED_PENDING_CUSTOMER_CONFIRMATION
+↓
+COMPLETED
+
+## Permissions
+
+Rider:
+
+* Accept Assignment
+* Reject Assignment
+* Mark Delivered
+
+Restaurant:
+
+* Mark Picked Up
+
+Customer:
+
+* Confirm Received
+* Leave Reviews
+
+Ensure role-based authorization checks are enforced in backend APIs.
+
+## Notifications
+
+Send real-time Socket.IO notifications for every state change:
+
+ASSIGNED
+ACCEPTED
+PICKED_UP
+OUT_FOR_DELIVERY
+DELIVERED_PENDING_CUSTOMER_CONFIRMATION
+COMPLETED
+
+## Frontend Updates
+
+### Rider Dashboard
+
+After accepting:
+
+* Automatically navigate to Active Delivery page.
+* No blank screen.
+* Display delivery progress timeline.
+
+### Restaurant Dashboard
+
+Add:
+
+* Rider Arrived card
+* Mark As Picked Up button
+
+### Customer Order Tracking
+
+Add:
+
+* Live order status tracking
+* Confirm Received button
+* Delivery timeline
+
+## Testing
+
+Add tests for:
+
+* Rider auto-online on login
+* Rider auto-offline after inactivity
+* Assignment acceptance flow
+* Restaurant pickup verification
+* Rider delivery confirmation
+* Customer receipt confirmation
+* Protection against undefined data causing .slice() crashes
+* End-to-end delivery workflow
+
+Follow the existing project architecture and update backend, frontend, database, Socket.IO events, APIs, and UI components accordingly.
