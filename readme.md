@@ -1,264 +1,249 @@
-Fix the rider delivery workflow and assignment system.
+# Clinic IntelliCare 
 
-## Issue 1: Rider should automatically become online
 
-Currently riders must manually become online.
 
-Required behavior:
+**AI-Assisted Hospital Management & Smart Patient Routing System**
 
-* When a rider successfully logs in, automatically set:
 
-  * online_status = true
-  * availability_status = available
-  * last_seen = current timestamp
-* Establish Socket.IO connection immediately after login.
-* Send heartbeat updates automatically while the app is active.
-* If the rider logs out:
 
-  * online_status = false
-  * availability_status = offline
-* If no activity is detected for 5 minutes:
+##  Overview
 
-  * online_status = false
-  * availability_status = offline
-* Remove the requirement for riders to manually toggle online after login.
 
-## Issue 2: Rider gets blank screen after accepting assignment
 
-Current error:
+Clinic IntelliCare is a full‑stack hospital/clinic management system that combines traditional HMS workflows with AI‑assisted symptom analysis and smart routing. It is built as an academic project to demonstrate how AI can improve triage, scheduling, and clinical decision support.
 
-TypeError: Cannot read properties of undefined (reading 'slice')
 
-This occurs immediately after the rider accepts a delivery assignment.
 
-Tasks:
+##  Key Features
 
-1. Find the exact source of the error.
-2. Identify which field is undefined and where .slice() is being called.
-3. Add defensive checks before calling:
 
-   * slice()
-   * substring()
-   * map()
-   * filter()
-   * reduce()
-4. Ensure all order data is validated before rendering.
-5. Prevent any rider page from crashing because of missing order fields.
-6. Add loading and error states.
-7. If required order information is missing, display a fallback message instead of a blank screen.
 
-Example:
+### Patient Experience
 
-Bad:
-order.id.slice(0,8)
 
-Good:
-order?.id ? order.id.slice(0,8) : "Unknown Order"
 
-## Issue 3: Delivery workflow is incorrect
+- Secure registration and login.
 
-Current workflow:
-Order Assigned → Rider Accepts → Delivered
+- Symptom submission with severity and duration.
 
-This is not enough verification.
+- AI‑assisted preliminary analysis with probability scores.
 
-Replace with the following workflow.
+- Follow‑up questions when symptoms are ambiguous.
 
-### Step 1: Order Assigned
+- View appointments and prescriptions.
 
-Status:
-ASSIGNED
 
-Rider receives notification.
 
-Actions:
+### Clinical & Admin Workflow
 
-* Accept
-* Reject
 
-### Step 2: Rider Accepts
 
-Status:
-ACCEPTED
+- Doctor dashboard for forwarded cases.
 
-After accepting:
+- Confirm or reject AI predictions and issue prescriptions.
 
-* Redirect rider to active delivery screen.
-* Show:
+- Appointment scheduling and availability management.
 
-  * Restaurant details
-  * Customer details
-  * Pickup location
-  * Delivery location
-  * Call buttons
-  * Navigation buttons
+- Admin tools for users, roles, and system oversight.
 
-The rider should NOT immediately see delivery completion options.
 
-## Step 3: Restaurant Verification
 
-Status:
-READY_FOR_PICKUP
+### Additional Modules
 
-Restaurant dashboard should display:
 
-"Rider Arrived"
 
-Button:
-MARK AS PICKED UP
+- Blog and community content (backend complete; UI in progress).
 
-Only restaurant staff/vendor can click this button.
+- Notifications (in‑app and email).
 
-When clicked:
+- Media uploads via Cloudinary.
 
-* Verify that rider has collected the order.
-* Update order status:
 
-PICKED_UP
 
-Send notifications to:
+##  Tech Stack
 
-* Rider
-* Customer
 
-This serves as proof that the rider actually collected the food.
 
-## Step 4: Rider Starts Delivery
+- **Frontend:** Angular 19 (Angular Material, standalone components)
 
-Once restaurant marks PICKED_UP:
+- **Backend:** NestJS 11
 
-Status:
-OUT_FOR_DELIVERY
+- **Database:** PostgreSQL (via Prisma ORM)
 
-Rider dashboard should show:
+- **AI:** Google Gemini API with optional OpenAI fallback
 
-* Customer information
-* Delivery address
-* Navigation
-* Call customer button
+- **Auth:** JWT + refresh tokens
 
-Button:
-MARK AS DELIVERED
+- **Email:** SMTP (configurable)
 
-Only rider can click.
 
-When clicked:
-Status becomes:
 
-DELIVERED_PENDING_CUSTOMER_CONFIRMATION
+##  Repository Structure
 
-Notify customer:
-"Your order has arrived. Please confirm receipt."
 
-## Step 5: Customer Verification
 
-Customer sees:
+```
 
-Order Delivered
+backend/   # NestJS API, Prisma schema, migrations
 
-Button:
-CONFIRM RECEIVED
+frontend/  # Angular application
 
-Only customer can click.
+```
 
-When clicked:
-Status becomes:
 
-COMPLETED
 
-Notifications:
+## ⚙️ Setup & Installation
 
-* Rider
-* Restaurant
 
-Only after customer confirms receipt should:
 
-* Ratings become available
-* Reviews become available
-* Order be considered completed
+### 1) Backend
 
-## Status Flow
 
-ASSIGNED
-↓
-ACCEPTED
-↓
-READY_FOR_PICKUP
-↓
-PICKED_UP
-↓
-OUT_FOR_DELIVERY
-↓
-DELIVERED_PENDING_CUSTOMER_CONFIRMATION
-↓
-COMPLETED
 
-## Permissions
+```
 
-Rider:
+cd backend
 
-* Accept Assignment
-* Reject Assignment
-* Mark Delivered
+npm install
 
-Restaurant:
+```
 
-* Mark Picked Up
 
-Customer:
 
-* Confirm Received
-* Leave Reviews
+Create a .env file from the template:
 
-Ensure role-based authorization checks are enforced in backend APIs.
 
-## Notifications
 
-Send real-time Socket.IO notifications for every state change:
+```
 
-ASSIGNED
-ACCEPTED
-PICKED_UP
-OUT_FOR_DELIVERY
-DELIVERED_PENDING_CUSTOMER_CONFIRMATION
-COMPLETED
+cp .env.example .env
 
-## Frontend Updates
+```
 
-### Rider Dashboard
 
-After accepting:
 
-* Automatically navigate to Active Delivery page.
-* No blank screen.
-* Display delivery progress timeline.
+Run Prisma migrations:
 
-### Restaurant Dashboard
 
-Add:
 
-* Rider Arrived card
-* Mark As Picked Up button
+```
 
-### Customer Order Tracking
+npx prisma migrate dev
 
-Add:
+```
 
-* Live order status tracking
-* Confirm Received button
-* Delivery timeline
 
-## Testing
 
-Add tests for:
+Start the API:
 
-* Rider auto-online on login
-* Rider auto-offline after inactivity
-* Assignment acceptance flow
-* Restaurant pickup verification
-* Rider delivery confirmation
-* Customer receipt confirmation
-* Protection against undefined data causing .slice() crashes
-* End-to-end delivery workflow
 
-Follow the existing project architecture and update backend, frontend, database, Socket.IO events, APIs, and UI components accordingly.
+
+```
+
+npm run start:dev
+
+```
+
+
+
+### 2) Frontend
+
+
+
+```
+
+cd frontend
+
+npm install
+
+npm start
+
+```
+
+
+
+Frontend runs at http://localhost:4200 and backend at http://localhost:3000 by default.
+
+
+
+##  Environment Variables
+
+
+
+Required backend variables are listed in [backend/.env.example](backend/.env.example).
+
+Key options include:
+
+
+
+- `DATABASE_URL`
+
+- `JWT_SECRET`, `REFRESH_TOKEN_SECRET`
+
+- `AI_API_KEY` (Gemini)
+
+- `USE_OPENAI`, `OPENAI_API_KEY` (optional)
+
+- `CLOUDINARY_*`
+
+- `EMAIL_*`
+
+
+
+## ✅ Current Status
+
+
+
+The system is actively developed. Core patient and prescription workflows are complete, with blog UI and notifications in progress. See [DEVELOPMENT_PROGRESS.md](DEVELOPMENT_PROGRESS.md) for detailed status.
+
+
+
+## 🧪 Testing
+
+
+
+Backend tests:
+
+
+
+```
+
+cd backend
+
+npm run test
+
+```
+
+
+
+Frontend tests:
+
+
+
+```
+
+cd frontend
+
+npm test
+
+```
+
+
+
+##  Documentation
+
+
+
+- Backend module map: [BACKEND_STRUCTURE.md](BACKEND_STRUCTURE.md)
+
+- AI analysis fixes and test script: [AI_ANALYSIS_FIXES.md](AI_ANALYSIS_FIXES.md)
+
+- Responsive UI references: [RESPONSIVE_QUICK_REFERENCE.md](RESPONSIVE_QUICK_REFERENCE.md)
+
+
+
+##  License
+
+
+
+This project is for academic purposes.
