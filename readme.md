@@ -2,7 +2,7 @@
 
 
 
-**AI-Assisted Hospital Management & Smart Patient Routing System**
+**AI-Assisted Hospital Management**
 
 
 
