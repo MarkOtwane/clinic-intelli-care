@@ -10,7 +10,7 @@
 
 
 
-Clinic IntelliCare is a full‑stack hospital/clinic management system that combines traditional HMS workflows with AI‑assisted symptom analysis and smart routing. It is built as an academic project to demonstrate how AI can improve triage, scheduling, and clinical decision support.
+Clinic IntelliCare is a full‑stack hospital management system that combines traditional HMS workflows with AI‑assisted symptom analysis and smart routing. It is built as an academic project to demonstrate how AI can improve triage, scheduling, and clinical decision support.
 
 
 
